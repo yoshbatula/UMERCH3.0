@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import Sidebar from "../../../components/layouts/Sidebar";
+import AdminFooter from "../../../components/layouts/AdminFooter";
 
 const StatCard = ({ title, value, className = "bg-green-700", icon }) => (
   <div
@@ -21,7 +22,9 @@ export default function AdminRecord() {
 
   return (
     <div className="flex min-h-screen bg-[#f5f5f5]">
-      <Sidebar />
+      <div className="h-screen sticky top-0">
+        <Sidebar />
+      </div>
 
       <main className="flex-1 px-10 py-10">
         {/* Header */}
@@ -118,6 +121,7 @@ export default function AdminRecord() {
             <button className="text-gray-900">Next</button>
           </div>
         </div>
+        <AdminFooter />
       </main>
     </div>
   );

@@ -1,5 +1,7 @@
 import React, { useMemo, useState } from "react";
 import Sidebar from "../../../components/layouts/Sidebar";
+import AdminFooter from "../../../components/layouts/AdminFooter";
+
 
 
 const StatCard = ({ title, value, className, icon }) => (
@@ -23,11 +25,13 @@ const Icon = ({ children }) => (
     </svg>
 );
 
+
+
 export default function AdminTransaction() {
     const [query, setQuery] = useState("");
     const [status, setStatus] = useState("All statuses");
 
-    const transactions = []; 
+    const transactions = [];
 
     const filtered = useMemo(() => {
         const q = query.trim().toLowerCase();
@@ -128,10 +132,12 @@ export default function AdminTransaction() {
 
     return (
         <div className="flex min-h-screen bg-[#f5f5f5]">
-            <Sidebar />
+            <div className="h-screen sticky top-0">
+                <Sidebar />
+            </div>
 
             <main className="flex-1 px-10 py-10">
-                <h1 className="text-4xl font-extrabold tracking-wide">
+                <h1 className="text-4xl font-extrabold tracking-[0.25em]">
                     TRANSACTIONS
                 </h1>
                 <p className="text-gray-500 mt-2">
@@ -213,11 +219,9 @@ export default function AdminTransaction() {
                         ))}
                     </div>
                 </div>
-
-                <div className="text-center text-xs text-gray-500 mt-10">
-                    Copyright © 2025 Merchandise | Powered by UMerch
-                </div>
+                <AdminFooter />
             </main>
         </div>
+
     );
 }

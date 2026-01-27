@@ -50,7 +50,7 @@ export default function Sidebar() {
   };
 
   useEffect(() => {
-    if (isActive("/Inventory")) setInventoryOpen(true);
+    if (isActive("/inventory")) setInventoryOpen(true);
   }, [url]);
 
   useEffect(() => {
@@ -73,18 +73,19 @@ export default function Sidebar() {
 
       {/* Nav */}
       <nav className="flex-1 py-6 space-y-1">
-        <NavItem href="/" icon={DASHBOARDLOGO} label="Dashboard" active={isActive("/")} />
-        <NavItem href="/Transaction" icon={TRANSACLOGO} label="Transaction" className={`${isActive("/Transaction") ? "bg-white text-[#9C0306]" : "text hover:bg-white hover:text-red-700 "}`} />
+        <NavItem href="/admin" icon={DASHBOARDLOGO} label="Dashboard" active={isActive("/admin")} />
+
+        <NavItem href="/admin/transaction" icon={TRANSACLOGO} label="Transaction" className={`${isActive("/admin/transaction") ? "bg-white text-[#9C0306]" : "text hover:bg-white hover:text-red-700 "}`} />
 
         {/* Inventory + submenu */}
         <div ref={inventoryRef}>
           <div className="flex items-center">
             <div className="flex-1">
               <NavItem
-                href="/Inventory"
+                href="/admin/inventory"
                 icon={INVENTORYLOGO}
                 label="Inventory"
-                active={isActive("/Inventory") || inventoryOpen}
+                active={isActive("/admin/inventory") || inventoryOpen}
                 onClick={() => setInventoryOpen(true)}
               />
             </div>
@@ -92,18 +93,12 @@ export default function Sidebar() {
             <button
               type="button"
               onClick={() => setInventoryOpen((open) => !open)}
-              className={[
-                "px-4 transition-colors duration-200",
-                inventoryOpen ? "text-red-700" : "text-white",
-              ].join(" ")}
+              className={["px-4 transition-colors duration-200", inventoryOpen ? "text-red-700" : "text-white",].join(" ")}
               aria-expanded={inventoryOpen}
               aria-label="Toggle inventory submenu"
             >
               <svg
-                className={[
-                  "h-4 w-4 transition-transform duration-200",
-                  inventoryOpen ? "rotate-180" : "",
-                ].join(" ")}
+                className={["h-4 w-4 transition-transform duration-200", inventoryOpen ? "rotate-180" : ""].join(" ")}
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -115,17 +110,17 @@ export default function Sidebar() {
           </div>
 
           <div className={inventoryOpen ? "block" : "hidden"}>
-            <Link href="/Inventory#add" className="block px-14 py-3 text-sm font-medium bg-white text-red-700">
+            <Link href="/admin/inventory#add" className="block px-14 py-3 text-sm font-medium bg-white text-red-700">
               Add Product
             </Link>
             <Link
-              href="/Inventory#stock-in"
+              href="/admin/inventory#stock-in"
               className="block px-14 py-2 text-sm text-white hover:bg-white hover:text-red-700 transition-all duration-200"
             >
               Stock In
             </Link>
             <Link
-              href="/Inventory#stock-out"
+              href="/admin/inventory#stock-out"
               className="block px-14 py-2 text-sm text-white hover:bg-white hover:text-red-700 transition-all duration-200"
             >
               Stock Out
@@ -133,10 +128,10 @@ export default function Sidebar() {
           </div>
         </div>
 
-        <NavItem href="/RecordLogs" icon={RECORDLOGO} label="Record Logs" active={isActive("/RecordLogs")} />
+        <NavItem href="/admin/record-logs" icon={RECORDLOGO} label="Record Logs" active={isActive("/admin/record-logs")} />
 
         <div className="mt-6 border-t border-red-800 pt-4">
-          <NavItem href="/logout" icon={LOGOUTLOGO} label="Logout" />
+          <NavItem href="/admin/logout" icon={LOGOUTLOGO} label="Logout" />
         </div>
       </nav>
 
