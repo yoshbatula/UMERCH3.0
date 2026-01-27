@@ -7,48 +7,72 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Mail;
 
-class AuthCont extends Controller
-{
-    public function showLoginForm()
-    {
-        return Inertia::render('Authentication');
-    }
+// This controllers handles user authentication functionality
+class AuthCont extends Controller {
 
-    public function login(Request $request)
-    {
-        $credentials = $request->validate([
-            'login' => 'required|string',
-            'password' => 'required|string',
-            'remember' => 'boolean'
-        ]);
+    // Verifies the OTP entered by the user
+    public function verifyOtp(Request $request) {
 
-        $field = filter_var($credentials['login'], FILTER_VALIDATE_EMAIL)
-            ? 'email'
-            : 'um_id';
+        $request->validate(['otp' => 'required|digits:6']);
+        $sessionOtp = $request->session()->get('otp');
+        $expires = session('otp_expires');
 
-        $user = User::where($field, $credentials['login'])->first();
-
-        if ($user) {
-            $dbPassword = $user->user_password;
-            $inputPassword = $credentials['password'];
-
-            $isHashed = str_starts_with($dbPassword, '$2y$');
-            $valid = $isHashed
-                ? Hash::check($inputPassword, $dbPassword)
-                : $inputPassword === $dbPassword;
-
-            if ($valid) {
-                Auth::login($user, $credentials['remember'] ?? false);
-                $request->session()->regenerate();
-
-                return redirect()->route('authentication');
-            }
+        if (!$sessionOtp || now()->greaterThan($expires)) {
+            return back()->withErrors(['otp' => 'The OTP has expired. Please request a new one.']);
         }
 
-        return back()->withErrors([
-            'login' => 'The provided credentials do not match our records.',
+        if ($request->otp == $sessionOtp) {
+            session()->forget(['otp', 'otp_expires']);
+            return redirect()->route('landing');
+        }
+
+        return back()->withErrors(['otp' => 'Invalid OTP.']);
+    }
+
+    // Resend OTP to the user's email
+    public function resendOtp(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $otp = random_int(100000, 999999);
+        session(['otp' => $otp, 'otp_expires' => now()->addMinutes(5)]);
+
+        Mail::raw("Your OTP code is: $otp", function ($message) use ($user) {
+            $message->to($user->email)
+                    ->subject('Your OTP Code');
+        });
+
+        return back()->with('status', 'OTP resent');
+    }
+
+    
+    public function showAuthenticationPage()
+    {
+        $email = Auth::user()->email;
+        $censored = $this->censorEmail($email);
+        return Inertia::render('Authentication', [
+            'email' => $censored
         ]);
+    }
+
+    private function censorEmail($email)
+    {
+        $parts = explode('@', $email);
+        $name = $parts[0];
+        $domain = $parts[1] ?? '';
+
+        if (strlen($name) <= 2) {
+            $censoredName = substr($name, 0, 1) . str_repeat('*', max(strlen($name) - 1, 0));
+        } else {
+            $censoredName = substr($name, 0, 1) . str_repeat('*', strlen($name) - 2) . substr($name, -1);
+        }
+
+        return $censoredName . '@' . $domain;
     }
 }
 

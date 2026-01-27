@@ -19,10 +19,10 @@ class DatabaseSeeder extends Seeder
         // User::factory(10)->create();
 
         User::factory()->create([
-            'um_id' => '544960',
-            'email' => 'rho.jornadal.544960@umindanao.edu.ph',
-            'user_fullname' => 'Rho Jornadal',
-            'user_password' => Hash::make('rho123'),
+            'um_id' => '544580',
+            'email' => 'y.batula.544580@umindanao.edu.ph',
+            'user_fullname' => 'Yosh Batula',
+            'user_password' => Hash::make('yoshie154693'),
         ]);
     }
 }

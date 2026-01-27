@@ -4,9 +4,12 @@ import Logo from '@images/UMERCH-LOGO.svg';
 import CartIcon from '@images/CartIcon.svg';
 import NotificationIcon from '@images/NotificationIcon.svg';
 import UserAvatar from '@images/AccountIcon.svg'
+
 export default function LandingNav() {
-    const { url } = usePage();
+    const { url, auth } = usePage().props;
+    const userName = auth?.user?.name || 'User';
     const isActive = (href) => {
+        if (!url) return false;
         if (href === '/') return url === '/';
         if (href === '/Orders') return url === '/Orders';
         return url.startsWith(href);
@@ -37,7 +40,7 @@ export default function LandingNav() {
                     <Link href="#"><img src={NotificationIcon} alt="Notification Icon"/></Link>
                     <div className='flex flex-row gap-1 items-center'>
                         <Link href="#"><img src={UserAvatar} alt="User Avatar"/></Link>
-                        <span className='text-[16px] font-bold'>Hi, User</span>
+                        <span className='text-[16px] font-bold'>Hi, {userName}</span>
                         <select name="user-options" id="user-options">
                             <option value=""></option>
                         </select>

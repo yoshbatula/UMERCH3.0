@@ -1,9 +1,18 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
+import { Inertia } from '@inertiajs/inertia';
 
-export default function Authentication() {
+export default function Authentication({ email }) {
     const inputLength = 6;
     const [values, setValues] = useState(Array(inputLength).fill(""));
     const inputsRef = useRef([]);
+    const [cooldown, setCooldown] = useState(0);
+
+    useEffect(() => {
+        if (cooldown > 0) {
+            const timer = setTimeout(() => setCooldown(cooldown - 1), 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [cooldown]);
 
     const handleChange = (e, idx) => {
         const val = e.target.value.replace(/[^0-9]/g, "");
@@ -49,14 +58,27 @@ export default function Authentication() {
         }
     };
 
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        const otp = values.join('');
+        Inertia.post('/verify-otp', { otp });
+    };
+
+    const handleResend = () => {
+        if (cooldown === 0) {
+            Inertia.post('/resend-otp');
+            setCooldown(60); // 60 seconds
+        }
+    };
+
     return (
         <div className="flex flex-col justify-center items-center h-screen">
             <h1 className="text-[34px] font-medium">Verification</h1>
             <div className="text-[20px] py-2">
                 <p>A verification code has been sent to</p>
-                <p>f****z@umindanao.edu.ph</p>
+                <p>{email}</p>
             </div>
-            <form action="#" className="flex flex-col justify-center items-center mt-6">
+            <form onSubmit={handleSubmit} className="flex flex-col justify-center items-center mt-6">
                 <div className="flex flex-row gap-6">
                     {values.map((val, idx) => (
                         <input
@@ -73,11 +95,17 @@ export default function Authentication() {
                     ))}
                 </div>
                 <div className="flex flex-row text-[16px] gap-2 mt-7">
-                    <p>Resend code in</p>
-                    <button className="text-[#9C0306] font-medium hover:cursor-pointer">55s</button>
+                    <button
+                        type="button"
+                        className="text-[#9C0306] font-medium hover:cursor-pointer"
+                        onClick={handleResend}
+                        disabled={cooldown > 0}
+                    >
+                        {cooldown > 0 ? `Resend code in ${cooldown}s` : 'Resend code'}
+                    </button>
                 </div>
                 <div className="mt-7 flex justify-center items-center">
-                    <button className="bg-[#9C0306] text-white rounded-[20px] w-40 h-8 hover:cursor-pointer">Verify</button>
+                    <button type="submit" className="bg-[#9C0306] text-white rounded-[20px] w-40 h-8 hover:cursor-pointer">Verify</button>
                 </div>
             </form>
         </div>
