@@ -67,7 +67,7 @@ export default function Authentication({ email }) {
     const handleResend = () => {
         if (cooldown === 0) {
             Inertia.post('/resend-otp');
-            setCooldown(60); // 60 seconds
+            setCooldown(60); 
         }
     };
 

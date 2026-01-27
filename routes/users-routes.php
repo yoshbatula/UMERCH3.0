@@ -1,9 +1,9 @@
 <?php
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\LoginControllers\LoginCont;
+use App\Http\Controllers\UsersideControllers\LoginControllers\LoginCont;
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Http\Controllers\AuthenticationController\AuthCont;;
+use App\Http\Controllers\UsersideControllers\AuthenticationController\AuthCont;;
 use Illuminate\Auth\Events\Login;
 use Inertia\Middleware;
 use Inertia\Inertia;

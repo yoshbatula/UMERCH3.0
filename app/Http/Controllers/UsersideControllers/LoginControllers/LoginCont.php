@@ -1,6 +1,5 @@
 <?php
-namespace App\Http\Controllers\LoginControllers;
-
+namespace App\Http\Controllers\UsersideControllers\LoginControllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
