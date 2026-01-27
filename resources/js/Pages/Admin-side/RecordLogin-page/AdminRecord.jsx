@@ -1,6 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { usePage } from '@inertiajs/react';
 import Sidebar from "../../../components/layouts/Sidebar";
 import AddUsersModals from "../../../components/modals/AddUsersModals";
+import EditUsersModals from "../../../components/modals/EditUsersModals";
+import DeleteUsersModals from "../../../components/modals/DeleteUsersModals";
 const StatCard = ({ title, value, className = "bg-green-700", icon }) => (
   <div
     className={`w-[260px] h-[96px] rounded-xl px-6 py-4 text-white flex items-center justify-between ${className}`}
@@ -19,6 +22,12 @@ const StatCard = ({ title, value, className = "bg-green-700", icon }) => (
 export default function AdminRecord() {
   
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
+  const [isEditUserModalOpen, setIsEditUserModalOpen] = useState(false);
+  const [editUser, setEditUser] = useState(null);
+  const [localSuccess, setLocalSuccess] = useState(false);
+  const [isDeleteUserModalOpen, setIsDeleteUserModalOpen] = useState(false);
+  const [deleteUser, setDeleteUser] = useState(null);
+
 
   const openAddUserModal = () => {
     setIsAddUserModalOpen(true);
@@ -27,6 +36,46 @@ export default function AdminRecord() {
   const closeAddUserModal = () => {
     setIsAddUserModalOpen(false);
   };
+
+  const openEditUserModal = (user) => {
+    setEditUser(user);
+    setIsEditUserModalOpen(true);
+  };
+
+  const closeEditUserModal = () => {
+    setIsEditUserModalOpen(false);
+    setEditUser(null);
+  };
+
+  const handleEditSuccess = () => {
+    setLocalSuccess(true);
+    setTimeout(() => {
+      setLocalSuccess(false);
+      window.location.reload();
+    }, 6000);
+  };
+
+  const openDeleteUserModal = (user) => {
+    setDeleteUser(user);
+    setIsDeleteUserModalOpen(true);
+  }
+
+  const closeDeleteUserModal = () => {
+    setIsDeleteUserModalOpen(false);
+    setDeleteUser(null);
+  }
+
+  const { props } = usePage();
+  const success = props.flash?.success;
+  const [showSuccess, setShowSuccess] = useState(false);
+  
+  useEffect(() => {
+    if (success) {
+      setShowSuccess(true);
+      const timer = setTimeout(() => setShowSuccess(false), 6000);
+      return () => clearTimeout(timer);
+    }
+  }, [success]);
 
   return (
     <div className="flex min-h-screen bg-[#f5f5f5]">
@@ -89,7 +138,6 @@ export default function AdminRecord() {
               className="bg-transparent outline-none w-full text-sm text-gray-700 placeholder:text-gray-400"
             />
           </div>
-
           <button
             type="button"
             onClick={openAddUserModal}
@@ -98,23 +146,51 @@ export default function AdminRecord() {
             Add User
           </button>
         </div>
-
+        {(showSuccess && success) || localSuccess ? (
+        <div className="mt-3 bg-green-100 border border-green-400 text-green-700 px-4 py-2 rounded-md">
+          User updated successfully!
+        </div> 
+        ) : null}
         {/* Table */}
         <div className="bg-white rounded-xl mt-6 shadow-sm border border-gray-200 overflow-hidden">
           <div className="px-8 py-6">
-            <div className="grid grid-cols-12 text-sm font-bold text-red-700">
-              <div className="col-span-1">ID</div>
-              <div className="col-span-3">Name</div>
-              <div className="col-span-3">UserId</div>
-              <div className="col-span-4">Email</div>
-              <div className="col-span-1 text-right">Action</div>
+            <div className="grid grid-cols-13 text-sm font-bold text-red-700">
+              <div className="col-span-1 text-center">ID</div>
+              <div className="col-span-3 text-center">Name</div>
+              <div className="col-span-3 text-center">UserId</div>
+              <div className="col-span-4 text-center">Email</div>
+              <div className="col-span-2 text-center">Action</div>
             </div>
           </div>
 
           <div className="border-t border-gray-200" />
 
-          {/* Empty body space (no users yet) */}
-          <div className="min-h-[520px]" />
+          {/* Users Table Body */}
+          <div className="min-h-[520px]">
+            {props.users && props.users.length > 0 ? (
+              props.users.map((user, idx) => (
+                <div key={user.id} className="grid grid-cols-13 px-8 py-4 text-sm items-center border-b border-gray-100">
+                  <div className="col-span-1 text-center">{idx + 1}</div>
+                  <div className="col-span-3 text-center">{user.user_fullname}</div>
+                  <div className="col-span-3 text-center">{user.um_id}</div>
+                  <div className="col-span-4 text-center">{user.email}</div>
+                  <div className="col-span-2 flex flex-row gap-2 justify-center items-center min-w-max">
+                    <button
+                      className="text-white bg-[#9C0306] min-w-[80px] px-4 h-8 rounded-[20px] font-semibold text-[13px] hover:cursor-pointer"
+                      onClick={() => openEditUserModal(user)}
+                    >
+                      Edit
+                    </button>
+                    <button className="text-[#9C0306] bg-white border border-[#9C0306] min-w-[80px] px-4 h-8 rounded-[20px] font-semibold text-[13px] hover:cursor-pointer" onClick={() => openDeleteUserModal(user)}>
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center text-gray-400 py-10">No users found.</div>
+            )}
+          </div>
 
           {/* Pagination */}
           <div className="border-t border-gray-200" />
@@ -130,6 +206,8 @@ export default function AdminRecord() {
 
       {/* Modals */}
       <AddUsersModals isOpen={isAddUserModalOpen} onClose={closeAddUserModal} />
+      <EditUsersModals isOpen={isEditUserModalOpen} onClose={closeEditUserModal} user={editUser} onSuccess={handleEditSuccess} />
+      <DeleteUsersModals isOpen={isDeleteUserModalOpen} onClose={closeDeleteUserModal} user={deleteUser} />
     </div>
   );
 }

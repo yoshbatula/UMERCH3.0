@@ -15,6 +15,7 @@ Route::post('/login', [LoginCont::class, 'login'])->name('login.submit');
 
 // Protected routes for authenticated users
 Route::middleware(['auth'])->group(function () {
+    
     // This routes for authentications
     Route::get('/authentication', [AuthCont::class, 'showAuthenticationPage'])->name('authentication');
     Route::post('/resend-otp', [AuthCont::class, 'resendOtp'])->name('resend.otp');

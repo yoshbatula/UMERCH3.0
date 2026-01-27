@@ -1,8 +1,10 @@
+
 import { useState, useEffect } from 'react';
 import { useForm } from '@inertiajs/react';
 
-export default function AddUsersModals({ isOpen, onClose }) {
-    const { data, setData, post, processing, errors, reset } = useForm({
+
+export default function EditUsersModals({ isOpen, onClose, user, onSuccess }) {
+    const { data, setData, put, patch, processing, errors, reset, clearErrors, setError } = useForm({
         name: '',
         email: '',
         userId: '',
@@ -12,13 +14,23 @@ export default function AddUsersModals({ isOpen, onClose }) {
     const [visible, setVisible] = useState(false);
 
     useEffect(() => {
-        if (isOpen) {
+        if (isOpen && user) {
+            setData({
+                name: user.user_fullname || '',
+                email: user.email || '',
+                userId: user.um_id || '',
+                password: ''
+            });
+            // Clear any previous errors when opening modal
+            clearErrors();
+            setVisible(true);
+        } else if (isOpen) {
             setVisible(true);
         } else {
             const timer = setTimeout(() => setVisible(false), 200);
             return () => clearTimeout(timer);
         }
-    }, [isOpen]);
+    }, [isOpen, user]);
 
     if (!isOpen && !visible) return null;
 
@@ -29,10 +41,22 @@ export default function AddUsersModals({ isOpen, onClose }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        
-        post('/add-user', {
+
+        // Client-side password length validation
+        if (data.password && data.password.length > 0 && data.password.length < 8) {
+            setError('password', 'Password must be at least 8 characters.');
+            return;
+        }
+
+        if (!user || !user.id) {
+            alert('No user selected for update');
+            return;
+        }
+
+        patch(`/update-user/${user.id}`, {
             onSuccess: () => {
                 reset();
+                if (onSuccess) onSuccess();
                 onClose();
             },
             onError: (errors) => {
@@ -60,8 +84,9 @@ export default function AddUsersModals({ isOpen, onClose }) {
                 }`}
             >
                 {/* Modal Header */}
-                <div className="flex items-center justify-between p-6  bg-[#9C0306]">
-                    <h2 className="text-xl font-semibold text-gray-900 text-white ">Add New User</h2>
+                <div className="flex items-center justify-between p-6 bg-[#9C0306]">
+                    <h2 className="text-xl font-semibold text-white">Update Users</h2>
+                    
                 </div>
 
                 {/* Modal Body */}
@@ -82,9 +107,6 @@ export default function AddUsersModals({ isOpen, onClose }) {
                                 required
                             />
                             {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
-                            {errors["name"] && errors["name"].toString().toLowerCase().includes("unique") && (
-                                <p className="text-red-500 text-sm mt-1">This name is already taken.</p>
-                            )}
                         </div>
 
                         <div>
@@ -102,9 +124,6 @@ export default function AddUsersModals({ isOpen, onClose }) {
                                 required
                             />
                             {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
-                            {errors["email"] && errors["email"].toString().toLowerCase().includes("unique") && (
-                                <p className="text-red-500 text-sm mt-1">This email is already taken.</p>
-                            )}
                         </div>
 
                         <div>
@@ -122,11 +141,7 @@ export default function AddUsersModals({ isOpen, onClose }) {
                                 required
                             />
                             {errors.userId && <p className="text-red-500 text-sm mt-1">{errors.userId}</p>}
-                            {errors["userId"] && errors["userId"].toString().toLowerCase().includes("unique") && (
-                                <p className="text-red-500 text-sm mt-1">This user ID is already taken.</p>
-                            )}
                         </div>
-
                         <div>
                             <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                                 Password
@@ -138,14 +153,13 @@ export default function AddUsersModals({ isOpen, onClose }) {
                                 value={data.password}
                                 onChange={handleInputChange}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9C0306] focus:border-[#9C0306]"
-                                placeholder="Enter password"
-                                required
+                                placeholder="Leave blank to keep current password"
                             />
                             {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
                         </div>
                     </div>
 
-                    <div className="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-200 hover:cursor-pointer">
+                    <div className="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-200">
                         <button
                             type="button"
                             onClick={onClose}
@@ -158,7 +172,7 @@ export default function AddUsersModals({ isOpen, onClose }) {
                             disabled={processing}
                             className="px-4 py-2 text-sm font-medium text-white bg-[#9C0306] border border-transparent rounded-lg hover:cursor-pointer"
                         >
-                            {processing ? 'Adding...' : 'Add User'}
+                            {processing ? 'Updating...' : 'Update User'}
                         </button>
                     </div>
                 </form>
