@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import Sidebar from "../../../components/layouts/Sidebar";
-
+import AddUsersModals from "../../../components/modals/AddUsersModals";
 const StatCard = ({ title, value, className = "bg-green-700", icon }) => (
   <div
     className={`w-[260px] h-[96px] rounded-xl px-6 py-4 text-white flex items-center justify-between ${className}`}
@@ -17,7 +17,16 @@ const StatCard = ({ title, value, className = "bg-green-700", icon }) => (
 );
 
 export default function AdminRecord() {
-  const [query, setQuery] = useState("");
+  
+  const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
+
+  const openAddUserModal = () => {
+    setIsAddUserModalOpen(true);
+  };
+
+  const closeAddUserModal = () => {
+    setIsAddUserModalOpen(false);
+  };
 
   return (
     <div className="flex min-h-screen bg-[#f5f5f5]">
@@ -76,15 +85,14 @@ export default function AdminRecord() {
             </svg>
 
             <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search transactions"
+              placeholder="Search"
               className="bg-transparent outline-none w-full text-sm text-gray-700 placeholder:text-gray-400"
             />
           </div>
 
           <button
             type="button"
+            onClick={openAddUserModal}
             className="bg-red-800 hover:bg-red-900 text-white px-10 py-3 rounded-full text-sm font-semibold"
           >
             Add User
@@ -119,6 +127,9 @@ export default function AdminRecord() {
           </div>
         </div>
       </main>
+
+      {/* Modals */}
+      <AddUsersModals isOpen={isAddUserModalOpen} onClose={closeAddUserModal} />
     </div>
   );
 }

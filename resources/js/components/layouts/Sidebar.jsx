@@ -64,7 +64,7 @@ export default function Sidebar() {
   }, []);
 
   return (
-    <aside className="w-72 bg-red-700 text-white min-h-screen flex flex-col">
+    <aside className="w-72 bg-[#9C0306] text-white min-h-screen flex flex-col">
       {/* Header */}
       <div className="px-5 py-5 flex flex-col items-center border-b border-red-800">
         <img src={Logo} alt="UMERCH logo" className="h-40 w-auto" />
@@ -115,7 +115,7 @@ export default function Sidebar() {
           </div>
 
           <div className={inventoryOpen ? "block" : "hidden"}>
-            <Link href="/Inventory#add" className="block px-14 py-3 text-sm font-medium bg-white text-red-700">
+            <Link href="#" className="block px-14 py-3 text-sm font-medium bg-white text-red-700">
               Add Product
             </Link>
             <Link
@@ -135,14 +135,10 @@ export default function Sidebar() {
 
         <NavItem href="/RecordLogs" icon={RECORDLOGO} label="Record Logs" active={isActive("/RecordLogs")} />
 
-        <div className="mt-6 border-t border-red-800 pt-4">
+        <div className="border-t border-red-800">
           <NavItem href="/logout" icon={LOGOUTLOGO} label="Logout" />
         </div>
       </nav>
-
-      <div className="px-6 py-4 border-t border-red-800 text-sm font-bold text-white">
-        Welcome back, Admin
-      </div>
     </aside>
   );
 }

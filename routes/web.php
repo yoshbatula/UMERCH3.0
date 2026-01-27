@@ -7,9 +7,9 @@ use Inertia\Inertia;
 
 
 
-Route::get('/', function () {
-return inertia('Login');
-})->name('login');
+// Route::get('/', function () {
+// return inertia('Login');
+// })->name('login');
 
 Route::get('Products', function () {
     return inertia('Products');
