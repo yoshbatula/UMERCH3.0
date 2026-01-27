@@ -1,0 +1,25 @@
+@import 'tailwindcss';
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+body {
+    font-family: 'Montserrat', sans-serif, 'Cormorant Garamond', serif;
+}
+
+
+.infiniteSlider {
+  animation: infiniteSlide 11s linear infinite;
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+}
+
+@keyframes infiniteSlide {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
