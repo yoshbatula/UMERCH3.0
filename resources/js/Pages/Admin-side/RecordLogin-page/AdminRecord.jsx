@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useForm } from "react";
 import Sidebar from "../../../components/layouts/Sidebar";
 import AdminFooter from "../../../components/layouts/AdminFooter";
-
+import AddUsersModal from "../../../components/modals/AddUsersModals";
 const StatCard = ({ title, value, className = "bg-green-700", icon }) => (
   <div
     className={`w-[260px] h-[96px] rounded-xl px-6 py-4 text-white flex items-center justify-between ${className}`}
@@ -19,6 +19,32 @@ const StatCard = ({ title, value, className = "bg-green-700", icon }) => (
 
 export default function AdminRecord() {
   const [query, setQuery] = useState("");
+  const [isAddUsersOpen, setAddUsersOpen] = useState(false);
+  
+
+  const openAddUsersModal = () => {
+    setAddUsersOpen(true);
+  }
+
+  const closeAddUsersModal = () => {
+    setAddUsersOpen(false);
+  }
+
+  const onHandleChange = (e) => {
+    setQuery(e.target.value);
+  };
+
+  const handeSubmit = (e) => {
+    e.preventDefault();
+
+    post('/add-user', {
+      onSuccess: () => {
+        reset();
+        onClose();
+      },
+    })
+    
+  }
 
   return (
     <div className="flex min-h-screen bg-[#f5f5f5]">
@@ -88,7 +114,8 @@ export default function AdminRecord() {
 
           <button
             type="button"
-            className="bg-red-800 hover:bg-red-900 text-white px-10 py-3 rounded-full text-sm font-semibold"
+            className="bg-red-800 hover:bg-red-900 text-white px-10 py-3 rounded-full text-sm font-semibold hover:cursor-pointer"
+            onClick={openAddUsersModal}
           >
             Add User
           </button>
@@ -123,6 +150,8 @@ export default function AdminRecord() {
         </div>
         <AdminFooter />
       </main>
+      {/* Modals */}
+      <AddUsersModal isOpen={isAddUsersOpen} onClose={closeAddUsersModal} />
     </div>
   );
 }
