@@ -50,7 +50,7 @@ export default function Sidebar() {
   };
 
   useEffect(() => {
-    if (isActive("/inventory")) setInventoryOpen(true);
+    if (isActive("/Inventory")) setInventoryOpen(true);
   }, [url]);
 
   useEffect(() => {

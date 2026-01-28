@@ -6,12 +6,8 @@ use Inertia\Middleware;
 use Inertia\Inertia;
 
 Route::get('/', function () {
-return inertia('Admin-side/Dashboard-page/Dashboard');
-})->name('admin.dashboard');
-
-//Route::get('/', function () {
-//return inertia('Login');
-//})->name('login');
+return inertia('Login');
+})->name('login');
 
 Route::get('Products', function () {
     return inertia('Products');
@@ -20,4 +16,3 @@ Route::get('Products', function () {
 
 require __DIR__.'/users-routes.php';
 require __DIR__.'/admin-routes.php';
-

@@ -2,8 +2,11 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
+use Inertia\Middleware;
+use App\Http\Controllers\AdminsideControllers\DashboardControllers\AdminDashboardCont;
 
-Route::get('/admin', function () {
+Route::get('/', function () {
             return inertia('Admin-side/Dashboard-page/Dashboard');
         })->name('Dashboard');
 
@@ -20,7 +23,7 @@ Route::get('/admin', function () {
         Route::get('/admin/record-logs', function () {
             return inertia('Admin-side/RecordLogin-page/AdminRecord');
         })->name('AdminRecordLogs');
-
+    
         Route::get('/admin/logout', function () {
             Auth::logout();
             return redirect('/');
