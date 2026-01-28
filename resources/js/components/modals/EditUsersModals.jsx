@@ -37,6 +37,8 @@ export default function EditUsersModals({ isOpen, onClose, user, onSuccess }) {
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setData(name, value);
+        // Clear the specific field error when updating
+        clearErrors(name);
     };
 
     const handleSubmit = (e) => {

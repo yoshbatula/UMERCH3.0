@@ -19,7 +19,7 @@ class UpdateRecords extends Controller {
             $user = User::findOrFail($id);
 
             $request->validate([
-                'name' => 'required|string|max:255',
+                'name' => 'required|string|max:255|unique:users,user_fullname,' . $id,
                 'email' => 'required|string|email|max:255|unique:users,email,' . $id,
                 'userId' => 'required|integer|unique:users,um_id,' . $id,
                 'password' => 'nullable|string|min:8', 
@@ -28,10 +28,15 @@ class UpdateRecords extends Controller {
             $user->user_fullname = $request->name;
             $user->email = $request->email;
             $user->um_id = $request->userId;
-            
+
             if ($request->filled('password')) {
                 Log::info('Password update requested:', ['user_id' => $id, 'password_provided' => true]);
-                $user->user_password = bcrypt($request->password); 
+                // Prevent using the same password as current
+                if (Hash::check($request->password, $user->user_password)) {
+                    Log::info('New password matches current password. Rejecting.', ['user_id' => $id]);
+                    return back()->withErrors(['password' => 'New password must be different from your current password.'])->withInput();
+                }
+                $user->user_password = bcrypt($request->password);
                 Log::info('Password hashed and set for user:', ['user_id' => $id]);
             } else {
                 Log::info('No password update requested:', ['user_id' => $id, 'password_value' => $request->password ?? 'null']);

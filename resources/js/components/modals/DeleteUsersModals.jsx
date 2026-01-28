@@ -1,15 +1,18 @@
 import React from 'react';
 import { router } from '@inertiajs/react';
 
-export default function DeleteUsersModals({ isOpen, onClose, user }) {
+export default function DeleteUsersModals({ isOpen, onClose, user, onDeleted }) {
     if (!isOpen || !user) return null;
 
     const handleDelete = () => {
         router.delete(`/delete-user/${user.id}`, {
             onSuccess: () => {
+                if (onDeleted) onDeleted();
                 onClose();
             },
-            preserveState: false,
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
         });
     };
 

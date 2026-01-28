@@ -134,10 +134,6 @@ export default function Sidebar() {
           <NavItem href="/admin/logout" icon={LOGOUTLOGO} label="Logout" />
         </div>
       </nav>
-
-      <div className="px-6 py-4 border-t border-red-800 text-sm font-bold text-white">
-        Welcome back, Admin
-      </div>
     </aside>
   );
 }

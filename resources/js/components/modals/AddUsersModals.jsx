@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useForm } from '@inertiajs/react';
 
-export default function AddUsersModals({ isOpen, onClose }) {
-    const { data, setData, post, processing, errors, reset } = useForm({
+export default function AddUsersModals({ isOpen, onClose, onUserAdded }) {
+    const { data, setData, post, processing, errors, reset, clearErrors } = useForm({
         name: '',
         email: '',
         userId: '',
@@ -25,13 +25,20 @@ export default function AddUsersModals({ isOpen, onClose }) {
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setData(name, value);
+        // Clear the specific field error as the user corrects it
+        clearErrors(name);
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        
         post('/add-user', {
-            onSuccess: () => {
+            onSuccess: (page) => {
+                
+                if (onUserAdded) {
+                    
+                    const newUser = page?.props?.newUser || null;
+                    onUserAdded(newUser);
+                }
                 reset();
                 onClose();
             },
@@ -61,7 +68,7 @@ export default function AddUsersModals({ isOpen, onClose }) {
             >
                 {/* Modal Header */}
                 <div className="flex items-center justify-between p-6  bg-[#9C0306]">
-                    <h2 className="text-xl font-semibold text-gray-900 text-white ">Add New User</h2>
+                    <h2 className="text-xl font-semibold text-white ">Add New User</h2>
                 </div>
 
                 {/* Modal Body */}
