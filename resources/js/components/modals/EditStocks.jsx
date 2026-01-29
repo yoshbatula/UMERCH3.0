@@ -80,12 +80,18 @@ export default function EditStocks({ open, onClose, stock, onSuccess }) {
                                 <label className="text-sm font-semibold">
                                     Variation
                                 </label>
-                                <input
-                                    type="text"
+                                <select
                                     className="w-full mt-1 border rounded-lg px-3 py-2 text-sm"
                                     value={variant}
                                     onChange={e => setVariant(e.target.value)}
-                                />
+                                >
+                                    <option value="">Select Variation</option>
+                                    <option value="XS">XS</option>
+                                    <option value="S">S</option>
+                                    <option value="M">M</option>
+                                    <option value="L">L</option>
+                                    <option value="XL">XL</option>
+                                </select>
                             </div>
                         </div>
 
@@ -93,14 +99,14 @@ export default function EditStocks({ open, onClose, stock, onSuccess }) {
                         <div className="flex justify-center gap-4 pt-6">
                             <button
                                 onClick={() => setConfirm(true)}
-                                className="bg-red-800 hover:bg-red-900 text-white px-10 py-2 rounded-full text-sm font-semibold"
+                                className="bg-red-800 hover:bg-red-900 text-white px-10 py-2 rounded-full text-sm font-semibold hover:cursor-pointer"
                             >
                                 Edit
                             </button>
 
                             <button
                                 onClick={onClose}
-                                className="border border-red-700 text-red-700 px-10 py-2 rounded-full text-sm font-semibold"
+                                className="border border-red-700 text-red-700 px-10 py-2 rounded-full text-sm font-semibold hover:cursor-pointer"
                             >
                                 Cancel
                             </button>

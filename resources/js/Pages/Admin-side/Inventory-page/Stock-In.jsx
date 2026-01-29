@@ -93,7 +93,7 @@ export default function StockIn() {
 
                     <button
                         onClick={() => setOpenAdd(true)}
-                        className="bg-red-800 hover:bg-red-900 text-white px-8 py-2 rounded-full text-sm font-semibold"
+                        className="bg-red-800 hover:bg-red-900 text-white px-8 py-2 rounded-full text-sm font-semibold hover:cursor-pointer"
                     >
                         Add Stock
                     </button>
@@ -146,7 +146,7 @@ export default function StockIn() {
 
                                     <div className="col-span-2 text-right">
                                         <button
-                                            className="bg-red-700 hover:bg-red-800 text-white px-5 py-1.5 rounded-full text-xs font-semibold"
+                                            className="bg-red-700 hover:bg-red-800 text-white px-5 py-1.5 rounded-full text-xs font-semibold hover:cursor-pointer"
                                             onClick={() => { setSelectedStock(stock); setOpenEdit(true); }}
                                         >
                                             Edit
