@@ -17,7 +17,7 @@ return new class extends Migration
                 ->constrained('users', 'id')
                 ->onDelete('cascade');
             $table->enum('status', ['Pending', 'Processing', 'Completed', 'Cancelled', 'Ready-for-pickup', 'Out-of-delivery'])->default('Pending');
-            $table->string('receipt_format')->nullable();
+            $table->string('receipt_form')->nullable();
             $table->dateTime('order_date');
             $table->timestamps();
         });

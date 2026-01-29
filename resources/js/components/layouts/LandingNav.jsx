@@ -6,14 +6,20 @@ import NotificationIcon from '@images/NotificationIcon.svg';
 import UserAvatar from '@images/AccountIcon.svg'
 
 export default function LandingNav() {
-    const { url, auth } = usePage().props;
+    const page = usePage();
+    const url = page.url;
+    const auth = page.props.auth;
     const userName = auth?.user?.name || 'User';
+    
     const isActive = (href) => {
         if (!url) return false;
-        if (href === '/') return url === '/';
-        if (href === '/Orders') return url === '/Orders';
-        return url.startsWith(href);
+        // Direct exact match comparison
+        if (url === href) return true;
+        // Check if url starts with the href
+        if (url.startsWith(href) && href !== '/') return true;
+        return false;
     };
+    
     return (
         <>
             <div className="bg-[#9C0306] flex flex-row items-center p-6 h-20 sticky top-0 z-50">

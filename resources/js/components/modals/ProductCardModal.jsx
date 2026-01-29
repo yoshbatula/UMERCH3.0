@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { Link } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import AddToCart from '@images/Cart.svg';
 import DefaultImage from '@images/product-placeholder.svg';
 import SizeChart from '@images/SizeChart.png';
@@ -46,6 +46,48 @@ export default function ProductCardModal({ isOpen, onClose, product, onShowToast
             setTimeout(() => onClose(), 50);
         } catch (error) {
             console.error('Add to cart error:', error);
+            const message = error.response?.data?.message || 'Failed to add item to cart';
+            onShowToast(message, 'error');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleBuyNow = async () => {
+        if (!product?.product_id) {
+            onShowToast('Product information missing', 'error');
+            return;
+        }
+
+        setLoading(true);
+        try {
+            // Add item to cart
+            await axios.post('/add-to-cart', {
+                product_id: product.product_id,
+                variant: selectedSize,
+                quantity: quantity,
+                price: product.product_price
+            });
+            
+            // Get the updated cart and prepare checkout items
+            const cartResponse = await axios.get('/get-cart');
+            const cartItems = cartResponse.data || [];
+            
+            // Store the last item in sessionStorage for checkout
+            if (cartItems.length > 0) {
+                const lastItem = cartItems[cartItems.length - 1];
+                sessionStorage.setItem('checkoutItems', JSON.stringify([lastItem]));
+            }
+            
+            onShowToast('Item added to cart!', 'success');
+            
+            // Close the modal and navigate to checkout
+            onClose();
+            setTimeout(() => {
+                router.visit('/Checkout');
+            }, 500);
+        } catch (error) {
+            console.error('Buy now error:', error);
             const message = error.response?.data?.message || 'Failed to add item to cart';
             onShowToast(message, 'error');
         } finally {
@@ -170,8 +212,12 @@ export default function ProductCardModal({ isOpen, onClose, product, onShowToast
                                         <img src={AddToCart} alt="Add to Cart" className='mr-2'/>
                                         <span className='text-[#9C0306] text-[16px] font-semibold'>{loading ? 'Adding...' : 'Add to Cart'}</span>
                                     </button>
-                                    <button className='bg-[#9C0306] w-40 h-10 rounded-[10px] flex justify-center items-center hover:cursor-pointer'>
-                                        <span className='text-white text-[16px] font-semibold'>Buy Now</span>
+                                    <button 
+                                        onClick={handleBuyNow}
+                                        disabled={loading}
+                                        className='bg-[#9C0306] w-40 h-10 rounded-[10px] flex justify-center items-center hover:cursor-pointer disabled:opacity-50'
+                                    >
+                                        <span className='text-white text-[16px] font-semibold'>{loading ? 'Processing...' : 'Buy Now'}</span>
                                     </button>
                                 </div>
                             </div>

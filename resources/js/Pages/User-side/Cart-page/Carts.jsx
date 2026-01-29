@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from '../../../components/layouts/LandingNav';
 import BackgroundModel from '@images/BackgroundModel.png'; 
-import { Link, usePage, useForm } from '@inertiajs/react';
+import { Link, usePage, useForm, router } from '@inertiajs/react';
 import ClothingItems from '../../../components/ui/ClothingItems';
 import AccessoriesItems from '../../../components/ui/AccessoriesItems';
 import CartsNav from '../../../components/layouts/CartsNav';
 import Footer from '../../../components/layouts/Footer';
 import RemoveCartModal from '../../../components/modals/RemoveCartModal';
+import ReceiptForm from '../../../components/modals/ReceiptFormModal';
 import axios from 'axios';
 
 export default function Carts({ cartItems: initialCartItems = [] }) {
@@ -18,6 +19,27 @@ export default function Carts({ cartItems: initialCartItems = [] }) {
     const [itemToRemove, setItemToRemove] = useState(null);
     const [toast, setToast] = useState(null);
     const { delete: destroy, put: update } = useForm();
+    const [receiptFormOpen, setReceiptFormOpen] = useState(false);
+
+    // Refresh cart items on component mount
+    useEffect(() => {
+        // Fetch fresh cart data from the server
+        axios.get('/get-cart')
+            .then(response => {
+                setCartItems(response.data || []);
+            })
+            .catch(error => {
+                console.error('Error fetching cart:', error);
+            });
+    }, []);
+
+    const openReceiptForm = () => {
+        setReceiptFormOpen(true);
+    }
+
+    const closeReceiptForm = () => {
+        setReceiptFormOpen(false);
+    }
 
     const showToast = (message, type = 'success') => {
         setToast({ message, type });
@@ -58,6 +80,20 @@ export default function Carts({ cartItems: initialCartItems = [] }) {
         setCartItems(cartItems.filter(item => item.cart_item_id !== cartItemId));
         setSelectedItems(selectedItems.filter(id => id !== cartItemId));
         showToast('Item removed from cart successfully!', 'success');
+        
+        // Also remove from sessionStorage if it exists
+        const existing = sessionStorage.getItem('checkoutItems');
+        if (existing) {
+            const existingItems = JSON.parse(existing);
+            const filtered = existingItems.filter(item => item.cart_item_id !== cartItemId);
+            console.log('Deleted cart item:', cartItemId);
+            console.log('Remaining checkout items:', filtered);
+            if (filtered.length > 0) {
+                sessionStorage.setItem('checkoutItems', JSON.stringify(filtered));
+            } else {
+                sessionStorage.removeItem('checkoutItems');
+            }
+        }
     };
 
     const handleVariantChange = async (cartItemId, newVariant) => {
@@ -74,6 +110,21 @@ export default function Carts({ cartItems: initialCartItems = [] }) {
     };
 
     const subtotal = calculateSubtotal();
+
+    const handleCheckout = () => {
+        if (selectedItems.length === 0) {
+            showToast("You didn't select an item", 'error');
+            return;
+        }
+        // Get only the selected items
+        const itemsToCheckout = cartItems.filter(item => 
+            selectedItems.includes(item.cart_item_id)
+        );
+        
+        // Store items in sessionStorage (replace, don't accumulate)
+        sessionStorage.setItem('checkoutItems', JSON.stringify(itemsToCheckout));
+        router.visit('/Checkout');
+    };
 
     return (
         <>
@@ -210,10 +261,10 @@ export default function Carts({ cartItems: initialCartItems = [] }) {
                             </div>
                             
                             <div className='px-7 flex justify-center items-center'>
-                                <div className='mt-7 ml-auto flex justify-center items-center bg-[#9C0306] rounded-[10px] w-48 h-8 hover:cursor-pointer disabled:opacity-50'>
+                                <div className='mt-7 ml-auto flex justify-center items-center bg-[#9C0306] rounded-[10px] w-48 h-8 hover:cursor-pointer'>
                                     <button 
                                         className='text-[#F6F6F6] text-[13px] font-bold hover:cursor-pointer'
-                                        disabled={selectedItems.length === 0}
+                                        onClick={handleCheckout}
                                     >
                                         Proceed to Checkout
                                     </button>
@@ -237,6 +288,7 @@ export default function Carts({ cartItems: initialCartItems = [] }) {
                 cartItem={itemToRemove}
                 onDeleted={handleRemoveConfirmed}
             />
+
 
             {/* Toast Notification */}
             {toast && (

@@ -4,6 +4,7 @@ import AdminFooter from "../../../components/layouts/AdminFooter";
 import AddUsersModal from "../../../components/modals/AddUsersModals";
 import EditUsersModals from "../../../components/modals/EditUsersModals";
 import DeleteUsersModals from "../../../components/modals/DeleteUsersModals";
+import ReceiptForm from "../../../components/modals/ReceiptFormModal";
 
 const StatCard = ({ title, value, className = "bg-green-700", icon }) => (
   <div
@@ -31,6 +32,15 @@ function AdminRecord() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [isDeleteOpen, setDeleteOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
+  const [isReceiptFormOpen, setReceiptFormOpen] = useState(false);
+
+  const openReceiptForm = () => {
+    setReceiptFormOpen(true);
+  }
+
+  const closeReceiptForm = () => {
+    setReceiptFormOpen(false);
+  }
 
   const fetchUsers = () => {
     fetch("/api/admin/users")
@@ -234,6 +244,11 @@ function AdminRecord() {
           onClose={closeDeleteModal}
           user={userToDelete}
           onDeleted={handleDeleteSuccess}
+        />
+
+        <ReceiptForm
+          open={isReceiptFormOpen}
+          onClose={closeReceiptForm}
         />
         <AdminFooter />
         {/* Toast Success */}

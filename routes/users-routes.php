@@ -7,6 +7,7 @@ use App\Http\Controllers\UsersideControllers\AuthenticationController\AuthCont;;
 use App\Http\Controllers\UsersideControllers\CartsController\AddCartCont;
 use App\Http\Controllers\UsersideControllers\CartsController\GetCartCont;
 use App\Http\Controllers\UsersideControllers\CartsController\CartsCont;
+use App\Http\Controllers\UsersideControllers\OrdersController\PlaceOrderCont;
 use Illuminate\Auth\Events\Login;
 use Inertia\Middleware;
 use Inertia\Inertia;
@@ -40,6 +41,8 @@ Route::middleware(['auth'])->group(function () {
     })->name('shop');
 
     Route::get('/Cart', [CartsCont::class, 'index'])->name('cart');
+
+    Route::post('/place-order', [PlaceOrderCont::class, 'placeOrder'])->name('place.order');
 
     Route::get('/Checkout', function () {
         return inertia('User-side/Cart-page/Checkout');

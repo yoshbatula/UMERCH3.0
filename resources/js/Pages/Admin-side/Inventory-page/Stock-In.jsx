@@ -3,6 +3,7 @@ import Sidebar from "../../../components/layouts/Sidebar";
 import AdminFooter from "../../../components/layouts/AdminFooter";
 import AddStock from "../../../components/modals/AddStocksModal";
 import EditStock from "../../../components/modals/EditStocks";
+import ReceiptForm from "../../../components/modals/ReceiptFormModal";
 import axios from "axios";
 
 // ✅ Stat Card (SIZE UNCHANGED, ICON BIG)
@@ -25,6 +26,15 @@ export default function StockIn() {
     const [selectedStock, setSelectedStock] = useState(null);
     const [toast, setToast] = useState("");
     const [showingToast, setShowingToast] = useState(false);
+    const [receiptFormOpen, setReceiptFormOpen] = useState(false);
+
+    const openReceiptForm = () => {
+        setReceiptFormOpen(true);
+    };
+
+    const closeReceiptForm = () => {
+        setReceiptFormOpen(false);
+    };
 
     const API = "/admin/stock-in";
 
@@ -178,6 +188,11 @@ export default function StockIn() {
                 onClose={() => setOpenEdit(false)}
                 stock={selectedStock}
                 onSuccess={() => { fetchStocks(); showToast("Stock updated successfully!"); }}
+            />
+            {/* RECEIPT FORM MODAL */}
+            <ReceiptForm
+                open={receiptFormOpen}
+                onClose={closeReceiptForm}
             />
         </div>
     );
