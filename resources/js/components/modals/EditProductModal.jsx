@@ -1,46 +1,53 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import { useForm } from "@inertiajs/react";
 
 export default function AdminEditProduct({ open, onClose, product, onSuccess }) {
-    const [image, setImage] = useState(null);
-    const [form, setForm] = useState({
+    const [preview, setPreview] = useState(null);
+    const { data, setData, patch, processing, errors, reset, clearErrors } = useForm({
         product_name: "",
         product_price: "",
-        product_type: "",
+        variant: "",
         product_description: "",
+        product_image: null,
     });
 
     useEffect(() => {
         if (product) {
-            setForm({
-                product_name: product.product_name,
-                product_price: product.product_price,
-                product_type: product.product_type,
-                product_description: product.product_description,
+            setData({
+                product_name: product.product_name || "",
+                product_price: product.product_price || "",
+                variant: product.variant || "",
+                product_description: product.product_description || "",
+                product_image: null,
             });
-            setImage(product.product_image);
+            setPreview(product.product_image || null);
         }
     }, [product]);
 
     if (!open) return null;
 
-    const handleSave = async () => {
-        if (!form.product_name || !form.product_price || !form.product_type) {
-            alert("Please fill in all required fields");
-            return;
-        }
+    const handleInput = (e) => {
+        const { name, value } = e.target;
+        setData(name, value);
+        clearErrors(name);
+    };
 
-        try {
-            await axios.patch(`/api/admin/products/${product.id}`, {
-                ...form,
-                product_image: image,
-            });
+    const handleFile = (e) => {
+        const file = e.target.files?.[0] || null;
+        setData("product_image", file);
+        setPreview(file ? URL.createObjectURL(file) : preview);
+        clearErrors("product_image");
+    };
 
-            onSuccess();
-            onClose();
-        } catch (error) {
-            console.error("Update failed", error);
-        }
+    const handleSave = (e) => {
+        e.preventDefault();
+        patch(`/admin/products/${product.product_id}`, {
+            onSuccess: () => {
+                if (onSuccess) onSuccess();
+                reset();
+                onClose && onClose();
+            },
+        });
     };
 
     return (
@@ -53,13 +60,13 @@ export default function AdminEditProduct({ open, onClose, product, onSuccess }) 
                 </div>
 
                 {/* Body */}
-                <div className="p-6 grid grid-cols-2 gap-6">
+                <form id="editProductForm" onSubmit={handleSave} className="p-6 grid grid-cols-2 gap-6">
 
                     {/* Image */}
                     <div>
                         <div className="border-2 border-dashed border-red-400 rounded-lg h-[180px] flex items-center justify-center">
-                            {image ? (
-                                <img src={image} alt="preview" className="h-full object-contain" />
+                            {preview ? (
+                                <img src={preview} alt="preview" className="h-full object-contain" />
                             ) : (
                                 <span className="text-red-600 text-sm">No image</span>
                             )}
@@ -67,13 +74,7 @@ export default function AdminEditProduct({ open, onClose, product, onSuccess }) 
 
                         <label className="mt-2 block text-center text-sm text-red-700 cursor-pointer">
                             Choose file to upload
-                            <input
-                                type="file"
-                                className="hidden"
-                                onChange={(e) =>
-                                    setImage(URL.createObjectURL(e.target.files[0]))
-                                }
-                            />
+                            <input type="file" className="hidden" onChange={handleFile} />
                         </label>
                     </div>
 
@@ -81,10 +82,9 @@ export default function AdminEditProduct({ open, onClose, product, onSuccess }) 
                     <div>
                         <label className="text-sm font-semibold">Description:</label>
                         <textarea
-                            value={form.product_description}
-                            onChange={(e) =>
-                                setForm({ ...form, product_description: e.target.value })
-                            }
+                            name="product_description"
+                            value={data.product_description}
+                            onChange={handleInput}
                             className="mt-2 w-full h-[180px] border rounded-lg p-3 text-sm resize-none outline-red-600"
                         />
                     </div>
@@ -93,10 +93,9 @@ export default function AdminEditProduct({ open, onClose, product, onSuccess }) 
                     <div className="col-span-2">
                         <label className="text-sm font-semibold">Product Name:</label>
                         <input
-                            value={form.product_name}
-                            onChange={(e) =>
-                                setForm({ ...form, product_name: e.target.value })
-                            }
+                            name="product_name"
+                            value={data.product_name}
+                            onChange={handleInput}
                             className="mt-2 w-full border rounded-full px-4 py-2 text-sm outline-red-600"
                         />
                     </div>
@@ -106,10 +105,9 @@ export default function AdminEditProduct({ open, onClose, product, onSuccess }) 
                         <label className="text-sm font-semibold">Price:</label>
                         <input
                             type="number"
-                            value={form.product_price}
-                            onChange={(e) =>
-                                setForm({ ...form, product_price: e.target.value })
-                            }
+                            name="product_price"
+                            value={data.product_price}
+                            onChange={handleInput}
                             className="mt-2 w-full border rounded-full px-4 py-2 text-sm outline-red-600"
                         />
                     </div>
@@ -120,10 +118,9 @@ export default function AdminEditProduct({ open, onClose, product, onSuccess }) 
                             Variation <span className="text-red-600">*</span>
                         </label>
                         <select
-                            value={form.product_type}
-                            onChange={(e) =>
-                                setForm({ ...form, product_type: e.target.value })
-                            }
+                            name="variant"
+                            value={data.variant}
+                            onChange={handleInput}
                             className="mt-2 w-full border rounded-full px-4 py-2 text-sm outline-red-600"
                         >
                             <option value="">Select Variation</option>
@@ -134,20 +131,17 @@ export default function AdminEditProduct({ open, onClose, product, onSuccess }) 
                             <option>XL</option>
                         </select>
                     </div>
-                </div>
+                </form>
 
                 {/* Footer */}
                 <div className="flex justify-end gap-4 px-6 pb-6">
-                    <button
-                        onClick={handleSave}
-                        className="bg-red-800 hover:bg-red-900 text-white px-10 py-2 rounded-full font-semibold"
-                    >
-                        Save Changes
+                    <button type="submit" form="editProductForm" disabled={processing} className="bg-red-800 hover:bg-red-900 text-white px-10 py-2 rounded-full font-semibold hover:cursor-pointer">
+                        {processing ? "Saving..." : "Save Changes"}
                     </button>
 
                     <button
                         onClick={onClose}
-                        className="border border-red-700 text-red-700 px-8 py-2 rounded-full font-semibold"
+                        className="border border-red-700 text-red-700 px-8 py-2 rounded-full font-semibold hover:cursor-pointer"
                     >
                         Cancel
                     </button>

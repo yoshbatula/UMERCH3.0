@@ -20,7 +20,7 @@ return new class extends Migration
 });
 
 
-        Schema::create('stock_ins', function (Blueprint $table) {
+    Schema::create('stock_ins', function (Blueprint $table) {
     $table->id();
     $table->foreignId('product_id')->constrained('_products')->onDelete('cascade');
     $table->integer('stock_qty');
@@ -31,7 +31,7 @@ return new class extends Migration
 
 
 
-        Schema::create('stock_outs', function (Blueprint $table) {
+    Schema::create('stock_outs', function (Blueprint $table) {
     $table->id();
     $table->foreignId('product_id')->constrained('_products')->onDelete('cascade');
     $table->integer('quantity');

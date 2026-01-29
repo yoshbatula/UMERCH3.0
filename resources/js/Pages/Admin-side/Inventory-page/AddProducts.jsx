@@ -2,8 +2,10 @@ import React, { useEffect, useState } from "react";
 import Sidebar from "../../../components/layouts/Sidebar";
 import AdminFooter from "../../../components/layouts/AdminFooter";
 import EditProductModal from "../../../components/modals/EditProductModal";
+import DeleteProductModal from "../../../components/modals/DeleteProductModal";
 import axios from "axios";
 import AddProductModal from "../../../components/modals/AddProductModal";
+import placeholderImg from "@images/product-placeholder.svg";
 
 // StatCard component
 const StatCard = ({ title, value, className, icon }) => (
@@ -40,10 +42,18 @@ export default function AddProducts() {
     const [openAdd, setOpenAdd] = useState(false);
     const [openEdit, setOpenEdit] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState(null);
+    const [openDelete, setOpenDelete] = useState(false);
     const [toast, setToast] = useState("");
     const [showingToast, setShowingToast] = useState(false);
 
     const API = "/admin/products";
+
+    const normalizeImageUrl = (u) => {
+        if (!u) return placeholderImg;
+        if (u.startsWith('http')) return u;
+        if (u.startsWith('/')) return u;
+        return '/' + u;
+    };
 
     // ✅ FETCH PRODUCTS FROM DATABASE
     const fetchProducts = async () => {
@@ -159,23 +169,19 @@ export default function AddProducts() {
                             ) : (
                                 products.map((product) => (
                                     <div
-                                        key={product.id}
+                                        key={product.product_id}
                                         className="grid grid-cols-12 py-4 px-8 border-b border-gray-200 hover:bg-gray-50"
                                     >
                                         <div className="col-span-6 flex items-center gap-3">
                                             <div className="w-10 h-10 rounded overflow-hidden flex items-center justify-center bg-gray-200">
-                                                {product.product_image ? (
-                                                    <img
-                                                        src={product.product_image}
-                                                        alt={product.product_name}
-                                                        className="w-10 h-10 object-cover rounded"
-                                                        onError={(e) => {
-                                                            e.currentTarget.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><rect width="40" height="40" fill="%23e5e7eb"/><text x="20" y="22" font-size="10" text-anchor="middle" fill="%236b7280">No Img</text></svg>';
-                                                        }}
-                                                    />
-                                                ) : (
-                                                    <span className="text-[10px] text-gray-500">No Img</span>
-                                                )}
+                                                <img
+                                                    src={normalizeImageUrl(product.product_image)}
+                                                    alt={product.product_name || "Product image"}
+                                                    className="w-10 h-10 object-cover rounded"
+                                                    onError={(e) => {
+                                                        e.currentTarget.src = placeholderImg;
+                                                    }}
+                                                />
                                             </div>
                                             {product.product_name}
                                         </div>
@@ -197,7 +203,7 @@ export default function AddProducts() {
 
                                             <ActionButton
                                                 type="delete"
-                                                onClick={() => handleDelete(product.id)}
+                                                onClick={() => { setSelectedProduct(product); setOpenDelete(true); }}
                                             >
                                                 Delete
                                             </ActionButton>
@@ -226,7 +232,17 @@ export default function AddProducts() {
                 open={openEdit}
                 onClose={() => setOpenEdit(false)}
                 product={selectedProduct}
-                onSuccess={fetchProducts}
+                onSuccess={() => {
+                    fetchProducts();
+                    showToast("Product updated successfully!");
+                }}
+            />
+
+            <DeleteProductModal
+                open={openDelete}
+                onClose={() => setOpenDelete(false)}
+                product={selectedProduct}
+                onDeleted={() => { fetchProducts(); showToast("Product deleted successfully!"); }}
             />
         </div>
         {showingToast && (
