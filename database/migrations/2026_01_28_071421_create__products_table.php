@@ -6,26 +6,44 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('_products', function (Blueprint $table) {
-            $table->id();
-            $table->integer('product_id')->unique();
-            $table->string('product_image')->unique();
-            $table->string('product_name')->unique();
-            $table->double('product_price', 8, 2);
-            $table->integer('product_stock');
-            $table->string('product_type');
-            $table->timestamps();
-        });
+    $table->id();
+    $table->string('product_name');
+    $table->string('product_image')->nullable();
+    $table->text('product_description')->nullable();
+    $table->decimal('product_price', 8, 2);
+    $table->integer('product_stock')->default(0);
+    $table->string('variant');
+    $table->timestamps();
+});
+
+
+        Schema::create('stock_ins', function (Blueprint $table) {
+    $table->id();
+    $table->foreignId('product_id')->constrained('_products')->onDelete('cascade');
+    $table->integer('stock_qty');
+    $table->decimal('cost', 10, 2);
+    $table->timestamp('stock_in_date');
+    $table->timestamps();
+});
+
+
+
+        Schema::create('stock_outs', function (Blueprint $table) {
+    $table->id();
+    $table->foreignId('product_id')->constrained('_products')->onDelete('cascade');
+    $table->integer('quantity');
+    $table->string('modified_by');
+    $table->timestamp('date_time');
+    $table->timestamps();
+});
+
+
+
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('_products');

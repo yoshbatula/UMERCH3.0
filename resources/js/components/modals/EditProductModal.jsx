@@ -1,41 +1,51 @@
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 
-export default function AdminEditProduct({ open, onClose, product, onSave }) {
+export default function AdminEditProduct({ open, onClose, product, onSuccess }) {
     const [image, setImage] = useState(null);
     const [form, setForm] = useState({
-        name: "",
-        price: "",
-        variation: "",
-        description: "",
+        product_name: "",
+        product_price: "",
+        product_type: "",
+        product_description: "",
     });
 
     useEffect(() => {
         if (product) {
             setForm({
-                name: product.name || "",
-                price: product.price || "",
-                variation: product.variation || "",
-                description: product.description || "",
+                product_name: product.product_name,
+                product_price: product.product_price,
+                product_type: product.product_type,
+                product_description: product.product_description,
             });
-            setImage(product.image || null);
+            setImage(product.product_image);
         }
     }, [product]);
 
     if (!open) return null;
 
-    const handleSave = () => {
-        if (!form.name || !form.price || !form.variation) {
+    const handleSave = async () => {
+        if (!form.product_name || !form.product_price || !form.product_type) {
             alert("Please fill in all required fields");
             return;
         }
 
-        onSave({ ...form, image });
-        onClose();
+        try {
+            await axios.patch(`/api/admin/products/${product.id}`, {
+                ...form,
+                product_image: image,
+            });
+
+            onSuccess();
+            onClose();
+        } catch (error) {
+            console.error("Update failed", error);
+        }
     };
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-            <div className="bg-white w-[700px] rounded-xl overflow-hidden shadow-2xl">
+            <div className="bg-white w-[700px] overflow-hidden shadow-2xl">
 
                 {/* Header */}
                 <div className="bg-red-800 px-6 py-4 text-white font-bold text-lg">
@@ -71,9 +81,9 @@ export default function AdminEditProduct({ open, onClose, product, onSave }) {
                     <div>
                         <label className="text-sm font-semibold">Description:</label>
                         <textarea
-                            value={form.description}
+                            value={form.product_description}
                             onChange={(e) =>
-                                setForm({ ...form, description: e.target.value })
+                                setForm({ ...form, product_description: e.target.value })
                             }
                             className="mt-2 w-full h-[180px] border rounded-lg p-3 text-sm resize-none outline-red-600"
                         />
@@ -83,9 +93,9 @@ export default function AdminEditProduct({ open, onClose, product, onSave }) {
                     <div className="col-span-2">
                         <label className="text-sm font-semibold">Product Name:</label>
                         <input
-                            value={form.name}
+                            value={form.product_name}
                             onChange={(e) =>
-                                setForm({ ...form, name: e.target.value })
+                                setForm({ ...form, product_name: e.target.value })
                             }
                             className="mt-2 w-full border rounded-full px-4 py-2 text-sm outline-red-600"
                         />
@@ -96,9 +106,9 @@ export default function AdminEditProduct({ open, onClose, product, onSave }) {
                         <label className="text-sm font-semibold">Price:</label>
                         <input
                             type="number"
-                            value={form.price}
+                            value={form.product_price}
                             onChange={(e) =>
-                                setForm({ ...form, price: e.target.value })
+                                setForm({ ...form, product_price: e.target.value })
                             }
                             className="mt-2 w-full border rounded-full px-4 py-2 text-sm outline-red-600"
                         />
@@ -109,17 +119,19 @@ export default function AdminEditProduct({ open, onClose, product, onSave }) {
                         <label className="text-sm font-semibold">
                             Variation <span className="text-red-600">*</span>
                         </label>
-
                         <select
-                            value={form.variation}
+                            value={form.product_type}
                             onChange={(e) =>
-                                setForm({ ...form, variation: e.target.value })
+                                setForm({ ...form, product_type: e.target.value })
                             }
                             className="mt-2 w-full border rounded-full px-4 py-2 text-sm outline-red-600"
                         >
                             <option value="">Select Variation</option>
-                            <option>Sizes XS–XXL</option>
-                            <option>Colors</option>
+                            <option>XS</option>
+                            <option>S</option>
+                            <option>M</option>
+                            <option>L</option>
+                            <option>XL</option>
                         </select>
                     </div>
                 </div>
@@ -139,7 +151,6 @@ export default function AdminEditProduct({ open, onClose, product, onSave }) {
                     >
                         Cancel
                     </button>
-
                 </div>
             </div>
         </div>

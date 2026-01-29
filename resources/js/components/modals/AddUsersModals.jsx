@@ -33,9 +33,9 @@ export default function AddUsersModals({ isOpen, onClose, onUserAdded }) {
         e.preventDefault();
         post('/add-user', {
             onSuccess: (page) => {
-                
+
                 if (onUserAdded) {
-                    
+
                     const newUser = page?.props?.newUser || null;
                     onUserAdded(newUser);
                 }
@@ -56,15 +56,13 @@ export default function AddUsersModals({ isOpen, onClose, onUserAdded }) {
 
     return (
         <div
-            className={`fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm transition-opacity duration-200 ${
-                isOpen ? 'opacity-100' : 'opacity-0'
-            }`}
+            className={`fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm transition-opacity duration-200 ${isOpen ? 'opacity-100' : 'opacity-0'
+                }`}
             onClick={handleBackdropClick}
         >
             <div
-                className={`bg-white rounded-lg shadow-xl w-full max-w-md mx-4 transform transition-all duration-200 ${
-                    isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
-                }`}
+                className={`bg-white rounded-lg shadow-xl w-full max-w-md mx-4 transform transition-all duration-200 ${isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
+                    }`}
             >
                 {/* Modal Header */}
                 <div className="flex items-center justify-between p-6  bg-[#9C0306]">

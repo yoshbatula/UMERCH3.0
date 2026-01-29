@@ -1,15 +1,16 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Sidebar from "../../../components/layouts/Sidebar";
 import AdminFooter from "../../../components/layouts/AdminFooter";
-import AdminAddProduct from "../../../components/modals/AdminAddProduct";
-import AdminEditProduct from "../../../components/modals/AdminEditProduct";
+import EditProductModal from "../../../components/modals/EditProductModal";
+import axios from "axios";
+import AddProductModal from "../../../components/modals/AddProductModal";
 
 // StatCard component
 const StatCard = ({ title, value, className, icon }) => (
-    <div className={`w-[260px] h-[96px] rounded-xl px-6 py-4 text-white flex items-center justify-between ${className}`}>
+    <div className={`w-[300px] h-[130px] rounded-xl px-6 py-4 text-white flex items-center justify-between ${className}`}>
         <div>
-            <div className="text-sm opacity-90">{title}</div>
-            <div className="text-2xl font-bold leading-tight mt-1">{value}</div>
+            <div className="text-lg opacity-90">{title}</div>
+            <div className="text-4xl font-bold leading-tight mt-1">{value}</div>
         </div>
         {icon && (
             <div className="w-12 h-12 rounded-lg bg-white/15 flex items-center justify-center">
@@ -17,13 +18,6 @@ const StatCard = ({ title, value, className, icon }) => (
             </div>
         )}
     </div>
-);
-
-// Icon component
-const Icon = ({ children }) => (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-        {children}
-    </svg>
 );
 
 // Reusable Action Button
@@ -41,11 +35,39 @@ const ActionButton = ({ type, children, onClick }) => {
     );
 };
 
-export default function AdminInventory() {
+export default function AddProducts() {
     const [products, setProducts] = useState([]);
     const [openAdd, setOpenAdd] = useState(false);
     const [openEdit, setOpenEdit] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState(null);
+
+    const API = "/admin/products";
+
+    // ✅ FETCH PRODUCTS FROM DATABASE
+    const fetchProducts = async () => {
+        try {
+            const res = await axios.get(API);
+            setProducts(res.data);
+        } catch (error) {
+            console.error("Error fetching products", error);
+        }
+    };
+
+    useEffect(() => {
+        fetchProducts();
+    }, []);
+
+    // ✅ DELETE PRODUCT (DB, NOT ARRAY INDEX)
+    const handleDelete = async (id) => {
+        if (!confirm("Are you sure you want to delete this product?")) return;
+
+        try {
+            await axios.delete(`${API}/${id}`);
+            fetchProducts();
+        } catch (error) {
+            console.error("Delete failed", error);
+        }
+    };
 
     return (
         <div className="flex min-h-screen bg-gray-100">
@@ -55,17 +77,36 @@ export default function AdminInventory() {
 
             <div className="flex-1 px-10 py-10">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2 gap-4">
-                    <h1 className="text-4xl font-extrabold tracking-[0.25em]">INVENTORY</h1>
+                    <h1 className="text-4xl font-extrabold tracking-[0.25em]">
+                        INVENTORY
+                    </h1>
                 </div>
+
                 <p className="text-gray-500 mb-6">
                     Welcome back Admin, everything looks great.
                 </p>
 
                 {/* Stats */}
                 <div className="flex flex-wrap gap-6 mb-6">
-                    <StatCard title="Total Stocks" value={products.length} className="bg-green-700" />
-                    <StatCard title="Low Stocks" value="0" className="bg-orange-500" />
-                    <StatCard title="Out of Stocks" value="0" className="bg-red-600" />
+                    <StatCard
+                        title="Total Stocks"
+                        value={products.length}
+                        className="bg-green-700"
+                    />
+                    <StatCard
+                        title="Low Stocks"
+                        value={
+                            products.filter(p => p.product_stock > 0 && p.product_stock <= 5).length
+                        }
+                        className="bg-orange-500"
+                    />
+                    <StatCard
+                        title="Out of Stocks"
+                        value={
+                            products.filter(p => p.product_stock === 0).length
+                        }
+                        className="bg-red-600"
+                    />
                 </div>
 
                 {/* Products Section */}
@@ -73,8 +114,12 @@ export default function AdminInventory() {
                     <h2 className="text-2xl font-bold mt-10">Products</h2>
 
                     <div className="mt-4 flex items-center justify-between gap-6">
-                        <div className="flex items-center gap-3 flex-1 max-w-[520px] bg-white rounded-lg px-4 py-3 border border-gray-200">
-                            <input type="text" placeholder="Search products" className="bg-transparent outline-none w-full text-sm" />
+                        <div className="flex items-center gap-3 flex-1 max-w-[520px] h-12 bg-white rounded-lg px-4 py-3 border border-gray-200">
+                            <input
+                                type="text"
+                                placeholder="Search products"
+                                className="bg-transparent outline-none w-full text-sm"
+                            />
                         </div>
 
                         <button
@@ -104,19 +149,25 @@ export default function AdminInventory() {
                                     No products added yet
                                 </div>
                             ) : (
-                                products.map((product, index) => (
+                                products.map((product) => (
                                     <div
-                                        key={index}
+                                        key={product.id}
                                         className="grid grid-cols-12 py-4 px-8 border-b border-gray-200 hover:bg-gray-50"
                                     >
                                         <div className="col-span-6 flex items-center gap-3">
-                                            {product.image && (
-                                                <img src={product.image} alt="" className="w-10 h-10 object-cover rounded" />
+                                            {product.product_image && (
+                                                <img
+                                                    src={product.product_image}
+                                                    alt=""
+                                                    className="w-10 h-10 object-cover rounded"
+                                                />
                                             )}
-                                            {product.name}
+                                            {product.product_name}
                                         </div>
 
-                                        <div className="col-span-4">₱{product.price}</div>
+                                        <div className="col-span-4">
+                                            ₱{product.product_price}
+                                        </div>
 
                                         <div className="col-span-2 flex justify-end gap-2">
                                             <ActionButton
@@ -131,9 +182,7 @@ export default function AdminInventory() {
 
                                             <ActionButton
                                                 type="delete"
-                                                onClick={() =>
-                                                    setProducts(products.filter((_, i) => i !== index))
-                                                }
+                                                onClick={() => handleDelete(product.id)}
                                             >
                                                 Delete
                                             </ActionButton>
@@ -149,25 +198,18 @@ export default function AdminInventory() {
             </div>
 
             {/* Modals */}
-            <AdminAddProduct
+            <AddProductModal
                 open={openAdd}
                 onClose={() => setOpenAdd(false)}
-                onAddProduct={(newProduct) =>
-                    setProducts((prev) => [...prev, newProduct])
-                }
+                onSuccess={fetchProducts}
             />
 
-            <AdminEditProduct
+            <EditProductModal
                 open={openEdit}
                 onClose={() => setOpenEdit(false)}
                 product={selectedProduct}
-                onSave={(updatedProduct) => {
-                    setProducts((prev) =>
-                        prev.map((p) => (p === selectedProduct ? updatedProduct : p))
-                    );
-                }}
+                onSuccess={fetchProducts}
             />
-
         </div>
     );
 }

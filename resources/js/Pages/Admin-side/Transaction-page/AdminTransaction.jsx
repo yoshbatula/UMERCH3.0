@@ -6,11 +6,11 @@ import AdminFooter from "../../../components/layouts/AdminFooter";
 
 const StatCard = ({ title, value, className, icon }) => (
     <div
-        className={`w-[260px] h-[96px] rounded-xl px-6 py-4 text-white flex items-center justify-between ${className}`}
+        className={`w-[300px] h-[130px] rounded-xl px-6 py-4 text-white flex items-center justify-between ${className}`}
     >
         <div>
-            <div className="text-sm opacity-90">{title}</div>
-            <div className="text-2xl font-bold leading-tight mt-1">{value}</div>
+            <div className="text-lg opacity-90">{title}</div>
+            <div className="text-4xl font-bold leading-tight mt-1">{value}</div>
         </div>
 
         <div className="w-12 h-12 rounded-lg bg-white/15 flex items-center justify-center">

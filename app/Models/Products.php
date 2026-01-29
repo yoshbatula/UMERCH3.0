@@ -1,21 +1,19 @@
-<?php 
+<?php
 
 namespace App\Models;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+
 use Illuminate\Database\Eloquent\Model;
 
-class Products extends Model {
-
-    use HasFactory;
-
-    protected $table = 'products';
+class Products extends Model
+{
+    protected $table = '_products';
 
     protected $fillable = [
-        'product_id',
-        'product_image',
         'product_name',
+        'product_image',
+        'product_description',
         'product_price',
         'product_stock',
-        'product_type',
+        'variant',
     ];
 }

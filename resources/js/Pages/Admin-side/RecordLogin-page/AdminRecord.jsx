@@ -7,11 +7,11 @@ import DeleteUsersModals from "../../../components/modals/DeleteUsersModals";
 
 const StatCard = ({ title, value, className = "bg-green-700", icon }) => (
   <div
-    className={`w-65 h-24 rounded-xl px-6 py-4 text-white flex items-center justify-between ${className}`}
+    className={`w-[300px] h-[130px] rounded-xl px-6 py-4 text-white flex items-center justify-between ${className}`}
   >
     <div>
-      <div className="text-sm opacity-90">{title}</div>
-      <div className="text-2xl font-bold mt-1">{value}</div>
+      <div className="text-lg opacity-90">{title}</div>
+      <div className="text-4xl font-bold mt-1">{value}</div>
     </div>
     <div className="w-12 h-12 rounded-lg bg-white/15 flex items-center justify-center">
       {icon}
@@ -38,8 +38,8 @@ function AdminRecord() {
         const list = Array.isArray(data)
           ? data
           : Array.isArray(data?.data)
-          ? data.data
-          : [];
+            ? data.data
+            : [];
         setUsers(list);
         setLoading(false);
       })
