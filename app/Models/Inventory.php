@@ -5,16 +5,20 @@ use Illuminate\Database\Eloquent\Model;
 
 class Inventory extends Model
 {
-    protected $table = 'inventories';
+    protected $table = '_inventory';
 
     protected $primaryKey = 'inventory_id';
 
     protected $fillable = [
         'product_id',
-        'product_name',
+        'variant',
+        'quantity',
         'status',
-        'stock',
-        'product_image',
-        'DateTime',
+        'cost'
     ];
+
+    public function product()
+    {
+        return $this->belongsTo(Products::class, 'product_id', 'product_id');
+    }
 }

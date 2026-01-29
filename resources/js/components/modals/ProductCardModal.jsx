@@ -1,10 +1,57 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Link } from '@inertiajs/react';
 import AddToCart from '@images/Cart.svg';
 import DefaultImage from '@images/product-placeholder.svg';
+import SizeChart from '@images/SizeChart.png';
+import axios from 'axios';
 
-export default function ProductCardModal({ isOpen, onClose, product }) {
+export default function ProductCardModal({ isOpen, onClose, product, onShowToast }) {
     const [quantity, setQuantity] = useState(1);
+    const [showSizeChart, setShowSizeChart] = useState(false);
+    const [selectedSize, setSelectedSize] = useState(null);
+    const [loading, setLoading] = useState(false);
+
+    // Set first size when modal opens or product changes
+    useEffect(() => {
+        if (isOpen) {
+            let defaultSizes = ['XS', 'S', 'M', 'L', 'XL'];
+            
+            if (product?.variant) {
+                const parsed = product.variant.split(',').map(v => v.trim()).filter(Boolean);
+                if (parsed.length > 1) {
+                    defaultSizes = parsed;
+                }
+            }
+            
+            setSelectedSize(defaultSizes[0]);
+        }
+    }, [isOpen, product?.product_id]);
+
+    const handleAddToCart = async () => {
+        if (!product?.product_id) {
+            onShowToast('Product information missing', 'error');
+            return;
+        }
+
+        setLoading(true);
+        try {
+            await axios.post('/add-to-cart', {
+                product_id: product.product_id,
+                variant: selectedSize,
+                quantity: quantity,
+                price: product.product_price
+            });
+            onShowToast('Item added to cart successfully!', 'success');
+            setQuantity(1);
+            setTimeout(() => onClose(), 50);
+        } catch (error) {
+            console.error('Add to cart error:', error);
+            const message = error.response?.data?.message || 'Failed to add item to cart';
+            onShowToast(message, 'error');
+        } finally {
+            setLoading(false);
+        }
+    };
     
     if (!isOpen) return null;
 
@@ -31,7 +78,8 @@ export default function ProductCardModal({ isOpen, onClose, product }) {
             const raw = product?.variant;
             if (typeof raw === 'string' && raw.trim()) {
                 const parsed = raw.split(',').map(v => v.trim()).filter(Boolean);
-                if (parsed.length > 0) {
+                // Only use parsed sizes if we got multiple sizes, otherwise use defaults
+                if (parsed.length > 1) {
                     sizes = parsed;
                 }
             }
@@ -42,6 +90,7 @@ export default function ProductCardModal({ isOpen, onClose, product }) {
         const formatPrice = (v) => `₱${Number(v || 0).toFixed(2)}`;
 
         return (
+            <>
             <div
                 className='fixed inset-0 z-50 flex justify-center items-center backdrop-blur-xs bg-white/5'
                 onClick={onClose}
@@ -72,14 +121,23 @@ export default function ProductCardModal({ isOpen, onClose, product }) {
                             <div className='mt-5 flex flex-row'>
                                 <span className='text-[12px] py-3'>Size</span>
                                 <div className='flex flex-row flex-wrap gap-y-1 px-6 items-center'>
-                                    <button className='bg-white border border-[#DDDDDD] w-18 h-10 hover:cursor-pointer'>XS</button>
-                                    <button className='bg-white border border-[#DDDDDD] w-18 h-10 hover:cursor-pointer'>S</button>
-                                    <button className='bg-white border border-[#DDDDDD] w-18 h-10 hover:cursor-pointer'>M</button>
-                                    <button className='bg-white border border-[#DDDDDD] w-18 h-10 hover:cursor-pointer'>L</button>
+                                    {sizes.map(size => (
+                                        <button
+                                            key={size}
+                                            onClick={() => setSelectedSize(size)}
+                                            className={`w-18 h-10 font-semibold hover:cursor-pointer transition-all ${
+                                                selectedSize === size
+                                                    ? 'bg-[#9C0306] text-white border-2 border-[#9C0306]'
+                                                    : 'bg-white text-black border-2 border-[#DDDDDD] hover:border-[#9C0306]'
+                                            }`}
+                                        >
+                                            {size}
+                                        </button>
+                                    ))}
                                 </div>
                             </div>
                             <div className='mt-5'>
-                                <Link href="#" className='text-[#0058B2]'>Size Chart &gt;</Link>
+                                <button onClick={() => setShowSizeChart(true)} className='text-[#0058B2] hover:underline hover:cursor-pointer'>Size Chart &gt;</button>
                             </div>
                             <div className='mt-5 flex flex-row gap-4 items-center'>
                                 <span className='text-[12px]'>Quantity</span>
@@ -104,12 +162,16 @@ export default function ProductCardModal({ isOpen, onClose, product }) {
                             </div>
                             <div className='mt-6 flex flex-row gap-3'>
                                 <div className='absolute flex flex-row gap-3'>
-                                    <button className='bg-white border border-[#9C0306] w-40 h-10 rounded-[10px] flex justify-center items-center hover:cursor-pointer'>
+                                    <button 
+                                        onClick={handleAddToCart}
+                                        disabled={loading}
+                                        className='bg-white border border-[#9C0306] w-40 h-10 rounded-[10px] flex justify-center items-center hover:cursor-pointer disabled:opacity-50'
+                                    >
                                         <img src={AddToCart} alt="Add to Cart" className='mr-2'/>
-                                        <span className='text-[#9C0306] text-[16px] font-semibold hover:cursor-pointer'>Add to Cart</span>
+                                        <span className='text-[#9C0306] text-[16px] font-semibold'>{loading ? 'Adding...' : 'Add to Cart'}</span>
                                     </button>
                                     <button className='bg-[#9C0306] w-40 h-10 rounded-[10px] flex justify-center items-center hover:cursor-pointer'>
-                                        <span className='text-white text-[16px] font-semibold hover:cursor-pointer'>Buy Now</span>
+                                        <span className='text-white text-[16px] font-semibold'>Buy Now</span>
                                     </button>
                                 </div>
                             </div>
@@ -117,6 +179,25 @@ export default function ProductCardModal({ isOpen, onClose, product }) {
                     </div>
                 </div>
             </div>
+
+            {showSizeChart && (
+                <div
+                    className='fixed inset-0 z-[60] flex justify-center items-center backdrop-blur-xs bg-white/5'
+                    onClick={() => setShowSizeChart(false)}
+                >
+                    <div
+                        className="bg-white p-4 rounded-[20px] shadow-lg relative max-w-[600px] w-full mx-4"
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <img
+                            src={SizeChart}
+                            alt="Size Chart"
+                            className='w-full h-auto rounded-[10px]'
+                        />
+                    </div>
+                </div>
+            )}
+            </>
         );
     } catch (error) {
         console.error('ProductCardModal error:', error);
