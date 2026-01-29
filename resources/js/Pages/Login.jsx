@@ -13,6 +13,15 @@ import Footer from '../components/layouts/Footer';
 export default function Login() {
 
     const [showLogin, setShowLogin] = React.useState(false);
+    React.useEffect(() => {
+        try {
+            const params = new URLSearchParams(window.location.search);
+            if (params.has('popup')) {
+                setShowLogin(true);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        } catch {}
+    }, []);
 
     const handleSignInClick = () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });

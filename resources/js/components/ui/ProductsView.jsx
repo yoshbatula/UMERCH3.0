@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import Navbar from '../layouts/Navbar';
 import BackgroundModel from '@images/BackgroundModel.png'; 
 import ShopCards from '../cards/ProductCards';
@@ -7,10 +7,14 @@ import LeftArrow from '@images/LeftArrow.svg';
 import RightArrow from '@images/RightArrow.svg';
 import ProductCardModal from '../modals/ProductCardModal';
 import AccessoriesCardModal from '../modals/ProductAccessoriesModal';
+import axios from 'axios';
+import Placeholder from '@images/product-placeholder.svg';
 export default function ProductsView() {
+    // For storefront, clicking a product should prompt login
 
     const [ProductModalOpen, setProductModalOpen] = useState(false);
     const [AccessoriesModalOpen, setAccessoriesModalOpen] = useState(false);
+    const [products, setProducts] = useState([]);
 
     const openProductModal = () => {
         setProductModalOpen(true);
@@ -27,6 +31,31 @@ export default function ProductsView() {
     const closeAccessoriesModal = () => {
         setAccessoriesModalOpen(false);
     }
+
+    const handleProductClick = () => {
+        alert('You need to sign in');
+        window.location.href = '/?popup=1';
+    };
+
+    const normalizeImageUrl = (u) => {
+        if (!u) return Placeholder;
+        const s = String(u).trim();
+        if (!s) return Placeholder;
+        if (s.startsWith('http')) return s;
+        if (s.startsWith('/')) return s;
+        if (s.startsWith('public/storage/')) return '/' + s.replace(/^public\//, '');
+        if (s.startsWith('storage/')) return '/' + s;
+        return '/' + s;
+    };
+
+    useEffect(() => {
+        axios.get('/admin/products')
+            .then(res => {
+                const list = Array.isArray(res.data) ? res.data : [];
+                setProducts(list);
+            })
+            .catch(() => setProducts([]));
+    }, []);
 
     return (
         <>
@@ -63,10 +92,17 @@ export default function ProductsView() {
 
             {/* Shop cards */}
             <div className='flex flex-row flex-wrap justify-center gap-6 px-10 pb-10'>
-                <ShopCards onClick={openProductModal}/>
-                <ShopCards onClick={openAccessoriesModal}/>
-                <ShopCards onClick={openProductModal}/>
-                <ShopCards onClick={openProductModal}/>
+                {products.map(p => (
+                    <ShopCards
+                        key={p.product_id}
+                        onClick={handleProductClick}
+                        image={normalizeImageUrl(p.product_image)}
+                        name={p.product_name}
+                        description={p.product_description}
+                        price={p.product_price}
+                        stock={p.product_stock}
+                    />
+                ))}
             </div>
 
             {/* Pagination */}
@@ -80,10 +116,6 @@ export default function ProductsView() {
 
             {/* Footer */}
             <Footer />
-
-            {/* Modals */}
-            <ProductCardModal isOpen={ProductModalOpen} onClose={closeProductModal}/>
-            <AccessoriesCardModal isOpen={AccessoriesModalOpen} onClose={closeAccessoriesModal}/>
 
             
         </div>

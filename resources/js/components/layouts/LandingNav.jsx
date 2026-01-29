@@ -20,9 +20,9 @@ export default function LandingNav() {
                 <img src={Logo} alt="UMERCH LOGO" />
                 <div className='flex flex-row gap-6 p-8 text-white font-montserrat'>
                     <Link
-                        href="/"
+                        href="/Landing"
                         prefetch
-                        className={`font-bold text-[16px] leading-tight ${isActive('/') ? 'text-[#FFB600]' : ''}`}
+                        className={`font-bold text-[16px] leading-tight ${isActive('/Landing') ? 'text-[#FFB600]' : ''}`}
                     >HOME</Link>
                     <Link
                         href="/Shop"

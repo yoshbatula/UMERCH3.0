@@ -17,7 +17,7 @@ use App\Http\Controllers\AdminsideControllers\InventoryControllers\StockOutContr
 | ADMIN DASHBOARD
 |--------------------------------------------------------------------------
 */
-Route::get('/', function () {
+Route::get('/admin', function () {
     return inertia('Admin-side/Dashboard-page/Dashboard');
 })->name('Dashboard');
 

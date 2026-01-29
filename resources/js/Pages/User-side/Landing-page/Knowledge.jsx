@@ -24,7 +24,7 @@ export default function Knowledge({ showLogin, onCloseLogin }) {
                         <span>Discover our Casual & Everyday Collection at UMerch, where relaxed designs meet a refined university look.</span>
                     </div>
                     <div className='mt-10'>
-                        <Link href="#" className='bg-[#9C0306] text-black text-white text-[16px] px-6 py-3 hover:cursor-pointer hover:bg-[#FFB600] transition-colors duration-300'>SHOP NOW</Link>
+                        <Link href="/Shop" className='bg-[#9C0306] text-black text-white text-[16px] px-6 py-3 hover:cursor-pointer hover:bg-[#FFB600] transition-colors duration-300'>SHOP NOW</Link>
                     </div>
                 </div>
                 

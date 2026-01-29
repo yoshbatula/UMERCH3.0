@@ -1,5 +1,19 @@
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 import ProductCard from '../../../components/cards/ProductCards';
+
 export default function FeaturedProducts() {
+    const [products, setProducts] = useState([]);
+
+    useEffect(() => {
+        axios.get('/admin/products')
+            .then(res => {
+                const list = Array.isArray(res.data) ? res.data.slice(0, 4) : [];
+                setProducts(list);
+            })
+            .catch(() => setProducts([]));
+    }, []);
+
     return (
         <div className="bg-[#F6F6F6] mt-20">
             <div className="flex flex-col justify-center items-center py-15">
@@ -8,10 +22,16 @@ export default function FeaturedProducts() {
             </div>
             {/* Feature Cards */}
             <div className='flex flex-row flex-wrap justify-center gap-6'>
-                <ProductCard/>
-                <ProductCard/>
-                <ProductCard/>
-                <ProductCard/>
+                {products.map(p => (
+                    <ProductCard
+                        key={p.product_id}
+                        image={p.product_image}
+                        name={p.product_name}
+                        description={p.product_description}
+                        price={p.product_price}
+                        stock={p.product_stock}
+                    />
+                ))}
             </div>
         </div>
     );

@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import Navbar from '../../../components/layouts/LandingNav';
 import BackgroundModel from '@images/BackgroundModel.png'; 
 import ShopCards from '../../../components/cards/ProductCards';
@@ -7,10 +7,12 @@ import LeftArrow from '@images/LeftArrow.svg';
 import RightArrow from '@images/RightArrow.svg';
 import ProductCardModal from '../../../components/modals/ProductCardModal';
 import AccessoriesCardModal from '../../../components/modals/ProductAccessoriesModal';
+import axios from 'axios';
 export default function Shop() {
 
     const [ProductModalOpen, setProductModalOpen] = useState(false);
     const [AccessoriesModalOpen, setAccessoriesModalOpen] = useState(false);
+    const [products, setProducts] = useState([]);
 
     const openProductModal = () => {
         setProductModalOpen(true);
@@ -27,6 +29,15 @@ export default function Shop() {
     const closeAccessoriesModal = () => {
         setAccessoriesModalOpen(false);
     }
+
+    useEffect(() => {
+        axios.get('/admin/products')
+            .then(res => {
+                const list = Array.isArray(res.data) ? res.data : [];
+                setProducts(list);
+            })
+            .catch(() => setProducts([]));
+    }, []);
 
     return (
         <>
@@ -63,10 +74,17 @@ export default function Shop() {
 
             {/* Shop cards */}
             <div className='flex flex-row flex-wrap justify-center gap-6 px-10 pb-10'>
-                <ShopCards onClick={openProductModal}/>
-                <ShopCards onClick={openAccessoriesModal}/>
-                <ShopCards onClick={openProductModal}/>
-                <ShopCards onClick={openProductModal}/>
+                {products.map(p => (
+                    <ShopCards
+                        key={p.product_id}
+                        onClick={openProductModal}
+                        image={p.product_image}
+                        name={p.product_name}
+                        description={p.product_description}
+                        price={p.product_price}
+                        stock={p.product_stock}
+                    />
+                ))}
             </div>
 
             {/* Pagination */}
