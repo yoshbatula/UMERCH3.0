@@ -21,8 +21,12 @@ const StatCard = ({ title, value, bg }) => (
 export default function StockIn() {
     const [stocks, setStocks] = useState([]);
     const [openAdd, setOpenAdd] = useState(false);
+    const [openEdit, setOpenEdit] = useState(false);
+    const [selectedStock, setSelectedStock] = useState(null);
+    const [toast, setToast] = useState("");
+    const [showingToast, setShowingToast] = useState(false);
 
-    const API = "/api/admin/stock-in";
+    const API = "/admin/stock-in";
 
     const fetchStocks = () => {
         axios.get(API).then(res => setStocks(res.data));
@@ -31,6 +35,12 @@ export default function StockIn() {
     useEffect(() => {
         fetchStocks();
     }, []);
+
+    const showToast = (message) => {
+        setToast(message);
+        setShowingToast(true);
+        setTimeout(() => setShowingToast(false), 5000);
+    };
 
     const getStatus = qty => {
         if (qty === 0) return { label: "Out of Stock", color: "text-red-600" };
@@ -91,12 +101,12 @@ export default function StockIn() {
 
                 {/* TABLE */}
                 <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                    <div className="grid grid-cols-12 px-8 py-4 text-sm font-bold text-red-700 border-b">
+                    <div className="grid grid-cols-12 px-8 py-4 text-sm font-bold text-red-700 border-b border-gray-400/30">
                         <div className="col-span-4">Product</div>
                         <div className="col-span-2">Cost</div>
                         <div className="col-span-2">Stocks</div>
                         <div className="col-span-2">Status</div>
-                        <div className="col-span-1 text-right">Action</div>
+                        <div className="col-span-2 text-right">Action</div>
                     </div>
 
                     <div className="min-h-[420px]">
@@ -104,8 +114,8 @@ export default function StockIn() {
                             const status = getStatus(stock.stock_qty);
                             return (
                                 <div
-                                    key={stock.id}
-                                    className="grid grid-cols-12 px-8 py-4 border-b items-center text-sm"
+                                    key={stock.stock_in_id}
+                                    className="grid grid-cols-12 px-8 py-4 border-b border-gray-400/30 items-center text-sm"
                                 >
                                     <div className="col-span-4 flex items-center gap-3">
                                         <img
@@ -135,7 +145,10 @@ export default function StockIn() {
                                     </div>
 
                                     <div className="col-span-2 text-right">
-                                        <button className="bg-red-700 hover:bg-red-800 text-white px-5 py-1.5 rounded-full text-xs font-semibold">
+                                        <button
+                                            className="bg-red-700 hover:bg-red-800 text-white px-5 py-1.5 rounded-full text-xs font-semibold"
+                                            onClick={() => { setSelectedStock(stock); setOpenEdit(true); }}
+                                        >
                                             Edit
                                         </button>
                                     </div>
@@ -147,12 +160,24 @@ export default function StockIn() {
 
                 <AdminFooter />
             </div>
-
+            {showingToast && (
+            <div className="fixed bottom-6 right-6 bg-green-600 text-white px-4 py-3 rounded-lg shadow-lg">
+                {toast}
+            </div>
+            )}
             {/* ADD STOCK MODAL */}
             <AddStock
                 open={openAdd}
                 onClose={() => setOpenAdd(false)}
-                onSuccess={fetchStocks}
+                onSuccess={() => { fetchStocks(); showToast("Stock added successfully!"); }}
+            />
+
+            {/* EDIT STOCK MODAL */}
+            <EditStock
+                open={openEdit}
+                onClose={() => setOpenEdit(false)}
+                stock={selectedStock}
+                onSuccess={() => { fetchStocks(); showToast("Stock updated successfully!"); }}
             />
         </div>
     );

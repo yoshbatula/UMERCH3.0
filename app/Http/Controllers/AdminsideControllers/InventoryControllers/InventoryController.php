@@ -59,14 +59,14 @@ class InventoryController extends Controller
 
         $product->update(array_filter($data, fn($v) => !is_null($v)));
 
-        // Inertia forms require a redirect (not plain JSON)
+        
         return redirect()->back()->with('success', 'Product updated successfully!');
     }
 
     public function destroy($id)
     {
         Products::findOrFail($id)->delete();
-        // Return a redirect for Inertia compliance
+        
         return redirect()->back()->with('success', 'Product deleted successfully!');
     }
 }

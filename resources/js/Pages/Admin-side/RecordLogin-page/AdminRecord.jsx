@@ -105,7 +105,7 @@ function AdminRecord() {
         {/* ✅ StatCard */}
         <div className="mt-7">
           <StatCard
-            title="Total Login Users"
+            title="Total Users"
             value={users.length}
             className="bg-green-700"
             icon={

@@ -8,20 +8,11 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (Schema::hasColumn('_products', 'product_id')) {
-            Schema::table('_products', function (Blueprint $table) {
-                $table->dropColumn('product_id');
-            });
-        }
+        // No-op: `product_id` is the primary key of `_products` and must not be dropped.
     }
 
     public function down(): void
     {
-        // If needed, you can restore the column, but normally `_products` should not have `product_id`.
-        if (!Schema::hasColumn('_products', 'product_id')) {
-            Schema::table('_products', function (Blueprint $table) {
-                $table->unsignedBigInteger('product_id')->nullable();
-            });
-        }
+        // No-op
     }
 };

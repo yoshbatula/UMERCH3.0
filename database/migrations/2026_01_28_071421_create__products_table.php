@@ -20,28 +20,6 @@ return new class extends Migration
 });
 
 
-    Schema::create('stock_ins', function (Blueprint $table) {
-    $table->id();
-    $table->foreignId('product_id')->constrained('_products')->onDelete('cascade');
-    $table->integer('stock_qty');
-    $table->decimal('cost', 10, 2);
-    $table->timestamp('stock_in_date');
-    $table->timestamps();
-});
-
-
-
-    Schema::create('stock_outs', function (Blueprint $table) {
-    $table->id();
-    $table->foreignId('product_id')->constrained('_products')->onDelete('cascade');
-    $table->integer('quantity');
-    $table->string('modified_by');
-    $table->timestamp('date_time');
-    $table->timestamps();
-});
-
-
-
     }
 
     public function down(): void

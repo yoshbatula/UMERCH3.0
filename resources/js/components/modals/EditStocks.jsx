@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import { router } from "@inertiajs/react";
 
 export default function EditStocks({ open, onClose, stock, onSuccess }) {
     const [quantity, setQuantity] = useState(stock?.stock_qty || "");
@@ -8,19 +8,20 @@ export default function EditStocks({ open, onClose, stock, onSuccess }) {
 
     if (!open || !stock) return null;
 
-    const handleUpdate = async () => {
-        try {
-            await axios.put(`/api/admin/stock-in/${stock.id}`, {
-                qty: quantity,
-                variant: variant,
-            });
-
-            onSuccess();
-            onClose();
-            setConfirm(false);
-        } catch (error) {
-            console.error("Update stock failed", error);
-        }
+    const handleUpdate = (e) => {
+        e.preventDefault();
+        router.patch(`/admin/stock-in/${stock.stock_in_id}`, {
+            stock_qty: Number(quantity),
+            variant: variant,
+        }, {
+            onSuccess: () => {
+                if (onSuccess) onSuccess();
+                onClose();
+                setConfirm(false);
+            },
+            preserveScroll: true,
+            replace: true,
+        });
     };
 
     return (
@@ -121,6 +122,7 @@ export default function EditStocks({ open, onClose, stock, onSuccess }) {
 
                             <div className="flex justify-center gap-4">
                                 <button
+                                    type="button"
                                     onClick={handleUpdate}
                                     className="bg-red-800 text-white px-8 py-2 rounded-full text-sm"
                                 >
