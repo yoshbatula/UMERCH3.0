@@ -40,6 +40,8 @@ export default function AddProducts() {
     const [openAdd, setOpenAdd] = useState(false);
     const [openEdit, setOpenEdit] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState(null);
+    const [toast, setToast] = useState("");
+    const [showingToast, setShowingToast] = useState(false);
 
     const API = "/admin/products";
 
@@ -57,6 +59,12 @@ export default function AddProducts() {
         fetchProducts();
     }, []);
 
+    const showToast = (message) => {
+        setToast(message);
+        setShowingToast(true);
+        setTimeout(() => setShowingToast(false), 5000);
+    };
+
     // ✅ DELETE PRODUCT (DB, NOT ARRAY INDEX)
     const handleDelete = async (id) => {
         if (!confirm("Are you sure you want to delete this product?")) return;
@@ -69,7 +77,7 @@ export default function AddProducts() {
         }
     };
 
-    return (
+    return (<>
         <div className="flex min-h-screen bg-gray-100">
             <div className="h-screen sticky top-0">
                 <Sidebar />
@@ -135,8 +143,8 @@ export default function AddProducts() {
                         <div className="px-8 py-6">
                             <div className="grid grid-cols-12 text-sm font-bold text-red-700">
                                 <div className="col-span-6">Product</div>
-                                <div className="col-span-4">Cost</div>
-                                <div className="col-span-2 text-right">Action</div>
+                                <div className="col-span-4 px-4">Cost</div>
+                                <div className="col-span-2 text-right px-14">Action</div>
                             </div>
                         </div>
 
@@ -155,13 +163,20 @@ export default function AddProducts() {
                                         className="grid grid-cols-12 py-4 px-8 border-b border-gray-200 hover:bg-gray-50"
                                     >
                                         <div className="col-span-6 flex items-center gap-3">
-                                            {product.product_image && (
-                                                <img
-                                                    src={product.product_image}
-                                                    alt=""
-                                                    className="w-10 h-10 object-cover rounded"
-                                                />
-                                            )}
+                                            <div className="w-10 h-10 rounded overflow-hidden flex items-center justify-center bg-gray-200">
+                                                {product.product_image ? (
+                                                    <img
+                                                        src={product.product_image}
+                                                        alt={product.product_name}
+                                                        className="w-10 h-10 object-cover rounded"
+                                                        onError={(e) => {
+                                                            e.currentTarget.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><rect width="40" height="40" fill="%23e5e7eb"/><text x="20" y="22" font-size="10" text-anchor="middle" fill="%236b7280">No Img</text></svg>';
+                                                        }}
+                                                    />
+                                                ) : (
+                                                    <span className="text-[10px] text-gray-500">No Img</span>
+                                                )}
+                                            </div>
                                             {product.product_name}
                                         </div>
 
@@ -201,7 +216,10 @@ export default function AddProducts() {
             <AddProductModal
                 open={openAdd}
                 onClose={() => setOpenAdd(false)}
-                onSuccess={fetchProducts}
+                onSuccess={() => {
+                    fetchProducts();
+                    showToast("Product added successfully!");
+                }}
             />
 
             <EditProductModal
@@ -211,5 +229,10 @@ export default function AddProducts() {
                 onSuccess={fetchProducts}
             />
         </div>
-    );
+        {showingToast && (
+            <div className="fixed bottom-6 right-6 bg-green-600 text-white px-4 py-3 rounded-lg shadow-lg">
+                {toast}
+            </div>
+        )}
+    </>);
 }

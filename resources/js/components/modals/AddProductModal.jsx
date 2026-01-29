@@ -1,91 +1,63 @@
-import React, { useState } from "react";
-import axios from "axios";
+import React, { useEffect, useState } from "react";
+import { useForm } from "@inertiajs/react";
 
-export default function AddProductModal({ open, onClose, onSuccess }) {
-    const [imageFile, setImageFile] = useState(null);
+export default function AddProductModal({ open, isOpen, onClose, onSuccess }) {
     const [preview, setPreview] = useState(null);
-    const [form, setForm] = useState({
+
+    const { data, setData, post, processing, errors, reset, clearErrors } = useForm({
         product_name: "",
         product_price: "",
         variant: "",
         product_description: "",
+        product_image: null,
     });
 
-    if (!open) return null;
+    const visible = typeof isOpen !== "undefined" ? isOpen : open;
 
-    const handleAdd = async () => {
-        if (!form.product_name || !form.product_price || !form.variant) {
-            alert("Please fill all required fields");
-            return;
-        }
+    useEffect(() => {
+        if (!visible) setPreview(null);
+    }, [visible]);
 
-        const data = new FormData();
-        data.append("product_name", form.product_name);
-        data.append("product_price", form.product_price);
-        data.append("variant", form.variant);
-        data.append("product_description", form.product_description);
-        data.append("product_stock", 0);
+    if (!visible) return null;
 
-
-        if (imageFile) {
-            data.append("product_image", imageFile);
-        }
-
-        try {
-            await axios.post("/admin/products", data, {
-                headers: { "Content-Type": "multipart/form-data" },
-            });
-
-            onSuccess && onSuccess();
-            onClose();
-
-            // reset
-            setForm({
-                product_name: "",
-                product_price: "",
-                variant: "",
-                product_description: "",
-            });
-            setImageFile(null);
-            setPreview(null);
-        } catch (error) {
-            console.log("FULL ERROR:", error);
-            console.log("RESPONSE DATA:", error.response?.data);
-            console.log("STATUS:", error.response?.status);
-            alert(JSON.stringify(error.response?.data, null, 2));
-        }
+    const handleInput = (e) => {
+        const { name, value } = e.target;
+        setData(name, value);
+        clearErrors(name);
     };
 
-    
+    const handleFile = (e) => {
+        const file = e.target.files?.[0] || null;
+        setData("product_image", file);
+        setPreview(file ? URL.createObjectURL(file) : null);
+        clearErrors("product_image");
+    };
 
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        post("/admin/products", {
+            onSuccess: () => {
+                if (onSuccess) onSuccess();
+                reset();
+                setPreview(null);
+                onClose && onClose();
+            },
+        });
+    };
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
             <div className="bg-white w-[720px] shadow-2xl rounded-xl overflow-hidden">
-
                 {/* Header */}
-                <div className="bg-red-800 px-6 py-4 text-white font-bold text-lg">
-                    ADD PRODUCT
-                </div>
+                <div className="bg-red-800 px-6 py-4 text-white font-bold text-lg">ADD PRODUCT</div>
 
                 {/* Body */}
-                <div className="p-6 grid grid-cols-2 gap-6">
-
+                <form onSubmit={handleSubmit} className="p-6 grid grid-cols-2 gap-6">
                     {/* Image Upload */}
                     <div>
-                        <label className="text-sm font-semibold mb-2 block">
-                            Product Image
-                        </label>
-                        <label className="border-2 border-dashed border-red-400 rounded-lg h-[180px]
-                            flex flex-col items-center justify-center cursor-pointer text-red-600">
-                            <input
-                                type="file"
-                                className="hidden"
-                                onChange={(e) => {
-                                    setImageFile(e.target.files[0]);
-                                    setPreview(URL.createObjectURL(e.target.files[0]));
-                                }}
-                            />
+                        <label className="text-sm font-semibold mb-2 block">Product Image</label>
+                        <label className="border-2 border-dashed border-red-400 rounded-lg h-[180px] flex flex-col items-center justify-center cursor-pointer text-red-600">
+                            <input type="file" className="hidden" onChange={handleFile} />
                             {preview ? (
                                 <img src={preview} alt="preview" className="h-full object-contain" />
                             ) : (
@@ -94,53 +66,56 @@ export default function AddProductModal({ open, onClose, onSuccess }) {
                                     <p className="text-sm mt-2">Choose file to upload</p>
                                 </>
                             )}
+                            {errors.product_image && (
+                                <p className="text-red-600 text-xs mt-2">{errors.product_image}</p>
+                            )}
                         </label>
                     </div>
 
                     {/* Description */}
                     <div>
-                        <label className="text-sm font-semibold mb-2 block">
-                            Description:
-                        </label>
+                        <label className="text-sm font-semibold mb-2 block">Description:</label>
                         <textarea
                             placeholder="Add Description"
-                            value={form.product_description}
-                            onChange={(e) =>
-                                setForm({ ...form, product_description: e.target.value })
-                            }
+                            name="product_description"
+                            value={data.product_description}
+                            onChange={handleInput}
                             className="w-full h-[180px] border rounded-lg p-3 text-sm resize-none outline-red-600"
                         />
+                        {errors.product_description && (
+                            <p className="text-red-600 text-xs mt-1">{errors.product_description}</p>
+                        )}
                     </div>
 
                     {/* Product Name */}
                     <div className="col-span-2">
-                        <label className="text-sm font-semibold mb-2 block">
-                            Product Name:
-                        </label>
+                        <label className="text-sm font-semibold mb-2 block">Product Name:</label>
                         <input
                             placeholder="Enter Product Name"
-                            value={form.product_name}
-                            onChange={(e) =>
-                                setForm({ ...form, product_name: e.target.value })
-                            }
+                            name="product_name"
+                            value={data.product_name}
+                            onChange={handleInput}
                             className="w-full border rounded-full px-4 py-2 outline-red-600"
                         />
+                        {errors.product_name && (
+                            <p className="text-red-600 text-xs mt-1">{errors.product_name}</p>
+                        )}
                     </div>
 
                     {/* Price */}
                     <div>
-                        <label className="text-sm font-semibold mb-2 block">
-                            Add Price:
-                        </label>
+                        <label className="text-sm font-semibold mb-2 block">Add Price:</label>
                         <input
                             type="number"
                             placeholder="Enter Price"
-                            value={form.product_price}
-                            onChange={(e) =>
-                                setForm({ ...form, product_price: e.target.value })
-                            }
+                            name="product_price"
+                            value={data.product_price}
+                            onChange={handleInput}
                             className="w-full border rounded-full px-4 py-2 outline-red-600"
                         />
+                        {errors.product_price && (
+                            <p className="text-red-600 text-xs mt-1">{errors.product_price}</p>
+                        )}
                     </div>
 
                     {/* Variation */}
@@ -149,10 +124,9 @@ export default function AddProductModal({ open, onClose, onSuccess }) {
                             Variation <span className="text-red-600">*</span>
                         </label>
                         <select
-                            value={form.variant}
-                            onChange={(e) =>
-                                setForm({ ...form, variant: e.target.value })
-                            }
+                            name="variant"
+                            value={data.variant}
+                            onChange={handleInput}
                             className="w-full border rounded-full px-4 py-2 outline-red-600"
                         >
                             <option value="">Select Variation</option>
@@ -162,24 +136,29 @@ export default function AddProductModal({ open, onClose, onSuccess }) {
                             <option>L</option>
                             <option>XL</option>
                         </select>
+                        {errors.variant && (
+                            <p className="text-red-600 text-xs mt-1">{errors.variant}</p>
+                        )}
                     </div>
-                </div>
 
-                {/* Footer */}
-                <div className="flex justify-end gap-4 px-6 pb-6">
-                    <button
-                        onClick={handleAdd}
-                        className="bg-red-800 hover:bg-red-900 text-white px-10 py-2 rounded-full font-semibold"
-                    >
-                        Add
-                    </button>
-                    <button
-                        onClick={onClose}
-                        className="border border-red-700 text-red-700 px-8 py-2 rounded-full font-semibold"
-                    >
-                        Cancel
-                    </button>
-                </div>
+                    {/* Footer */}
+                    <div className="col-span-2 flex justify-end gap-4">
+                        <button
+                            type="submit"
+                            disabled={processing}
+                            className="bg-red-800 hover:bg-red-900 text-white px-10 py-2 rounded-full font-semibold hover:cursor-pointer"
+                        >
+                            {processing ? "Adding..." : "Add"}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="border border-red-700 text-red-700 px-8 py-2 rounded-full font-semibold hover:cursor-pointer"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     );

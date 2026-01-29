@@ -5,11 +5,10 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 
 /* CONTROLLERS */
-use App\Http\Controllers\AdminsideControllers\InventoryControllers\InventoryControllers;
+use App\Http\Controllers\AdminsideControllers\InventoryControllers\InventoryController;
 use App\Http\Controllers\AdminsideControllers\RecordsControllers\AddRecords;
 use App\Http\Controllers\AdminsideControllers\RecordsControllers\UpdateRecords;
 use App\Http\Controllers\AdminsideControllers\RecordsControllers\DeleteRecords;
-use App\Http\Controllers\AdminsideControllers\InventoryControllers\InventoryController;
 use App\Http\Controllers\AdminsideControllers\InventoryControllers\StockInController;
 use App\Http\Controllers\AdminsideControllers\InventoryControllers\StockOutController;
 
@@ -64,18 +63,19 @@ Route::prefix('admin')->group(function () {
     // PRODUCTS
     Route::get('/products', [InventoryController::class, 'index']);
     Route::post('/products', [InventoryController::class, 'store']);
+    Route::post('/products/store', [InventoryController::class, 'store']);
     Route::patch('/products/{id}', [InventoryController::class, 'update']);
     Route::delete('/products/{id}', [InventoryController::class, 'destroy']);
 
     // STOCK IN
     Route::get('/stock-in', [StockInController::class, 'index']);
-    Route::post('/stock-in', [StockInController::class, 'store']);
+    Route::post('/stock-in/store', [StockInController::class, 'store']);
     Route::patch('/stock-in/{id}', [StockInController::class, 'update']);
     Route::delete('/stock-in/{id}', [StockInController::class, 'destroy']);
 
     // STOCK OUT
     Route::get('/stock-out/logs', [StockOutController::class, 'logs']);
-    Route::post('/stock-out', [StockOutController::class, 'store']);
+    Route::post('/stock-out/store', [StockOutController::class, 'store']);
 });
 
 

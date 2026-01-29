@@ -55,7 +55,7 @@ export default function EditUsersModals({ isOpen, onClose, user, onSuccess }) {
             return;
         }
 
-        patch(`/update-user/${user.id}`, {
+        patch(`/admin/update-user/${user.id}`, {
             onSuccess: () => {
                 reset();
                 if (onSuccess) onSuccess();

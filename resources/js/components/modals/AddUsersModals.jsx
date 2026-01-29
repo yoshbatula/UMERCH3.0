@@ -31,7 +31,7 @@ export default function AddUsersModals({ isOpen, onClose, onUserAdded }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        post('/add-user', {
+        post('/admin/add-user', {
             onSuccess: (page) => {
 
                 if (onUserAdded) {

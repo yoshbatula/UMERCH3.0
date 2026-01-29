@@ -25,7 +25,8 @@ function AdminRecord() {
   const [isAddUsersOpen, setAddUsersOpen] = useState(false);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [success, setSuccess] = useState("");
+  const [toast, setToast] = useState("");
+  const [showingToast, setShowingToast] = useState(false);
   const [isEditOpen, setEditOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [isDeleteOpen, setDeleteOpen] = useState(false);
@@ -50,12 +51,17 @@ function AdminRecord() {
     fetchUsers();
   }, []);
 
+  const showToast = (message) => {
+    setToast(message);
+    setShowingToast(true);
+    setTimeout(() => setShowingToast(false), 5000);
+  };
+
   const openAddUsersModal = () => setAddUsersOpen(true);
   const closeAddUsersModal = () => setAddUsersOpen(false);
   const handleUserAdded = (user) => {
     const name = user && (user.user_fullname || user.name) ? (user.user_fullname || user.name) : null;
-    setSuccess(name ? `User ${name} added successfully!` : 'User added successfully!');
-    setTimeout(() => setSuccess(""), 5000);
+    showToast(name ? `User ${name} added successfully!` : 'User added successfully!');
     setAddUsersOpen(false);
     fetchUsers();
   };
@@ -68,8 +74,7 @@ function AdminRecord() {
     setSelectedUser(null);
   };
   const handleUpdateSuccess = () => {
-    setSuccess('User updated successfully!');
-    setTimeout(() => setSuccess(""), 5000);
+    showToast('User updated successfully!');
     fetchUsers();
     closeEditModal();
   };
@@ -82,8 +87,7 @@ function AdminRecord() {
     setUserToDelete(null);
   };
   const handleDeleteSuccess = () => {
-    setSuccess('User deleted successfully!');
-    setTimeout(() => setSuccess(""), 5000);
+    showToast('User deleted successfully!');
     fetchUsers();
     closeDeleteModal();
   };
@@ -157,12 +161,6 @@ function AdminRecord() {
             Add User
           </button>
         </div>
-
-        {success && (
-          <div className="mt-3 mb-4 px-4 py-3 rounded bg-green-100 text-green-800 font-semibold shadow">
-            {success}
-          </div>
-        )}
         {/* Table */}
         <div className="bg-white rounded-xl mt-6 shadow-sm border border-gray-200 overflow-hidden">
           <div className="px-8 py-6">
@@ -238,6 +236,12 @@ function AdminRecord() {
           onDeleted={handleDeleteSuccess}
         />
         <AdminFooter />
+        {/* Toast Success */}
+        {showingToast && (
+          <div className="fixed bottom-6 right-6 bg-green-600 text-white px-4 py-3 rounded-lg shadow-lg">
+            {toast}
+          </div>
+        )}
       </main>
     </div>
   );

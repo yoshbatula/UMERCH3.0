@@ -5,7 +5,6 @@ namespace App\Http\Controllers\AdminsideControllers\InventoryControllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Products;
-use Illuminate\Support\Facades\Storage;
 
 class InventoryController extends Controller
 {
@@ -26,8 +25,7 @@ class InventoryController extends Controller
         $imagePath = null;
 
         if ($request->hasFile('product_image')) {
-            $imagePath = $request->file('product_image')
-                ->store('products', 'public');
+            $imagePath = $request->file('product_image')->store('products', 'public');
         }
 
         $product = Products::create([
@@ -36,12 +34,10 @@ class InventoryController extends Controller
             'variant' => $request->variant,
             'product_description' => $request->product_description,
             'product_stock' => 0,
-            'product_image' => $imagePath
-                ? asset('storage/' . $imagePath)
-                : null,
+            'product_image' => $imagePath ? asset('storage/' . $imagePath) : null,
         ]);
 
-        return response()->json($product, 201);
+        return redirect()->back()->with('success', 'Product added successfully!');
     }
 
     public function update(Request $request, $id)
@@ -51,7 +47,7 @@ class InventoryController extends Controller
         $product->update([
             'product_name' => $request->product_name,
             'product_price' => $request->product_price,
-            'variant' => $request->product_type, // UI compatibility
+            'variant' => $request->variant,
             'product_description' => $request->product_description,
             'product_image' => $request->product_image,
         ]);
