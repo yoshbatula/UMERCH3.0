@@ -13,13 +13,16 @@ export default function Shop() {
     const [ProductModalOpen, setProductModalOpen] = useState(false);
     const [AccessoriesModalOpen, setAccessoriesModalOpen] = useState(false);
     const [products, setProducts] = useState([]);
+    const [selectedProduct, setSelectedProduct] = useState(null);
 
-    const openProductModal = () => {
+    const openProductModal = (product) => {
+        setSelectedProduct(product || null);
         setProductModalOpen(true);
     }
 
     const closeProductModal = () => {
         setProductModalOpen(false);
+        setSelectedProduct(null);
     }
 
     const openAccessoriesModal = () => {
@@ -77,7 +80,7 @@ export default function Shop() {
                 {products.map(p => (
                     <ShopCards
                         key={p.product_id}
-                        onClick={openProductModal}
+                        onClick={() => openProductModal(p)}
                         image={p.product_image}
                         name={p.product_name}
                         description={p.product_description}
@@ -100,7 +103,7 @@ export default function Shop() {
             <Footer />
 
             {/* Modals */}
-            <ProductCardModal isOpen={ProductModalOpen} onClose={closeProductModal}/>
+            <ProductCardModal isOpen={ProductModalOpen} onClose={closeProductModal} product={selectedProduct}/>
             <AccessoriesCardModal isOpen={AccessoriesModalOpen} onClose={closeAccessoriesModal}/>
 
             

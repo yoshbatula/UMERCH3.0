@@ -6,10 +6,22 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Products;
 use App\Models\StockIn;
+use App\Models\Inventory;
 use Illuminate\Support\Facades\DB;
 
 class StockInController extends Controller
 {
+    private function getStatus($quantity)
+    {
+        if ($quantity > 20) {
+            return 'active';
+        } elseif ($quantity > 0) {
+            return 'low';
+        } else {
+            return 'out_of_stock';
+        }
+    }
+
     public function index()
     {
         // Return stock-in logs joined with product details
@@ -43,6 +55,20 @@ class StockInController extends Controller
 
             // Increment overall product stock
             $product->increment('product_stock', $request->stock_qty);
+
+            // Update or create inventory record
+            $currentInv = Inventory::where('product_id', $product->product_id)
+                ->where('variant', trim($request->variant))
+                ->first();
+            $newQty = ($currentInv?->quantity ?? 0) + $request->stock_qty;
+            Inventory::updateOrCreate(
+                ['product_id' => $product->product_id, 'variant' => trim($request->variant)],
+                [
+                    'quantity' => $newQty,
+                    'status' => $this->getStatus($newQty),
+                    'cost' => $request->cost
+                ]
+            );
 
             // Merge with existing stock-in entry for same product + variant
             $existing = StockIn::where('product_id', $product->product_id)
@@ -107,6 +133,20 @@ class StockInController extends Controller
                 $product->increment('product_stock', $delta);
             }
 
+            // Update or create inventory record
+            $currentInv = Inventory::where('product_id', $log->product_id)
+                ->where('variant', $newVariant)
+                ->first();
+            $invNewQty = ($currentInv?->quantity ?? 0) + $delta;
+            Inventory::updateOrCreate(
+                ['product_id' => $log->product_id, 'variant' => $newVariant],
+                [
+                    'quantity' => max(0, $invNewQty),
+                    'status' => $this->getStatus(max(0, $invNewQty)),
+                    'cost' => $log->cost
+                ]
+            );
+
             // If variant changes and there is an existing row for the new variant, merge
             if ($newVariant !== $log->variant) {
                 $existing = StockIn::where('product_id', $log->product_id)
@@ -149,6 +189,18 @@ class StockInController extends Controller
             if ($decrement > 0) {
                 $newStock = max(0, (int) $product->product_stock - $decrement);
                 $product->update(['product_stock' => $newStock]);
+            }
+
+            // Update inventory record
+            $inventory = Inventory::where('product_id', $log->product_id)
+                ->where('variant', $log->variant)
+                ->first();
+            if ($inventory) {
+                $newInvQty = max(0, $inventory->quantity - $decrement);
+                $inventory->update([
+                    'quantity' => $newInvQty,
+                    'status' => $this->getStatus($newInvQty)
+                ]);
             }
 
             $log->delete();
