@@ -59,8 +59,9 @@ The UM Merchandise Store is committed to serving students, employees, and alumni
 
 ## How to Run the Project
 
-### 1. Clone the Repository
+
 ```bash
+### 1. Clone the Repositories
 git clone https://github.com/your-username/um-merch-management-system.git
 cd um-merch-management-system
 
