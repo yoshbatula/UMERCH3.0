@@ -1,59 +1,80 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# UM Merchandise Management System
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## Project Overview
 
-## About Laravel
+The **UM Merchandise Management System** is a web-based application developed for the **External Relations and International Affairs Office (ERIAO)** of the **University of Mindanao**. The system manages **UM Merch**, a collection of official university apparel and souvenirs that promote school pride and unity among UMians.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+Launched as part of ERIAO’s expanding role, UM Merch gained popularity through the **#UMIANvibe** campaign and continues to thrive as a symbol of belonging for students, employees, alumni, and the global UM community.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+---
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Company Background
 
-## Learning Laravel
+The **External Relations and International Affairs Office (ERIAO)** initially served as the university’s hub for partnerships, promotions, and employee-related activities. In 2023, ERIAO expanded its initiatives by introducing **UM Merch**, integrating branding with modern merchandise management.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+Under the guidance of **Mr. Jovanie Garcia, Information Assistant**, ERIAO continues to advance international relations while strengthening unity and school spirit through innovative digital solutions.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-## Laravel Sponsors
+## Vision
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+To provide quality, affordable, and authentic University of Mindanao merchandise that fosters school pride and accessibility for the UM community.
 
-### Premium Partners
+---
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+## Mission
 
-## Contributing
+The UM Merchandise Store is committed to serving students, employees, and alumni by offering reliable products, transparent and efficient services, and by adapting modern management solutions.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+---
 
-## Code of Conduct
+## Project Goals
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+- Improve efficiency and accuracy of merchandise operations  
+- Provide convenient access to UM merchandise  
+- Ensure transparency in inventory and transaction records  
+- Strengthen UM’s brand identity through modernization  
 
-## Security Vulnerabilities
+---
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## Technology Stack
 
-## License
+- **Backend:** Laravel  
+- **Frontend:** React  
+- **Styling:** Tailwind CSS  
+- **SPA Framework:** Inertia.js  
+- **Database:** MySQL  
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+---
+
+## System Requirements
+
+- PHP 8.1 or higher  
+- Composer  
+- Node.js and npm  
+- MySQL  
+- Laravel CLI  
+
+---
+
+## How to Run the Project
+
+### 1. Clone the Repository
+```bash
+git clone https://github.com/your-username/um-merch-management-system.git
+cd um-merch-management-system
+
+### 2. Install Backend Dependencies (Laravel)
+composer install
+
+### 3. Install Frontend Dependencies (React + Tailwind)
+npm install
+
+### 4. Create and Configure Environment File
+cp .env.example .env
+
+### 5. Generate Application Key
+php artisan key:generate
+
+### 6. Development Server
+composer run dev
