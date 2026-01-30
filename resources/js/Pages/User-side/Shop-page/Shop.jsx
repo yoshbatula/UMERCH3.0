@@ -21,6 +21,17 @@ export default function Shop() {
         setTimeout(() => setToast(null), 6000);
     };
 
+    // Group products by name and show only one per group
+    const groupProductsByName = (productList) => {
+        const grouped = {};
+        productList.forEach((product) => {
+            if (!grouped[product.product_name]) {
+                grouped[product.product_name] = product;
+            }
+        });
+        return Object.values(grouped);
+    };
+
     const openProductModal = (product) => {
         setSelectedProduct(product || null);
         setProductModalOpen(true);
@@ -43,7 +54,8 @@ export default function Shop() {
         axios.get('/admin/products')
             .then(res => {
                 const list = Array.isArray(res.data) ? res.data : [];
-                setProducts(list);
+                const grouped = groupProductsByName(list);
+                setProducts(grouped);
             })
             .catch(() => setProducts([]));
     }, []);

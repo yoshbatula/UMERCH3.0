@@ -10,6 +10,47 @@ export default function ProductCardModal({ isOpen, onClose, product, onShowToast
     const [showSizeChart, setShowSizeChart] = useState(false);
     const [selectedSize, setSelectedSize] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [sizeStocks, setSizeStocks] = useState({});
+
+    // Fetch stock for each size when modal opens
+    useEffect(() => {
+        if (isOpen && product?.product_id) {
+            fetchSizeStocks();
+        }
+    }, [isOpen, product?.product_id]);
+
+    const fetchSizeStocks = async () => {
+        try {
+            // Fetch from inventory table for accurate per-variant stock
+            const res = await axios.get('/api/inventory');
+            const inventoryData = res.data || [];
+            
+            // Group stock by variant for this product
+            const stocks = {};
+            inventoryData.forEach(inv => {
+                if (inv.product_id === product.product_id) {
+                    stocks[inv.variant] = inv.quantity;
+                }
+            });
+            setSizeStocks(stocks);
+        } catch (error) {
+            // Fallback: fetch from products table if inventory endpoint fails
+            try {
+                const res = await axios.get('/admin/products');
+                const allProducts = res.data || [];
+                
+                const stocks = {};
+                allProducts.forEach(p => {
+                    if (p.product_name === product.product_name) {
+                        stocks[p.variant] = p.product_stock;
+                    }
+                });
+                setSizeStocks(stocks);
+            } catch (fallbackError) {
+                console.error('Error fetching size stocks:', fallbackError);
+            }
+        }
+    };
 
     // Set first size when modal opens or product changes
     useEffect(() => {
@@ -200,7 +241,7 @@ export default function ProductCardModal({ isOpen, onClose, product, onShowToast
                                         +
                                     </button>
                                 </div>
-                                <span className='text-[#7F7F7F] text-[10px] font-light'>{stock} pieces available</span>
+                                <span className='text-[#7F7F7F] text-[10px] font-light'>{sizeStocks[selectedSize] !== undefined ? sizeStocks[selectedSize] : stock} pieces available</span>
                             </div>
                             <div className='mt-6 flex flex-row gap-3'>
                                 <div className='absolute flex flex-row gap-3'>

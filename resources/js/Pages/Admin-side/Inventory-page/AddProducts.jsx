@@ -45,6 +45,7 @@ export default function AddProducts() {
     const [openDelete, setOpenDelete] = useState(false);
     const [toast, setToast] = useState("");
     const [showingToast, setShowingToast] = useState(false);
+    const [expandedProducts, setExpandedProducts] = useState({});
 
     const API = "/admin/products";
 
@@ -53,6 +54,18 @@ export default function AddProducts() {
         if (u.startsWith('http')) return u;
         if (u.startsWith('/')) return u;
         return '/' + u;
+    };
+
+    // ✅ GROUP PRODUCTS BY NAME
+    const groupProductsByName = (productList) => {
+        const grouped = {};
+        productList.forEach((product) => {
+            if (!grouped[product.product_name]) {
+                grouped[product.product_name] = [];
+            }
+            grouped[product.product_name].push(product);
+        });
+        return grouped;
     };
 
     // ✅ FETCH PRODUCTS FROM DATABASE
@@ -73,6 +86,13 @@ export default function AddProducts() {
         setToast(message);
         setShowingToast(true);
         setTimeout(() => setShowingToast(false), 5000);
+    };
+
+    const toggleExpanded = (productName) => {
+        setExpandedProducts(prev => ({
+            ...prev,
+            [productName]: !prev[productName]
+        }));
     };
 
     // ✅ DELETE PRODUCT (DB, NOT ARRAY INDEX)
@@ -107,9 +127,14 @@ export default function AddProducts() {
                 {/* Stats */}
                 <div className="flex flex-wrap gap-6 mb-6">
                     <StatCard
-                        title="Total Stocks"
-                        value={products.length}
+                        title="Total Products"
+                        value={Object.keys(groupProductsByName(products)).length}
                         className="bg-green-700"
+                    />
+                    <StatCard
+                        title="Total Variants"
+                        value={products.length}
+                        className="bg-blue-700"
                     />
                     <StatCard
                         title="Low Stocks"
@@ -142,7 +167,7 @@ export default function AddProducts() {
 
                         <button
                             onClick={() => setOpenAdd(true)}
-                            className="bg-red-800 hover:bg-red-900 text-white px-10 py-3 rounded-full text-sm font-semibold"
+                            className="bg-red-800 hover:bg-red-900 text-white px-10 py-3 rounded-full text-sm font-semibold hover:cursor-pointer"
                         >
                             Add Product
                         </button>
@@ -151,10 +176,11 @@ export default function AddProducts() {
                     {/* Table */}
                     <div className="bg-white rounded-xl mt-6 shadow-sm border border-gray-200 overflow-hidden">
                         <div className="px-8 py-6">
-                            <div className="grid grid-cols-12 text-sm font-bold text-red-700">
-                                <div className="col-span-6">Product</div>
-                                <div className="col-span-4 px-4">Cost</div>
-                                <div className="col-span-2 text-right px-14">Action</div>
+                            <div className="grid grid-cols-12 text-sm font-bold text-red-700 gap-4">
+                                <div className="col-span-5">Product</div>
+                                <div className="col-span-3">Cost</div>
+                                <div className="col-span-2">Variants</div>
+                                <div className="col-span-2 text-right">Action</div>
                             </div>
                         </div>
 
@@ -167,49 +193,99 @@ export default function AddProducts() {
                                     No products added yet
                                 </div>
                             ) : (
-                                products.map((product) => (
-                                    <div
-                                        key={product.product_id}
-                                        className="grid grid-cols-12 py-4 px-8 border-b border-gray-200 hover:bg-gray-50"
-                                    >
-                                        <div className="col-span-6 flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded overflow-hidden flex items-center justify-center bg-gray-200">
-                                                <img
-                                                    src={normalizeImageUrl(product.product_image)}
-                                                    alt={product.product_name || "Product image"}
-                                                    className="w-10 h-10 object-cover rounded"
-                                                    onError={(e) => {
-                                                        e.currentTarget.src = placeholderImg;
-                                                    }}
-                                                />
+                                Object.entries(groupProductsByName(products)).map(
+                                    ([productName, variants]) => (
+                                        <div key={productName}>
+                                            {/* Main Product Row */}
+                                            <div className="grid grid-cols-12 py-4 px-8 border-b border-gray-200 hover:bg-gray-50 bg-gray-50 font-semibold gap-4">
+                                                <div className="col-span-5 flex items-center gap-3">
+                                                    <button
+                                                        onClick={() => toggleExpanded(productName)}
+                                                        className="text-lg cursor-pointer w-6 flex-shrink-0"
+                                                    >
+                                                        {expandedProducts[productName] ? "▼" : "▶"}
+                                                    </button>
+                                                    <div className="w-10 h-10 rounded overflow-hidden flex items-center justify-center bg-gray-200 flex-shrink-0">
+                                                        <img
+                                                            src={normalizeImageUrl(variants[0].product_image)}
+                                                            alt={productName}
+                                                            className="w-10 h-10 object-cover rounded"
+                                                            onError={(e) => {
+                                                                e.currentTarget.src = placeholderImg;
+                                                            }}
+                                                        />
+                                                    </div>
+                                                    <span className="truncate">{productName}</span>
+                                                </div>
+
+                                                <div className="col-span-3">
+                                                    ₱{variants[0].product_price}
+                                                </div>
+
+                                                <div className="col-span-2 text-gray-600">
+                                                    {variants.length}
+                                                </div>
+
+                                                <div className="col-span-2 flex justify-end gap-2">
+                                                    <ActionButton
+                                                        type="edit"
+                                                        onClick={() => {
+                                                            setSelectedProduct(variants[0]);
+                                                            setOpenEdit(true);
+                                                        }}
+                                                    >
+                                                        Edit
+                                                    </ActionButton>
+                                                </div>
                                             </div>
-                                            {product.product_name}
-                                        </div>
 
-                                        <div className="col-span-4">
-                                            ₱{product.product_price}
-                                        </div>
+                                            {/* Expanded Variants */}
+                                            {expandedProducts[productName] &&
+                                                variants.map((variant) => (
+                                                    <div
+                                                        key={variant.product_id}
+                                                        className="grid grid-cols-12 py-3 px-8 border-b border-gray-200 hover:bg-gray-50 text-sm bg-white gap-4"
+                                                    >
+                                                        <div className="col-span-5 flex items-center gap-3 pl-10">
+                                                            <span className="text-gray-600 font-medium">
+                                                                {variant.variant}
+                                                            </span>
+                                                        </div>
 
-                                        <div className="col-span-2 flex justify-end gap-2">
-                                            <ActionButton
-                                                type="edit"
-                                                onClick={() => {
-                                                    setSelectedProduct(product);
-                                                    setOpenEdit(true);
-                                                }}
-                                            >
-                                                Edit
-                                            </ActionButton>
+                                                        <div className="col-span-3">
+                                                            ₱{variant.product_price}
+                                                        </div>
 
-                                            <ActionButton
-                                                type="delete"
-                                                onClick={() => { setSelectedProduct(product); setOpenDelete(true); }}
-                                            >
-                                                Delete
-                                            </ActionButton>
+                                                        <div className="col-span-2 text-gray-400 text-xs">
+                                                            -
+                                                        </div>
+
+                                                        <div className="col-span-2 flex justify-end gap-2">
+                                                            <ActionButton
+                                                                type="edit"
+                                                                onClick={() => {
+                                                                    setSelectedProduct(variant);
+                                                                    setOpenEdit(true);
+                                                                }}
+                                                            >
+                                                                Edit
+                                                            </ActionButton>
+
+                                                            <ActionButton
+                                                                type="delete"
+                                                                onClick={() => {
+                                                                    setSelectedProduct(variant);
+                                                                    setOpenDelete(true);
+                                                                }}
+                                                            >
+                                                                Delete
+                                                            </ActionButton>
+                                                        </div>
+                                                    </div>
+                                                ))}
                                         </div>
-                                    </div>
-                                ))
+                                    )
+                                )
                             )}
                         </div>
                     </div>

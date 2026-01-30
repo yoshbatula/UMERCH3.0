@@ -29,6 +29,40 @@ class InventoryController extends Controller
             $imagePath = $request->file('product_image')->store('products', 'public');
         }
 
+        // Check if product with same name and variant already exists
+        $existingProduct = Products::where('product_name', $request->product_name)
+            ->where('variant', $request->variant)
+            ->first();
+
+        if ($existingProduct) {
+            // Update existing product instead of creating duplicate
+            $existingProduct->update([
+                'product_price' => $request->product_price,
+                'product_description' => $request->product_description,
+                'product_image' => $imagePath ? Storage::url($imagePath) : $existingProduct->product_image,
+            ]);
+
+            return redirect()->back()->with('success', 'Product updated successfully!');
+        }
+
+        // Check if product with same name exists (but different variant)
+        $sameNameProduct = Products::where('product_name', $request->product_name)->first();
+
+        if ($sameNameProduct) {
+            // Add as new variant to existing product
+            $product = Products::create([
+                'product_name' => $request->product_name,
+                'product_price' => $request->product_price,
+                'variant' => $request->variant,
+                'product_description' => $request->product_description,
+                'product_stock' => 0,
+                'product_image' => $imagePath ? Storage::url($imagePath) : $sameNameProduct->product_image,
+            ]);
+
+            return redirect()->back()->with('success', 'New variant added to existing product!');
+        }
+
+        // Create completely new product
         $product = Products::create([
             'product_name' => $request->product_name,
             'product_price' => $request->product_price,

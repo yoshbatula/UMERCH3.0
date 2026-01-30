@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import ProductCard from '../cards/ProductCards';
 import Placeholder from '@images/product-placeholder.svg';
+import { Link } from '@inertiajs/react';
 
 export default function FeatureProducts() {
     const [items, setItems] = useState([]);
@@ -48,7 +49,7 @@ export default function FeatureProducts() {
             </div>
             <div className='mt-8 flex justify-center items-center'>
                 <div className='bg-[#9C0306] w-55 h-10 rounded-[20px] flex justify-center items-center hover:cursor-pointer'>
-                    <button className='text-white text-[16px] font-semibold hover:cursor-pointer'>SEE MORE PRODUCTS</button>
+                    <Link href="/Products" prefetch className='text-white text-[16px] font-semibold hover:cursor-pointer'>SEE MORE PRODUCTS</Link>
                 </div>
             </div>
         </div>

@@ -66,7 +66,7 @@ export default function EditStocks({ open, onClose, stock, onSuccess }) {
                         <div className="grid grid-cols-2 gap-4 mt-4">
                             <div>
                                 <label className="text-sm font-semibold">
-                                    Add Quantity
+                                    Edit Quantity
                                 </label>
                                 <input
                                     type="number"

@@ -18,32 +18,58 @@ export default function AddStock({ open, onClose, onSuccess }) {
         }
     }, [open]);
 
+    // Group products by name
+    const groupProductsByName = (productList) => {
+        const grouped = {};
+        productList.forEach((product) => {
+            if (!grouped[product.product_name]) {
+                grouped[product.product_name] = [];
+            }
+            grouped[product.product_name].push(product);
+        });
+        return grouped;
+    };
+
     // Derive variant options from selected product's `variant` field
     useEffect(() => {
-        const selected = products.find(p => String(p.product_id) === String(productId));
-        const raw = selected?.variant || "";
-        let options = [];
-        if (raw) {
-            // Split by common delimiters and trim
-            options = raw.split(/[,|/\s]+/).map(v => v.trim()).filter(v => v.length > 0);
-        }
-        if (options.length === 0) {
-            // Fallback defaults
-            options = ["XS", "S", "M", "L", "XL"];
-        }
-        // Deduplicate while preserving order
-        const seen = new Set();
-        const unique = options.filter(v => {
-            if (seen.has(v)) return false;
-            seen.add(v);
-            return true;
-        });
-        setVariantOptions(unique);
-        // Reset selected variation if it no longer exists
-        if (!unique.includes(variation)) {
+        if (productId) {
+            const selected = products.find(p => String(p.product_id) === String(productId));
+            if (selected) {
+                // Find all products with the same product_name to get all variants
+                const sameNameProducts = products.filter(p => p.product_name === selected.product_name);
+                const variants = sameNameProducts.map(p => p.variant).filter(v => v);
+                
+                // Deduplicate while preserving order
+                const seen = new Set();
+                const unique = variants.filter(v => {
+                    if (seen.has(v)) return false;
+                    seen.add(v);
+                    return true;
+                });
+                
+                setVariantOptions(unique.length > 0 ? unique : ["XS", "S", "M", "L", "XL"]);
+                setVariation("");
+            }
+        } else {
+            setVariantOptions([]);
             setVariation("");
         }
     }, [productId, products]);
+
+    // Update productId when variant is selected to use the correct product_id for that variant
+    const handleVariantChange = (selectedVariant) => {
+        setVariation(selectedVariant);
+        if (productId && selectedVariant) {
+            const selected = products.find(p => String(p.product_id) === String(productId));
+            if (selected) {
+                const sameNameProducts = products.filter(p => p.product_name === selected.product_name);
+                const variantProduct = sameNameProducts.find(p => p.variant === selectedVariant);
+                if (variantProduct) {
+                    setProductId(String(variantProduct.product_id));
+                }
+            }
+        }
+    };
 
     if (!open) return null;
 
@@ -94,9 +120,9 @@ export default function AddStock({ open, onClose, onSuccess }) {
                                 onChange={e => setProductId(e.target.value)}
                             >
                                 <option value="">Select Products</option>
-                                {products.map(product => (
-                                    <option key={product.product_id} value={product.product_id}>
-                                        {product.product_name}
+                                {Object.entries(groupProductsByName(products)).map(([productName, variants]) => (
+                                    <option key={productName} value={variants[0].product_id}>
+                                        {productName}
                                     </option>
                                 ))}
                             </select>
@@ -110,7 +136,7 @@ export default function AddStock({ open, onClose, onSuccess }) {
                             <select
                                 className="w-full mt-1 border rounded-lg px-3 py-2 text-sm"
                                 value={variation}
-                                onChange={e => setVariation(e.target.value)}
+                                onChange={e => handleVariantChange(e.target.value)}
                                 disabled={!productId}
                             >
                                 <option value="">Select Variation</option>

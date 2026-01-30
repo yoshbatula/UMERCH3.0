@@ -108,7 +108,7 @@ export default function StockOut() {
 
                 {/* Table */}
                 <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                    <div className="grid grid-cols-12 px-8 py-4 text-sm font-bold text-red-700 border-b">
+                    <div className="grid grid-cols-12 px-8 py-4 text-sm font-bold text-red-700 border-b gap-4">
                         <div className="col-span-3">Date / Time</div>
                         <div className="col-span-4">Product</div>
                         <div className="col-span-3">Quantity</div>
@@ -124,7 +124,7 @@ export default function StockOut() {
                             logs.map(log => (
                                 <div
                                     key={log.id}
-                                    className="grid grid-cols-12 px-8 py-4 border-b text-sm"
+                                    className="grid grid-cols-12 px-8 py-4 border-b text-sm gap-4"
                                 >
                                     <div className="col-span-3">{log.date_time}</div>
                                     <div className="col-span-4">{log.product_name}</div>

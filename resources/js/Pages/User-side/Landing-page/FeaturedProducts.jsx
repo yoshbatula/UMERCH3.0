@@ -5,11 +5,23 @@ import ProductCard from '../../../components/cards/ProductCards';
 export default function FeaturedProducts() {
     const [products, setProducts] = useState([]);
 
+    // Group products by name and show only one per group
+    const groupProductsByName = (productList) => {
+        const grouped = {};
+        productList.forEach((product) => {
+            if (!grouped[product.product_name]) {
+                grouped[product.product_name] = product;
+            }
+        });
+        return Object.values(grouped);
+    };
+
     useEffect(() => {
         axios.get('/admin/products')
             .then(res => {
-                const list = Array.isArray(res.data) ? res.data.slice(0, 4) : [];
-                setProducts(list);
+                const list = Array.isArray(res.data) ? res.data : [];
+                const grouped = groupProductsByName(list);
+                setProducts(grouped.slice(0, 4));
             })
             .catch(() => setProducts([]));
     }, []);
