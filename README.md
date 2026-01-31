@@ -62,7 +62,7 @@ The UM Merchandise Store is committed to serving students, employees, and alumni
 
 ```bash
 ### 1. Clone the Repositories
-git clone https://github.com/your-username/um-merch-management-system.git
+git clone https://github.com/yoshbatula/UMERCH3.0.git
 cd um-merch-management-system
 
 ### 2. Install Backend Dependencies (Laravel)
