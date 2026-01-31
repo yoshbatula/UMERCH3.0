@@ -31,6 +31,12 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/remove-from-cart/{cartItemId}', [GetCartCont::class, 'removeFromCart'])->name('remove.from.cart');
     Route::put('/update-cart-item/{cartItemId}', [GetCartCont::class, 'updateCartItem'])->name('update.cart.item');
 
+    // Order routes
+    Route::post('/place-order', [PlaceOrderCont::class, 'placeOrder'])->name('place.order');
+    Route::get('/api/orders', [PlaceOrderCont::class, 'getUserOrders'])->name('api.orders');
+    Route::post('/api/orders/{orderId}/upload-receipt', [PlaceOrderCont::class, 'uploadReceipt'])->name('upload.receipt');
+    Route::get('/api/admin/orders', [PlaceOrderCont::class, 'getAllOrders'])->name('api.admin.orders');
+
     // User-side page routes
     Route::get('/Landing', function () {
         return inertia('User-side/Landing-page/Landingpage');
@@ -41,8 +47,6 @@ Route::middleware(['auth'])->group(function () {
     })->name('shop');
 
     Route::get('/Cart', [CartsCont::class, 'index'])->name('cart');
-
-    Route::post('/place-order', [PlaceOrderCont::class, 'placeOrder'])->name('place.order');
 
     Route::get('/Checkout', function () {
         return inertia('User-side/Cart-page/Checkout');

@@ -21,12 +21,26 @@ export default function ProductCardModal({ isOpen, onClose, product, onShowToast
 
     const fetchSizeStocks = async () => {
         try {
+            // Determine available sizes from product variant field
+            let availableSizes = ['XS', 'S', 'M', 'L', 'XL'];
+            if (product?.variant) {
+                const parsed = product.variant.split(',').map(v => v.trim()).filter(Boolean);
+                if (parsed.length > 0) {
+                    availableSizes = parsed;
+                }
+            }
+            
             // Fetch from inventory table for accurate per-variant stock
             const res = await axios.get('/api/inventory');
             const inventoryData = res.data || [];
             
-            // Group stock by variant for this product
-            const stocks = {};
+            // Initialize stocks with 0 for all available sizes
+            let stocks = {};
+            availableSizes.forEach(size => {
+                stocks[size] = 0;
+            });
+            
+            // Override with actual stock values from database
             inventoryData.forEach(inv => {
                 if (inv.product_id === product.product_id) {
                     stocks[inv.variant] = inv.quantity;
@@ -39,7 +53,19 @@ export default function ProductCardModal({ isOpen, onClose, product, onShowToast
                 const res = await axios.get('/admin/products');
                 const allProducts = res.data || [];
                 
-                const stocks = {};
+                let availableSizes = ['XS', 'S', 'M', 'L', 'XL'];
+                if (product?.variant) {
+                    const parsed = product.variant.split(',').map(v => v.trim()).filter(Boolean);
+                    if (parsed.length > 0) {
+                        availableSizes = parsed;
+                    }
+                }
+                
+                let stocks = {};
+                availableSizes.forEach(size => {
+                    stocks[size] = 0;
+                });
+                
                 allProducts.forEach(p => {
                     if (p.product_name === product.product_name) {
                         stocks[p.variant] = p.product_stock;
@@ -74,6 +100,11 @@ export default function ProductCardModal({ isOpen, onClose, product, onShowToast
             return;
         }
 
+        if (sizeStocks[selectedSize] === 0 || sizeStocks[selectedSize] === undefined) {
+            onShowToast('This size is out of stock', 'error');
+            return;
+        }
+
         setLoading(true);
         try {
             await axios.post('/add-to-cart', {
@@ -97,6 +128,11 @@ export default function ProductCardModal({ isOpen, onClose, product, onShowToast
     const handleBuyNow = async () => {
         if (!product?.product_id) {
             onShowToast('Product information missing', 'error');
+            return;
+        }
+
+        if (sizeStocks[selectedSize] === 0 || sizeStocks[selectedSize] === undefined) {
+            onShowToast('This size is out of stock', 'error');
             return;
         }
 
@@ -241,22 +277,22 @@ export default function ProductCardModal({ isOpen, onClose, product, onShowToast
                                         +
                                     </button>
                                 </div>
-                                <span className='text-[#7F7F7F] text-[10px] font-light'>{sizeStocks[selectedSize] !== undefined ? sizeStocks[selectedSize] : stock} pieces available</span>
+                                <span className='text-[#7F7F7F] text-[10px] font-light'>{sizeStocks[selectedSize] !== undefined ? sizeStocks[selectedSize] : 0} pieces available</span>
                             </div>
                             <div className='mt-6 flex flex-row gap-3'>
                                 <div className='absolute flex flex-row gap-3'>
                                     <button 
                                         onClick={handleAddToCart}
-                                        disabled={loading}
-                                        className='bg-white border border-[#9C0306] w-40 h-10 rounded-[10px] flex justify-center items-center hover:cursor-pointer disabled:opacity-50'
+                                        disabled={loading || sizeStocks[selectedSize] === 0}
+                                        className='bg-white border border-[#9C0306] w-40 h-10 rounded-[10px] flex justify-center items-center hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
                                     >
                                         <img src={AddToCart} alt="Add to Cart" className='mr-2'/>
                                         <span className='text-[#9C0306] text-[16px] font-semibold'>{loading ? 'Adding...' : 'Add to Cart'}</span>
                                     </button>
                                     <button 
                                         onClick={handleBuyNow}
-                                        disabled={loading}
-                                        className='bg-[#9C0306] w-40 h-10 rounded-[10px] flex justify-center items-center hover:cursor-pointer disabled:opacity-50'
+                                        disabled={loading || sizeStocks[selectedSize] === 0}
+                                        className='bg-[#9C0306] w-40 h-10 rounded-[10px] flex justify-center items-center hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
                                     >
                                         <span className='text-white text-[16px] font-semibold'>{loading ? 'Processing...' : 'Buy Now'}</span>
                                     </button>

@@ -1,11 +1,118 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import BackgroundModel from '@images/BackgroundModel.png';
 import OrdersNav from '../../../components/layouts/OrdersNav';
-import All from '../../User-side/Order-page/All';
 import Tshirt from '@images/tshirt.jpg';
 import Navbar from '../../../components/layouts/LandingNav';
 import Footer from '../../../components/layouts/Footer';
+import axios from 'axios';
+
 export default function ToPay() {
+    const [orders, setOrders] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [uploadedFiles, setUploadedFiles] = useState(() => {
+        // Initialize from localStorage
+        const saved = localStorage.getItem('uploadedFiles');
+        return saved ? JSON.parse(saved) : {};
+    });
+
+    useEffect(() => {
+        fetchOrders();
+    }, []);
+
+    useEffect(() => {
+        // Save to localStorage whenever uploadedFiles changes
+        localStorage.setItem('uploadedFiles', JSON.stringify(uploadedFiles));
+    }, [uploadedFiles]);
+
+    const fetchOrders = async () => {
+        try {
+            console.log('Fetching orders from /api/orders...');
+            const response = await axios.get('/api/orders');
+            console.log('✅ API Response:', response.data);
+            
+            const orderList = Array.isArray(response.data) ? response.data : response.data?.data || [];
+            
+            // Filter for "To Pay" / "Pending" status orders
+            const toPayOrders = orderList.filter(order => 
+                order.order_status?.toLowerCase() === 'pending'
+            );
+            console.log('✅ To Pay Orders:', toPayOrders);
+            setOrders(toPayOrders);
+        } catch (error) {
+            console.error('❌ Error fetching orders:', error);
+            setOrders([]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleFileUpload = (orderId) => {
+        const fileInput = document.getElementById(`file-input-${orderId}`);
+        fileInput?.click();
+    };
+
+    const handleFileChange = async (event, orderId) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            console.log(`✅ File selected for order ${orderId}:`, file.name);
+            
+            try {
+                // Create FormData to send file to backend
+                const formData = new FormData();
+                formData.append('receipt_form', file);
+                
+                console.log(`⏳ Uploading file for order ${orderId}...`);
+                
+                // Send to backend to save in database
+                const response = await axios.post(`/api/orders/${orderId}/upload-receipt`, formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    }
+                });
+                
+                console.log(`✅ File uploaded successfully:`, response.data);
+                
+                // Update state after successful upload
+                setUploadedFiles(prev => ({
+                    ...prev,
+                    [orderId]: {
+                        name: file.name,
+                        uploadedAt: new Date().toISOString()
+                    }
+                }));
+            } catch (error) {
+                console.error(`❌ Error uploading file for order ${orderId}:`, error);
+                alert('Error uploading file. Please try again.');
+            }
+        }
+    };
+
+    if (loading) {
+        return (
+            <>
+                <Navbar/>
+                <div className="bg-[#F6F6F6] flex flex-col">
+                    <div className='bg-[#F6F6F6]'>
+                        <div className='w-full h-48 sm:h-56 md:h-64 lg:h-72 overflow-hidden'>
+                            <img 
+                            src={BackgroundModel}
+                            alt="Background Model"
+                            className='w-full h-full object-cover'
+                            />
+                        </div>
+                    </div>
+                    <div>
+                        <OrdersNav/>
+                    </div>
+                    <div className="flex flex-col items-center justify-center p-4 py-10">
+                        <p>Loading orders...</p>
+                    </div>
+                    <Footer/>
+                </div>
+            </>
+        );
+    }
+
     return (
         <>
             <Navbar/>
@@ -22,44 +129,75 @@ export default function ToPay() {
                 <div>
                     <OrdersNav/>
                 </div>
-                <div className="flex flex-col items-center justify-center p-4 py-10">
-                    <div className='flex flex-col bg-white w-300 h-78 rounded-[10px]'>
-                        <div className='flex flex-row p-4'>
-                            <h1 className='text-[#575757] text-[13px]'>Order ID: 0001</h1>
-                            <div className='ml-auto flex'>
-                                <h1 className='text-[#9C0306] text-[16px]'>To Pay</h1>
-                            </div>
+                <div className="flex flex-col items-center justify-center p-4 py-10 gap-5">
+                    {orders.length === 0 ? (
+                        <div className="text-gray-500 text-center py-10">
+                            <p>No orders to pay</p>
                         </div>
-                        <div className='mt-3'>
-                            <div className='bg-[#9C9C9C] w-full h-[1px]'></div>
-                        </div>
-                        <div className='p-4'>
-                            <div className="flex flex-row items-center justify-center gap-2 w-full">
-                                <img src={Tshirt} alt="tshirt" className="w-20 h-20 rounded-[10px]" />
-                                <div className="flex flex-col items-start justify-center gap-1">
-                                    <h1 className="text-[15px] font-semibold">UM CCE Esports Jersey</h1>
-                                    <span className="text-[10px]">Medium</span>
-                                    <span className="text-[10px] text-[#9C0306]">x1</span>
+                    ) : (
+                        orders.map((order) => (
+                            <div key={order.order_id} className='flex flex-col bg-white w-300 h-auto rounded-[10px]'>
+                                <div className='flex flex-row p-4'>
+                                    <h1 className='text-[#575757] text-[13px]'>Order ID: {order.order_id || 'N/A'}</h1>
+                                    <div className='ml-auto flex'>
+                                        <h1 className='text-[#9C0306] text-[16px] font-semibold'>To Pay</h1>
+                                    </div>
                                 </div>
-                                <div className="flex ml-auto items-center justify-center">
-                                    <h1 className="text-[13px] text-[#9C0306] font-medium">₱500</h1>
+                                <div className='mt-3'>
+                                    <div className='bg-[#9C9C9C] w-full h-[1px]'></div>
                                 </div>
+                                <div className='p-4'>
+                                    <div className="flex flex-col gap-4">
+                                        {order.order_items && order.order_items.length > 0 ? (
+                                            order.order_items.map((item, index) => (
+                                                <div key={index} className="flex flex-row items-center justify-center gap-2 w-full border-b pb-4 last:border-b-0">
+                                                    <img 
+                                                        src={item.product?.product_image || Tshirt} 
+                                                        alt={item.product?.product_name || 'product'} 
+                                                        className="w-20 h-20 rounded-[10px] object-cover" 
+                                                    />
+                                                    <div className="flex flex-col items-start justify-center gap-1">
+                                                        <h1 className="text-[15px] font-semibold">{item.product?.product_name || 'Product'}</h1>
+                                                        <span className="text-[10px]">{item.variant || 'N/A'}</span>
+                                                        <span className="text-[10px] text-[#9C0306]">x{item.quantity || 1}</span>
+                                                    </div>
+                                                    <div className="flex ml-auto items-center justify-center">
+                                                        <h1 className="text-[13px] text-[#9C0306] font-medium">₱{Number(item.price || 0).toFixed(2)}</h1>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <p className="text-gray-500 text-sm">No items in this order</p>
+                                        )}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className='bg-[#9C9C9C] w-full h-[1px]'></div>
+                                </div>
+                                <div className="py-5 flex flex-row ml-auto items-center gap-5 p-4">
+                                    <span className="text-[#5C5C5C] text-[13px] font-medium">Order Total:</span>
+                                    <h1 className="text-[#9C0306] text-[20px] font-medium">₱{Number(order.order_total || 0).toFixed(2)}</h1>
+                                </div>
+                                <div className="flex flex-row ml-auto items-center gap-5 p-4">
+                                    <span className={`text-[13px] font-medium underline ${uploadedFiles[order.order_id] ? 'text-green-600' : 'text-[#031A9C]'}`}>
+                                        {uploadedFiles[order.order_id] ? 'File Uploaded' : 'Upload Proof of Payment Here'}
+                                    </span>
+                                    <div className="bg-[#9C0306] text-white w-30 h-9 flex items-center justify-center rounded-[20px] hover:cursor-pointer" onClick={() => handleFileUpload(order.order_id)}>
+                                        <button className="text-[12px] font-medium hover:cursor-pointer">
+                                            {uploadedFiles[order.order_id] ? '✓ Uploaded' : 'Upload File'}
+                                        </button>
+                                    </div>
+                                    <input 
+                                        id={`file-input-${order.order_id}`}
+                                        type="file" 
+                                        accept="image/*,.pdf"
+                                        onChange={(e) => handleFileChange(e, order.order_id)}
+                                        style={{ display: 'none' }}
+                                    />
+                                </div> 
                             </div>
-                        </div>
-                        <div>
-                            <div className='bg-[#9C9C9C] w-full h-[1px]'></div>
-                        </div>
-                        <div className="py-5 flex flex-rowv ml-auto items-center gap-5 p-4">
-                            <span className="text-[#5C5C5C] text-[13px] font-medium">Order Total:</span>
-                            <h1 className="text-[#9C0306] text-[20px] font-medium">₱500</h1>
-                        </div>
-                        <div className="flex flex-rowv ml-auto items-center gap-5 p-4">
-                            <span className="text-[#031A9C] text-[13px] font-medium underline">Upload Proof of Payment Here</span>
-                            <div className="bg-[#9C0306] text-white w-30 h-9 flex items-center justify-center rounded-[20px] hover:cursor-pointer">
-                                <button className="text-[12px] font-medium">Upload File</button>
-                            </div>
-                        </div> 
-                    </div>
+                        ))
+                    )}
                 </div>
             <Footer/>
             </div>

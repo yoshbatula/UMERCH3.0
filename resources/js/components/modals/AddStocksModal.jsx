@@ -33,52 +33,39 @@ export default function AddStock({ open, onClose, onSuccess }) {
     // Derive variant options from selected product's `variant` field
     useEffect(() => {
         if (productId) {
-            const selected = products.find(p => String(p.product_id) === String(productId));
-            if (selected) {
-                // Find all products with the same product_name to get all variants
-                const sameNameProducts = products.filter(p => p.product_name === selected.product_name);
-                const variants = sameNameProducts.map(p => p.variant).filter(v => v);
-                
-                // Deduplicate while preserving order
-                const seen = new Set();
-                const unique = variants.filter(v => {
-                    if (seen.has(v)) return false;
-                    seen.add(v);
-                    return true;
-                });
-                
-                setVariantOptions(unique.length > 0 ? unique : ["XS", "S", "M", "L", "XL"]);
-                setVariation("");
-            }
+            // Find all products with the same product_name to get all variants
+            const sameNameProducts = products.filter(p => p.product_name === productId);
+            const variants = sameNameProducts.map(p => p.variant).filter(v => v);
+            
+            // Deduplicate while preserving order
+            const seen = new Set();
+            const unique = variants.filter(v => {
+                if (seen.has(v)) return false;
+                seen.add(v);
+                return true;
+            });
+            
+            setVariantOptions(unique.length > 0 ? unique : ["XS", "S", "M", "L", "XL"]);
+            setVariation("");
         } else {
             setVariantOptions([]);
             setVariation("");
         }
     }, [productId, products]);
 
-    // Update productId when variant is selected to use the correct product_id for that variant
+    // Update variation when selected
     const handleVariantChange = (selectedVariant) => {
         setVariation(selectedVariant);
-        if (productId && selectedVariant) {
-            const selected = products.find(p => String(p.product_id) === String(productId));
-            if (selected) {
-                const sameNameProducts = products.filter(p => p.product_name === selected.product_name);
-                const variantProduct = sameNameProducts.find(p => p.variant === selectedVariant);
-                if (variantProduct) {
-                    setProductId(String(variantProduct.product_id));
-                }
-            }
-        }
     };
 
     if (!open) return null;
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        const selected = products.find(p => String(p.product_id) === String(productId));
+        const selected = products.find(p => p.variant === variation && p.product_name === productId);
         const derivedCost = selected ? Number(selected.product_price) : 0;
         router.post("/admin/stock-in/store", {
-            product_id: productId,
+            product_id: selected?.product_id,
             variant: variation,
             stock_qty: Number(quantity),
             cost: derivedCost,
@@ -121,7 +108,7 @@ export default function AddStock({ open, onClose, onSuccess }) {
                             >
                                 <option value="">Select Products</option>
                                 {Object.entries(groupProductsByName(products)).map(([productName, variants]) => (
-                                    <option key={productName} value={variants[0].product_id}>
+                                    <option key={productName} value={productName}>
                                         {productName}
                                     </option>
                                 ))}

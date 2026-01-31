@@ -12,6 +12,7 @@ use App\Http\Controllers\AdminsideControllers\RecordsControllers\DeleteRecords;
 use App\Http\Controllers\AdminsideControllers\InventoryControllers\StockInController;
 use App\Http\Controllers\AdminsideControllers\InventoryControllers\StockOutController;
 use App\Http\Controllers\AdminsideControllers\RecordsControllers\DashboardController;
+use App\Http\Controllers\UsersideControllers\OrdersController\PlaceOrderCont;
 
 /*
 |--------------------------------------------------------------------------
@@ -77,6 +78,10 @@ Route::prefix('admin')->group(function () {
     // STOCK OUT
     Route::get('/stock-out/logs', [StockOutController::class, 'logs']);
     Route::post('/stock-out/store', [StockOutController::class, 'store']);
+
+
+    // Transactions API
+    Route::get('/api/admin/orders', [PlaceOrderCont::class, 'getAllOrders'])->name('api.admin.orders');
 
     // DASHBOARD API
     Route::get('/dashboard/stats', [DashboardController::class, 'getStats']);

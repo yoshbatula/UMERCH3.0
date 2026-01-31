@@ -5,6 +5,8 @@ import CartsNav from '../../../components/layouts/CartsNav';
 import BackgroundModel from '@images/BackgroundModel.png';
 import Footer from '../../../components/layouts/Footer';
 import axios from 'axios';
+import PlaceOrderModal from '../../../components/modals/PlaceOrderModal';
+import ReceiptForm from '../../../components/modals/ReceiptFormModal';
 import { useState, useEffect } from 'react';
 
 export default function Checkout() {
@@ -13,6 +15,8 @@ export default function Checkout() {
     const [toast, setToast] = useState(null);
     const [fulfillmentMethod, setFulfillmentMethod] = useState('delivery');
     const [campus, setCampus] = useState('');
+    const [isPlaceOrderModalOpen, setIsPlaceOrderModalOpen] = useState(false);
+    const [isReceiptFormOpen, setIsReceiptFormOpen] = useState(false);
     const intervalRef = React.useRef(null);
 
     useEffect(() => {
@@ -44,36 +48,69 @@ export default function Checkout() {
         setTimeout(() => setToast(null), 6000);
     };
 
-    const handlePlaceOrder = async (e) => {
+    const handlePlaceOrderClick = (e) => {
         e.preventDefault();
 
+        // Validate campus selection for delivery
+        if (fulfillmentMethod === 'delivery' && !campus) {
+            showToast('Please select a campus for delivery', 'error');
+            return;
+        }
+
+        // Open PlaceOrderModal
+        setIsPlaceOrderModalOpen(true);
+    };
+
+    const handlePlaceOrderConfirm = async () => {
+        setIsPlaceOrderModalOpen(false);
         setLoading(true);
         try {
-            await axios.post('/place-order', {
-                payment_method: fulfillmentMethod === 'delivery' ? 'cashier' : 'cashier', 
+            console.log('Placing order with data:', {
+                payment_method: 'cashier',
                 fulfillment_method: fulfillmentMethod,
                 campus: fulfillmentMethod === 'delivery' ? campus : null,
                 cart_items: cartItems
             });
+
+            const response = await axios.post('/place-order', {
+                payment_method: 'cashier', 
+                fulfillment_method: fulfillmentMethod,
+                campus: fulfillmentMethod === 'delivery' ? campus : null,
+                cart_items: cartItems
+            });
+            
+            console.log('✅ Order placed successfully:', response.data);
             
             // Clear the interval to prevent redirect to /Cart
             if (intervalRef.current) {
                 clearInterval(intervalRef.current);
             }
             
-            showToast('Order placed successfully!', 'success');
-            sessionStorage.removeItem('checkoutItems');
-            
-            // Navigate directly to Orders
-            setTimeout(() => {
-                router.visit('/Orders');
-            }, 1500);
+            // Open Receipt Form instead of redirecting
+            setIsReceiptFormOpen(true);
         } catch (error) {
-            console.error('Order error:', error);
+            console.error('❌ Order error:', error);
+            console.error('❌ Error response data:', error.response?.data);
+            console.error('❌ Error message:', error.message);
+            console.error('❌ Full error response:', JSON.stringify(error.response?.data, null, 2));
             showToast('Error placing order. Please try again.', 'error');
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleReceiptClose = () => {
+        setIsReceiptFormOpen(false);
+    };
+
+    const handleGoHome = () => {
+        sessionStorage.removeItem('checkoutItems');
+        router.visit('/Landing');
+    };
+
+    const handleTrackOrders = () => {
+        sessionStorage.removeItem('checkoutItems');
+        router.visit('/Orders');
     };
 
     const total = cartItems.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0);
@@ -196,7 +233,7 @@ export default function Checkout() {
                                 </div>
                             </div>
                             <div className='ml-auto flex flex-col'>
-                                <form onSubmit={handlePlaceOrder} className='bg-white w-110 h-auto rounded-[10px] p-6 flex flex-col gap-4'>
+                                <form className='bg-white w-110 h-auto rounded-[10px] p-6 flex flex-col gap-4'>
                                     <div className='flex flex-row justify-between'>
                                         <h1 className='text-[16px] font-medium'>SUBTOTAL</h1>
                                         <span className='text-[16px] font-medium'>₱{total.toFixed(2)}</span>
@@ -212,7 +249,8 @@ export default function Checkout() {
                                         </div>
                                         <div className='border border-[#9C0306] bg-[#9C0306] w-50 h-10 flex justify-center rounded-[20px] hover:cursor-pointer disabled:opacity-50'>
                                             <button 
-                                                type="submit" 
+                                                type="button" 
+                                                onClick={handlePlaceOrderClick}
                                                 disabled={loading || cartItems.length === 0} 
                                                 className='text-[16px] font-bold text-white disabled:opacity-50 disabled:cursor-not-allowed hover:cursor-pointer'
                                             >
@@ -229,6 +267,20 @@ export default function Checkout() {
                     </div>
                 </div>
             </div>
+
+            {/* Modals */}
+            <PlaceOrderModal 
+                isOpen={isPlaceOrderModalOpen} 
+                onClose={() => setIsPlaceOrderModalOpen(false)}
+                onConfirm={handlePlaceOrderConfirm}
+            />
+            <ReceiptForm
+                open={isReceiptFormOpen}
+                onClose={handleReceiptClose}
+                cartItems={cartItems}
+                onGoHome={handleGoHome}
+                onTrackOrders={handleTrackOrders}
+            />
 
             {/* Toast Notification */}
             {toast && (

@@ -15,6 +15,9 @@ class Orders extends Model
         'status',
         'receipt_form',
         'order_date',
+        'payment_method',
+        'fulfillment_method',
+        'campus',
     ];
 
     public function orderItems()

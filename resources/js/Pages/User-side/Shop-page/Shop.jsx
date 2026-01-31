@@ -15,6 +15,10 @@ export default function Shop() {
     const [products, setProducts] = useState([]);
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [toast, setToast] = useState(null);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [sortBy, setSortBy] = useState('default');
+    const [itemsPerPage, setItemsPerPage] = useState(9);
+    const [currentPage, setCurrentPage] = useState(1);
 
     const showToast = (message, type = 'success') => {
         setToast({ message, type });
@@ -60,6 +64,48 @@ export default function Shop() {
             .catch(() => setProducts([]));
     }, []);
 
+    // Filter products based on search query
+    const filteredProducts = products.filter(p => 
+        p.product_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (p.product_description && p.product_description.toLowerCase().includes(searchQuery.toLowerCase()))
+    );
+
+    // Sort products
+    const sortedProducts = [...filteredProducts].sort((a, b) => {
+        if (sortBy === 'price-low') return a.product_price - b.product_price;
+        if (sortBy === 'price-high') return b.product_price - a.product_price;
+        if (sortBy === 'name') return a.product_name.localeCompare(b.product_name);
+        return 0;
+    });
+
+    // Pagination
+    const totalItems = sortedProducts.length;
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const paginatedProducts = sortedProducts.slice(startIndex, startIndex + itemsPerPage);
+    const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+
+    const goToPage = (page) => {
+        if (page >= 1 && page <= totalPages) {
+            setCurrentPage(page);
+        }
+    };
+
+    const handleItemsPerPageChange = (e) => {
+        setItemsPerPage(Number(e.target.value));
+        setCurrentPage(1);
+    };
+
+    const handleSortChange = (e) => {
+        setSortBy(e.target.value);
+        setCurrentPage(1);
+    };
+
+    const handleSearchChange = (e) => {
+        setSearchQuery(e.target.value);
+        setCurrentPage(1);
+    };
+
     return (
         <>
             <Navbar/>
@@ -77,25 +123,46 @@ export default function Shop() {
                 <div className='flex flex-row gap-5'>
                     <div className='flex flex-row gap-1 items-center'>
                         <p>View</p>
-                        <select className='border border-[#727272] rounded px-2 py-1'>
-                            <option value="grid">25</option>
+                        <select className='border border-[#727272] rounded px-2 py-1' value={itemsPerPage} onChange={handleItemsPerPageChange}>
+                            <option value="9">9</option>
+                            <option value="15">15</option>
+                            <option value="25">25</option>
                         </select>
                     </div>
                     <div className='flex flex-row gap-1 items-center'>
                         <p>Sort by</p>
-                        <select className='border border-[#727272] rounded px-2 py-1'>
+                        <select className='border border-[#727272] rounded px-2 py-1' value={sortBy} onChange={handleSortChange}>
                             <option value="default">Default</option>
+                            <option value="price-low">Price: Low to High</option>
+                            <option value="price-high">Price: High to Low</option>
+                            <option value="name">Name: A to Z</option>
                         </select>
+                    </div>
+                    <div className='flex flex-row items-center gap-2 border border-[#727272] rounded px-2 py-1'>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                            <path
+                                d="M21 21l-4.35-4.35"
+                                stroke="#727272"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                            />
+                            <path
+                                d="M11 19a8 8 0 100-16 8 8 0 000 16z"
+                                stroke="#727272"
+                                strokeWidth="2"
+                            />
+                        </svg>
+                        <input type="text" placeholder="Search products..." className="border-none outline-none bg-transparent w-full text-sm text-gray-700 placeholder:text-gray-400" value={searchQuery} onChange={handleSearchChange} />
                     </div>
                 </div>
                 <div className='flex flex-row gap-1 items-center'>
-                    <p>Showing 1-20 of 120 results </p>
+                    <p>Showing {totalItems === 0 ? 0 : startIndex + 1}-{endIndex} of {totalItems} results </p>
                 </div>
             </div>
 
             {/* Shop cards */}
             <div className='flex flex-row flex-wrap justify-center gap-6 px-10 pb-10'>
-                {products.map(p => (
+                {paginatedProducts.map(p => (
                     <ShopCards
                         key={p.product_id}
                         onClick={() => openProductModal(p)}
@@ -110,11 +177,33 @@ export default function Shop() {
 
             {/* Pagination */}
             <div className='flex flex-row justify-center items-center gap-4 pb-10'>
-                <button className='px-3 py-1 hover:cursor-pointer'><img src={LeftArrow} alt="Left Arrow"/></button>
-                <button className='px-3 py-1 border border-gray-400 rounded bg-[#9C0306] text-white hover:cursor-pointer'>1</button>
-                <button className='px-3 py-1 border border-[#9C0306] text-[#9C0306] hover:cursor-pointer'>2</button>
-                <button className='px-3 py-1 border border-[#9C0306] text-[#9C0306] hover:cursor-pointer'>3</button>
-                <button className='px-3 py-1 hover:cursor-pointer'><img src={RightArrow} alt="Right Arrow"/></button>
+                <button 
+                    onClick={() => goToPage(currentPage - 1)} 
+                    disabled={currentPage === 1}
+                    className='px-3 py-1 hover:cursor-pointer disabled:opacity-50'
+                >
+                    <img src={LeftArrow} alt="Left Arrow"/>
+                </button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                    <button 
+                        key={page}
+                        onClick={() => goToPage(page)}
+                        className={`px-3 py-1 border rounded hover:cursor-pointer ${
+                            page === currentPage 
+                                ? 'bg-[#9C0306] text-white border-gray-400' 
+                                : 'border-[#9C0306] text-[#9C0306]'
+                        }`}
+                    >
+                        {page}
+                    </button>
+                ))}
+                <button 
+                    onClick={() => goToPage(currentPage + 1)} 
+                    disabled={currentPage === totalPages}
+                    className='px-3 py-1 hover:cursor-pointer disabled:opacity-50'
+                >
+                    <img src={RightArrow} alt="Right Arrow"/>
+                </button>
             </div>
 
             {/* Footer */}

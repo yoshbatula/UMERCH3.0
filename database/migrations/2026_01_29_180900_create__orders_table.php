@@ -19,6 +19,9 @@ return new class extends Migration
             $table->enum('status', ['Pending', 'Processing', 'Completed', 'Cancelled', 'Ready-for-pickup', 'Out-of-delivery'])->default('Pending');
             $table->string('receipt_form')->nullable();
             $table->dateTime('order_date');
+            $table->string('payment_method')->nullable();
+            $table->string('fulfillment_method')->nullable();
+            $table->string('campus')->nullable();
             $table->timestamps();
         });
     }
