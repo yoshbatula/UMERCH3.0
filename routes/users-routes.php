@@ -36,6 +36,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/api/orders', [PlaceOrderCont::class, 'getUserOrders'])->name('api.orders');
     Route::post('/api/orders/{orderId}/upload-receipt', [PlaceOrderCont::class, 'uploadReceipt'])->name('upload.receipt');
     Route::get('/api/admin/orders', [PlaceOrderCont::class, 'getAllOrders'])->name('api.admin.orders');
+    Route::put('/api/admin/orders/{orderId}/status', [PlaceOrderCont::class, 'updateOrderStatus'])->name('update.order.status');
 
     // User-side page routes
     Route::get('/Landing', function () {

@@ -8,6 +8,9 @@ export default function All() {
 
     useEffect(() => {
         fetchOrders();
+        // Auto-refresh orders every 5 seconds
+        const interval = setInterval(fetchOrders, 5000);
+        return () => clearInterval(interval);
     }, []);
 
     const fetchOrders = async () => {

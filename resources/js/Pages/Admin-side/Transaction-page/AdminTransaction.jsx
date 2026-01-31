@@ -1,6 +1,11 @@
 import React, { useMemo, useState, useEffect } from "react";
 import Sidebar from "../../../components/layouts/Sidebar";
 import AdminFooter from "../../../components/layouts/AdminFooter";
+import PrepareModal from "../../../components/modals/PrepareModal";
+import DeclineModal from "../../../components/modals/DeclineModal";
+import DeliverModal from "../../../components/modals/DeliverModal";
+import ReadyForPickupModal from "../../../components/modals/ReadyForPickupModal";
+import ViewReceiptFormModal from "../../../components/modals/ViewReceiptFormModal";
 import axios from "axios";
 
 
@@ -26,70 +31,133 @@ const Icon = ({ children }) => (
     </svg>
 );
 
-const OrderModal = ({ order, isOpen, onClose }) => {
+const OrderModal = ({ order, isOpen, onClose, onReceiptOpen, onPrepareOpen, onDeclineOpen, onDeliverOpen, onReadyForPickupOpen }) => {
     if (!isOpen || !order) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full mx-4">
-                <h2 className="text-xl font-bold mb-4">Order Details</h2>
-                
-                <div className="space-y-3 mb-6">
-                    <div className="flex justify-between">
-                        <span className="text-gray-600">Order ID:</span>
-                        <span className="font-semibold">{order.order_id}</span>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
+            <div className="bg-white rounded-lg shadow-lg p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+                {/* Header */}
+                <div className="flex justify-between items-start mb-8">
+                    <div>
+                        <h2 className="text-2xl font-bold text-red-700">{order.user_fullname || 'Customer'}</h2>
+                        <p className="text-gray-600 text-sm">Order ID: {order.order_id}</p>
                     </div>
-                    <div className="flex justify-between">
-                        <span className="text-gray-600">Status:</span>
-                        <span className={`font-semibold ${
-                            order.order_status?.toLowerCase() === 'pending' ? 'text-yellow-600' : 'text-green-600'
+                    <div className="flex gap-3">
+                        {order.receipt_form && (
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onClose();
+                                    onReceiptOpen();
+                                }}
+                                className="text-red-700 hover:text-red-900 font-semibold"
+                            >
+                                View File
+                            </button>
+                        )}
+                        <span className={`px-4 py-1 rounded-full text-sm font-semibold ${
+                            order.order_status?.toLowerCase() === 'pending' ? 'bg-gray-300 text-gray-700' :
+                            order.order_status?.toLowerCase() === 'completed' ? 'bg-green-100 text-green-800' :
+                            'bg-blue-100 text-blue-800'
                         }`}>
                             {order.order_status || 'Pending'}
                         </span>
                     </div>
-                    <div className="flex justify-between">
-                        <span className="text-gray-600">Total:</span>
-                        <span className="font-semibold">₱{Number(order.order_total || 0).toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                        <span className="text-gray-600">Receipt:</span>
-                        <span className={`font-semibold ${order.receipt_form ? 'text-green-600' : 'text-yellow-600'}`}>
-                            {order.receipt_form ? '✓ Uploaded' : 'Pending'}
-                        </span>
-                    </div>
-                    <div className="flex justify-between">
-                        <span className="text-gray-600">Order Date:</span>
-                        <span className="font-semibold text-sm">{new Date(order.created_at).toLocaleDateString()}</span>
-                    </div>
                 </div>
 
-                <h3 className="font-semibold mb-3">Items:</h3>
-                <div className="space-y-2 mb-6 max-h-48 overflow-y-auto">
+                {/* Products */}
+                <div className="space-y-4 mb-8 pb-8 border-b">
                     {order.order_items?.map((item, idx) => (
-                        <div key={idx} className="border-b pb-2 text-sm">
-                            <p className="font-medium">{item.product?.product_name || 'Product'}</p>
-                            <p className="text-gray-600">Qty: {item.quantity} × ₱{Number(item.price || 0).toFixed(2)}</p>
+                        <div key={idx} className="flex gap-4">
+                            {item.product?.product_image && (
+                                <img
+                                    src={item.product.product_image}
+                                    alt={item.product.product_name}
+                                    className="w-20 h-20 rounded object-cover"
+                                />
+                            )}
+                            <div className="flex-1">
+                                <h3 className="font-semibold text-lg">{item.product?.product_name || 'Product'}</h3>
+                                <p className="text-gray-600 text-sm">{item.variant || 'Standard'}</p>
+                                <div className="flex justify-between items-end mt-2">
+                                    <p className="text-sm text-gray-600">x{item.quantity}</p>
+                                    <p className="text-red-700 font-bold text-lg">₱{Number(item.price || 0).toFixed(2)}</p>
+                                </div>
+                            </div>
                         </div>
                     ))}
                 </div>
 
-                {order.receipt_form && (
-                    <a
-                        href={`/storage/${order.receipt_form}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="block w-full text-center bg-blue-600 text-white py-2 rounded-lg mb-4 hover:bg-blue-700"
-                    >
-                        View Receipt
-                    </a>
-                )}
+                {/* Details */}
+                <div className="space-y-4 mb-8">
+                    <div className="flex justify-between">
+                        <span className="text-gray-700">Payment Method:</span>
+                        <span className="font-semibold">{order.payment_method || 'Cashier Payment'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                        <span className="text-gray-700">Fulfillment Method:</span>
+                        <span className="font-semibold">{order.fulfillment_method || 'Delivery'}</span>
+                    </div>
+                </div>
 
-                <button
-                    onClick={onClose}
-                    className="w-full bg-gray-300 text-gray-800 py-2 rounded-lg hover:bg-gray-400"
-                >
-                    Close
-                </button>
+                {/* Order Total */}
+                <div className="flex justify-between items-center mb-8 pb-8 border-b">
+                    <span className="text-gray-700 font-medium">Order Total:</span>
+                    <span className="text-red-700 text-3xl font-bold">₱{Number(order.order_total || 0).toFixed(2)}</span>
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-4">
+                    {order.order_status?.toLowerCase() === 'pending' && (
+                        <>
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onClose();
+                                    onPrepareOpen();
+                                }}
+                                className="flex-1 bg-[#9C0306] hover:cursor-pointer text-white py-3 rounded-[10px] font-semibold"
+                            >
+                                Prepare
+                            </button>
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onClose();
+                                    onDeclineOpen();
+                                }}
+                                className="flex-1 border-2 border-[#9C0306] text-[#9C0306] hover:cursor-pointer py-3 rounded-[10px] font-semibold"
+                            >
+                                Decline
+                            </button>
+                        </>
+                    )}
+                    {order.order_status?.toLowerCase() === 'processing' && (
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onClose();
+                                onDeliverOpen();
+                            }}
+                            className="flex-1 bg-[#9C0306] hover:cursor-pointer text-white py-3 rounded-[10px] font-semibold"
+                        >
+                            To Deliver
+                        </button>
+                    )}
+                    {order.order_status?.toLowerCase() === 'out-of-delivery' && (
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onClose();
+                                onReadyForPickupOpen();
+                            }}
+                            className="flex-1 bg-[#9C0306] hover:cursor-pointer text-white py-3 rounded-[10px] font-semibold"
+                        >
+                            Ready for Pickup
+                        </button>
+                    )}
+                </div>
             </div>
         </div>
     );
@@ -102,9 +170,23 @@ export default function AdminTransaction() {
     const [loading, setLoading] = useState(true);
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
+    const [isPrepareModalOpen, setIsPrepareModalOpen] = useState(false);
+    const [isDeclineModalOpen, setIsDeclineModalOpen] = useState(false);
+    const [isDeliverModalOpen, setIsDeliverModalOpen] = useState(false);
+    const [isReadyForPickupModalOpen, setIsReadyForPickupModalOpen] = useState(false);
+    const [toast, setToast] = useState(null);
+
+    const showToast = (message, type = 'success') => {
+        setToast({ message, type });
+        setTimeout(() => setToast(null), 3000);
+    };
 
     useEffect(() => {
         fetchOrders();
+        // Auto-refresh orders every 3 seconds
+        const interval = setInterval(fetchOrders, 3000);
+        return () => clearInterval(interval);
     }, []);
 
     const fetchOrders = async () => {
@@ -117,6 +199,24 @@ export default function AdminTransaction() {
             setOrders([]);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleOrderUpdated = async () => {
+        // Refresh orders and update selected order
+        await fetchOrders();
+        // Refresh the selected order data
+        if (selectedOrder) {
+            try {
+                const response = await axios.get('/api/admin/orders');
+                const updated = Array.isArray(response.data) ? response.data : response.data?.data || [];
+                const refreshedOrder = updated.find(o => o.order_id === selectedOrder.order_id);
+                if (refreshedOrder) {
+                    setSelectedOrder(refreshedOrder);
+                }
+            } catch (error) {
+                console.error('❌ Error refreshing selected order:', error);
+            }
         }
     };
 
@@ -168,8 +268,29 @@ export default function AdminTransaction() {
             ),
         },
         {
-            title: "Delivering",
+            title: "Processing",
             value: orders.filter(o => o.order_status?.toLowerCase() === 'processing').length,
+            className: "bg-[#4F46E5]",
+            icon: (
+                <Icon>
+                    <path
+                        d="M12 6v6l4 2"
+                        stroke="white"
+                        strokeWidth="2.2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                    />
+                    <path
+                        d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        stroke="white"
+                        strokeWidth="2.2"
+                    />
+                </Icon>
+            ),
+        },
+        {
+            title: "Out for Delivery",
+            value: orders.filter(o => o.order_status?.toLowerCase() === 'out-of-delivery').length,
             className: "bg-[#EF2F2A]",
             icon: (
                 <Icon>
@@ -235,10 +356,10 @@ export default function AdminTransaction() {
                     ))}
                 </div>
 
-                <h2 className="text-xl font-bold mt-10">Orders</h2>
+                <h2 className="text-2xl font-bold mt-10 mb-4">Orders</h2>
 
                 {/* SEARCH + STATUS */}
-                <div className="mt-4 flex items-center justify-between gap-6">
+                <div className="flex items-center justify-between gap-6 mb-4">
                     <div className="flex items-center gap-3 flex-1 max-w-[520px] bg-white border border-gray-200 rounded-lg px-4 py-3">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none"> <path d="M21 21l-4.35-4.35" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" />
                             <path
@@ -272,66 +393,66 @@ export default function AdminTransaction() {
                 </div>
 
                 {/* TABLE */}
-                <div className="bg-white rounded-xl mt-6 shadow-sm border border-gray-200 overflow-hidden">
-                    <table className="w-full">
-                        <thead className="bg-gray-50 border-b border-gray-200">
-                            <tr>
-                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Order ID</th>
-                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Status</th>
-                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Receipt</th>
-                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Total</th>
-                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Date</th>
-                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {loading ? (
-                                <tr>
-                                    <td colSpan="6" className="px-6 py-4 text-center text-gray-500">Loading...</td>
-                                </tr>
-                            ) : filtered.length === 0 ? (
-                                <tr>
-                                    <td colSpan="6" className="px-6 py-4 text-center text-gray-500">No orders found</td>
-                                </tr>
-                            ) : (
-                                filtered.map((order) => (
-                                    <tr key={order.order_id} className="border-b border-gray-200 hover:bg-gray-50">
-                                        <td className="px-6 py-4 text-sm font-semibold text-gray-900">#{order.order_id}</td>
-                                        <td className="px-6 py-4 text-sm">
-                                            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                                                order.order_status?.toLowerCase() === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                                order.order_status?.toLowerCase() === 'completed' ? 'bg-green-100 text-green-800' :
-                                                order.order_status?.toLowerCase() === 'processing' ? 'bg-blue-100 text-blue-800' :
-                                                'bg-red-100 text-red-800'
-                                            }`}>
-                                                {order.order_status || 'Pending'}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-sm">
-                                            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                                                order.receipt_form ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                                            }`}>
-                                                {order.receipt_form ? '✓ Uploaded' : 'Pending'}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-sm font-semibold">₱{Number(order.order_total || 0).toFixed(2)}</td>
-                                        <td className="px-6 py-4 text-sm text-gray-600">{new Date(order.created_at).toLocaleDateString()}</td>
-                                        <td className="px-6 py-4 text-sm">
-                                            <button
-                                                onClick={() => {
-                                                    setSelectedOrder(order);
-                                                    setIsModalOpen(true);
-                                                }}
-                                                className="text-blue-600 hover:text-blue-800 font-semibold"
-                                            >
-                                                View Info
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
+                <div className="space-y-3">
+                    {loading ? (
+                        <div className="text-center py-24 text-gray-400">
+                            Loading...
+                        </div>
+                    ) : filtered.length === 0 ? (
+                        <div className="text-center py-24 text-gray-400">
+                            No orders found
+                        </div>
+                    ) : (
+                        filtered.map((order) => (
+                            <div
+                                key={order.order_id}
+                                className="bg-white rounded-lg border border-gray-200 p-4 flex items-center justify-between hover:shadow-md transition"
+                            >
+                                {/* Left - Info */}
+                                <div className="flex items-start flex-1">
+                                    <div>
+                                        <p className="font-semibold text-gray-900">{order.user_fullname || order.user?.name || 'Customer'}</p>
+                                        <p className="text-sm text-gray-600">Order ID: {order.order_id}</p>
+                                        <p className="text-xs text-gray-400 mt-1">{Math.floor((Date.now() - new Date(order.created_at).getTime()) / 60000)} mins ago</p>
+                                    </div>
+                                </div>
+
+                                {/* Middle - Status Badges */}
+                                <div className="flex items-start gap-3 flex-1">
+                                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                                        order.order_status?.toLowerCase() === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                        order.order_status?.toLowerCase() === 'completed' ? 'bg-green-100 text-green-800' :
+                                        order.order_status?.toLowerCase() === 'processing' ? 'bg-blue-100 text-blue-800' :
+                                        'bg-red-100 text-red-800'
+                                    }`}>
+                                        {order.order_status || 'Pending'}
+                                    </span>
+                                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                                        order.receipt_form ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                                    }`}>
+                                        {order.receipt_form ? 'File Uploaded' : 'No file uploaded'}
+                                    </span>
+                                </div>
+
+                                {/* Right - Total + Action */}
+                                <div className="flex items-center gap-6 justify-end">
+                                    <div className="text-right">
+                                        <p className="text-xs text-red-600 font-semibold">To Pay</p>
+                                        <p className="text-lg font-bold text-red-700">₱{Number(order.order_total || 0).toFixed(2)}</p>
+                                    </div>
+                                    <button
+                                        onClick={() => {
+                                            setSelectedOrder(order);
+                                            setIsModalOpen(true);
+                                        }}
+                                        className="text-blue-600 hover:text-blue-800 font-semibold"
+                                    >
+                                        ℹ️
+                                    </button>
+                                </div>
+                            </div>
+                        ))
+                    )}
                 </div>
                 <AdminFooter />
             </main>
@@ -340,7 +461,92 @@ export default function AdminTransaction() {
                 order={selectedOrder}
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
+                onReceiptOpen={() => setIsReceiptModalOpen(true)}
+                onPrepareOpen={() => setIsPrepareModalOpen(true)}
+                onDeclineOpen={() => setIsDeclineModalOpen(true)}
+                onDeliverOpen={() => setIsDeliverModalOpen(true)}
+                onReadyForPickupOpen={() => setIsReadyForPickupModalOpen(true)}
             />
+
+            <ViewReceiptFormModal
+                open={isReceiptModalOpen}
+                onClose={() => {
+                    setIsReceiptModalOpen(false);
+                    setIsModalOpen(true);
+                }}
+                product={selectedOrder}
+            />
+
+            <PrepareModal
+                open={isPrepareModalOpen}
+                onClose={() => {
+                    setIsPrepareModalOpen(false);
+                    setIsModalOpen(false);
+                }}
+                onBackToOrder={() => {
+                    setIsPrepareModalOpen(false);
+                    setIsModalOpen(true);
+                }}
+                product={selectedOrder}
+                onDeleted={handleOrderUpdated}
+                onShowToast={showToast}
+            />
+
+            <DeclineModal
+                open={isDeclineModalOpen}
+                onClose={() => {
+                    setIsDeclineModalOpen(false);
+                    setIsModalOpen(false);
+                }}
+                onBackToOrder={() => {
+                    setIsDeclineModalOpen(false);
+                    setIsModalOpen(true);
+                }}
+                product={selectedOrder}
+                onDeleted={handleOrderUpdated}
+                onShowToast={showToast}
+            />
+
+            <DeliverModal
+                open={isDeliverModalOpen}
+                onClose={() => {
+                    setIsDeliverModalOpen(false);
+                    setIsModalOpen(false);
+                }}
+                onBackToOrder={() => {
+                    setIsDeliverModalOpen(false);
+                    setIsModalOpen(true);
+                }}
+                product={selectedOrder}
+                onDeleted={handleOrderUpdated}
+                onShowToast={showToast}
+            />
+
+            <ReadyForPickupModal
+                open={isReadyForPickupModalOpen}
+                onClose={() => {
+                    setIsReadyForPickupModalOpen(false);
+                    setIsModalOpen(false);
+                }}
+                onBackToOrder={() => {
+                    setIsReadyForPickupModalOpen(false);
+                    setIsModalOpen(true);
+                }}
+                product={selectedOrder}
+                onDeleted={handleOrderUpdated}
+                onShowToast={showToast}
+            />
+
+            {/* Toast Notification */}
+            {toast && (
+                <div
+                    className={`fixed bottom-6 right-6 px-6 py-3 rounded-lg shadow-lg text-white z-[70] animate-pulse ${
+                        toast.type === 'success' ? 'bg-green-500' : 'bg-red-500'
+                    }`}
+                >
+                    {toast.message}
+                </div>
+            )}
         </div>
     );
 }

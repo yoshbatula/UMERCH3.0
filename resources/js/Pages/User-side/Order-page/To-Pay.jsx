@@ -9,20 +9,19 @@ import axios from 'axios';
 export default function ToPay() {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [uploadedFiles, setUploadedFiles] = useState(() => {
-        // Initialize from localStorage
-        const saved = localStorage.getItem('uploadedFiles');
-        return saved ? JSON.parse(saved) : {};
-    });
+    const [toast, setToast] = useState(null);
+
+    const showToast = (message, type = 'success') => {
+        setToast({ message, type });
+        setTimeout(() => setToast(null), 3000);
+    };
 
     useEffect(() => {
         fetchOrders();
+        // Auto-refresh orders every 5 seconds
+        const interval = setInterval(fetchOrders, 5000);
+        return () => clearInterval(interval);
     }, []);
-
-    useEffect(() => {
-        // Save to localStorage whenever uploadedFiles changes
-        localStorage.setItem('uploadedFiles', JSON.stringify(uploadedFiles));
-    }, [uploadedFiles]);
 
     const fetchOrders = async () => {
         try {
@@ -37,6 +36,9 @@ export default function ToPay() {
                 order.order_status?.toLowerCase() === 'pending'
             );
             console.log('✅ To Pay Orders:', toPayOrders);
+            toPayOrders.forEach(order => {
+                console.log(`Order ${order.order_id} receipt_form:`, order.receipt_form);
+            });
             setOrders(toPayOrders);
         } catch (error) {
             console.error('❌ Error fetching orders:', error);
@@ -71,18 +73,19 @@ export default function ToPay() {
                 });
                 
                 console.log(`✅ File uploaded successfully:`, response.data);
+                console.log(`Upload Response Order ID:`, response.data?.order_id);
+                console.log(`Upload Response receipt_form:`, response.data?.receipt_form);
                 
-                // Update state after successful upload
-                setUploadedFiles(prev => ({
-                    ...prev,
-                    [orderId]: {
-                        name: file.name,
-                        uploadedAt: new Date().toISOString()
-                    }
-                }));
+                // Show success toast
+                showToast('File uploaded successfully!', 'success');
+                
+                // Refresh orders to get updated receipt_form status
+                setLoading(true);
+                await fetchOrders();
             } catch (error) {
                 console.error(`❌ Error uploading file for order ${orderId}:`, error);
-                alert('Error uploading file. Please try again.');
+                const errorMsg = error.response?.data?.message || error.message || 'Error uploading file. Please try again.';
+                showToast(errorMsg, 'error');
             }
         }
     };
@@ -179,12 +182,12 @@ export default function ToPay() {
                                     <h1 className="text-[#9C0306] text-[20px] font-medium">₱{Number(order.order_total || 0).toFixed(2)}</h1>
                                 </div>
                                 <div className="flex flex-row ml-auto items-center gap-5 p-4">
-                                    <span className={`text-[13px] font-medium underline ${uploadedFiles[order.order_id] ? 'text-green-600' : 'text-[#031A9C]'}`}>
-                                        {uploadedFiles[order.order_id] ? 'File Uploaded' : 'Upload Proof of Payment Here'}
+                                    <span className={`text-[13px] font-medium underline ${order.receipt_form ? 'text-green-600' : 'text-[#031A9C]'}`}>
+                                        {order.receipt_form ? 'File Uploaded' : 'Upload Proof of Payment Here'}
                                     </span>
                                     <div className="bg-[#9C0306] text-white w-30 h-9 flex items-center justify-center rounded-[20px] hover:cursor-pointer" onClick={() => handleFileUpload(order.order_id)}>
                                         <button className="text-[12px] font-medium hover:cursor-pointer">
-                                            {uploadedFiles[order.order_id] ? '✓ Uploaded' : 'Upload File'}
+                                            {order.receipt_form ? '✓ Uploaded' : 'Upload File'}
                                         </button>
                                     </div>
                                     <input 
@@ -200,6 +203,17 @@ export default function ToPay() {
                     )}
                 </div>
             <Footer/>
+            
+            {/* Toast Notification */}
+            {toast && (
+                <div
+                    className={`fixed bottom-6 right-6 px-6 py-3 rounded-lg shadow-lg text-white z-[70] animate-pulse ${
+                        toast.type === 'success' ? 'bg-green-500' : 'bg-red-500'
+                    }`}
+                >
+                    {toast.message}
+                </div>
+            )}
             </div>
         </>
     );

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\UsersideControllers\OrdersController;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use App\Models\Orders;
 use App\Models\OrderItems;
 use App\Models\Carts;
@@ -106,6 +107,7 @@ class PlaceOrderCont extends Controller
                     'order_total' => $orderTotal,
                     'fulfillment_method' => $order->fulfillment_method ?? 'N/A',
                     'campus' => $order->campus ?? null,
+                    'receipt_form' => $order->receipt_form ?? null,
                     'created_at' => $order->created_at,
                     'order_items' => $orderItems->map(function ($item) {
                         return [
@@ -196,7 +198,7 @@ class PlaceOrderCont extends Controller
     public function getAllOrders()
     {
         try {
-            $orders = Orders::with('orderItems.product')
+            $orders = Orders::with(['orderItems.product', 'user'])
                 ->orderBy('created_at', 'desc')
                 ->get();
             
@@ -213,8 +215,10 @@ class PlaceOrderCont extends Controller
                     'order_status' => $order->status ?? 'Pending',
                     'order_total' => $orderTotal,
                     'receipt_form' => $order->receipt_form ?? null,
+                    'campus' => $order->campus ?? null,
                     'created_at' => $order->created_at,
                     'user_id' => $order->user_id,
+                    'user_fullname' => $order->user?->user_fullname ?? 'Customer',
                     'order_items' => $orderItems->map(function ($item) {
                         return [
                             'quantity' => $item->quantity ?? 0,
@@ -235,6 +239,42 @@ class PlaceOrderCont extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Error fetching orders',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function updateOrderStatus($orderId, Request $request)
+    {
+        try {
+            Log::info('updateOrderStatus called with orderId: ' . $orderId);
+            Log::info('Status from request: ' . $request->input('status'));
+            
+            $order = Orders::where('order_id', $orderId)->first();
+            
+            Log::info('Order found: ' . ($order ? 'yes' : 'no'));
+            
+            if (!$order) {
+                return response()->json(['message' => 'Order not found'], 404);
+            }
+            
+            $status = $request->input('status');
+            $order->status = $status;
+            $order->save();
+            
+            return response()->json([
+                'message' => 'Order status updated successfully',
+                'order' => [
+                    'order_id' => $order->order_id,
+                    'status' => $order->status,
+                    'campus' => $order->campus
+                ]
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Error updating order status: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+            return response()->json([
+                'message' => 'Error updating order status',
                 'error' => $e->getMessage()
             ], 500);
         }
