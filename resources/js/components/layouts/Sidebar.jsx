@@ -16,14 +16,14 @@ const NavItem = ({ href, icon, label, active = false, onClick, asButton }) => {
     "group w-full flex items-center gap-3 px-4 py-3 text-base font-medium transition-all duration-200",
     active
       ? "bg-white text-red-700"
-      : "text-white hover:bg-white hover:text-red-700",
+      : "text-white",
   ].join(" ");
 
   const iconClass = [
     "h-6 w-6 transition-all duration-200",
     active
       ? `filter ${RED_FILTER}`
-      : `group-hover:filter group-hover:${RED_FILTER}`,
+      : "",
   ].join(" ");
 
   if (asButton) {
@@ -104,33 +104,30 @@ export default function Sidebar() {
             <div>
               <Link
                 href="/admin/inventory/add"
-                className={`block px-14 py-3 text-sm font-medium transition-all duration-200 ${
-                  isActive("/admin/inventory/add")
+                className={`block px-14 py-3 text-sm font-medium transition-all duration-200 ${isActive("/admin/inventory/add")
                     ? "bg-white text-red-700"
-                    : "text-white hover:bg-white hover:text-red-700"
-                }`}
+                    : "text-white"
+                  }`}
               >
                 Add Product
               </Link>
 
               <Link
                 href="/admin/inventory/stock-in"
-                className={`block px-14 py-2 text-sm transition-all duration-200 ${
-                  isActive("/admin/inventory/stock-in")
+                className={`block px-14 py-2 text-sm transition-all duration-200 ${isActive("/admin/inventory/stock-in")
                     ? "bg-white text-red-700"
-                    : "text-white hover:bg-white hover:text-red-700"
-                }`}
+                    : "text-white"
+                  }`}
               >
                 Stock In
               </Link>
 
               <Link
                 href="/admin/inventory/stock-out"
-                className={`block px-14 py-2 text-sm transition-all duration-200 ${
-                  isActive("/admin/inventory/stock-out")
+                className={`block px-14 py-2 text-sm transition-all duration-200 ${isActive("/admin/inventory/stock-out")
                     ? "bg-white text-red-700"
-                    : "text-white hover:bg-white hover:text-red-700"
-                }`}
+                    : "text-white"
+                  }`}
               >
                 Stock Out
               </Link>

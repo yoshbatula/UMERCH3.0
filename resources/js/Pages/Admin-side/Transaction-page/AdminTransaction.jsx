@@ -49,7 +49,7 @@ export default function AdminTransaction() {
         {
             title: "Completed",
             value: "0",
-            className: "bg-green-700",
+            className: "bg-[#5C975A]",
             icon: (
                 <Icon>
                     <path
@@ -65,7 +65,7 @@ export default function AdminTransaction() {
         {
             title: "Pending",
             value: "0",
-            className: "bg-orange-500",
+            className: "bg-[#F7962A]",
             icon: (
                 <Icon>
                     <path
@@ -86,7 +86,7 @@ export default function AdminTransaction() {
         {
             title: "Delivering",
             value: "0",
-            className: "bg-red-600",
+            className: "bg-[#EF2F2A]",
             icon: (
                 <Icon>
                     <path
@@ -111,7 +111,7 @@ export default function AdminTransaction() {
         {
             title: "Cancelled",
             value: "0",
-            className: "bg-red-900",
+            className: "bg-[#9C0306]",
             icon: (
                 <Icon>
                     <path
@@ -156,13 +156,7 @@ export default function AdminTransaction() {
                 {/* SEARCH + STATUS */}
                 <div className="mt-4 flex items-center justify-between gap-6">
                     <div className="flex items-center gap-3 flex-1 max-w-[520px] bg-white border border-gray-200 rounded-lg px-4 py-3">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                            <path
-                                d="M21 21l-4.35-4.35"
-                                stroke="#9CA3AF"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                            />
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"> <path d="M21 21l-4.35-4.35" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" />
                             <path
                                 d="M11 19a8 8 0 100-16 8 8 0 000 16z"
                                 stroke="#9CA3AF"

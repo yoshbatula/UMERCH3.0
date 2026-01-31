@@ -11,6 +11,7 @@ use App\Http\Controllers\AdminsideControllers\RecordsControllers\UpdateRecords;
 use App\Http\Controllers\AdminsideControllers\RecordsControllers\DeleteRecords;
 use App\Http\Controllers\AdminsideControllers\InventoryControllers\StockInController;
 use App\Http\Controllers\AdminsideControllers\InventoryControllers\StockOutController;
+use App\Http\Controllers\AdminsideControllers\RecordsControllers\DashboardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -76,6 +77,14 @@ Route::prefix('admin')->group(function () {
     // STOCK OUT
     Route::get('/stock-out/logs', [StockOutController::class, 'logs']);
     Route::post('/stock-out/store', [StockOutController::class, 'store']);
+
+    // DASHBOARD API
+    Route::get('/dashboard/stats', [DashboardController::class, 'getStats']);
+    Route::get('/dashboard/sales-overview', [DashboardController::class, 'getSalesOverview']);
+    Route::get('/dashboard/inventory-status', [DashboardController::class, 'getInventoryStatus']);
+    Route::get('/dashboard/recent-transactions', [DashboardController::class, 'getRecentTransactions']);
+    Route::get('/dashboard/top-products', [DashboardController::class, 'getTopProducts']);
+    Route::get('/dashboard/weekly-stats', [DashboardController::class, 'getWeeklyStats']);
 });
 
 

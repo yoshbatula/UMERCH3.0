@@ -158,7 +158,7 @@ function AdminRecord() {
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search transactions"
+              placeholder="Search by Email or UserId"
               className="bg-transparent outline-none w-full text-sm text-gray-700 placeholder:text-gray-400"
             />
           </div>
@@ -184,43 +184,58 @@ function AdminRecord() {
           </div>
           <div className="border-t border-gray-200" />
           {/* Users List */}
-          {users.length > 0 ? (
-            users.map((userRaw) => {
-              // Map possible backend keys to expected keys
-              const user = {
-                id: userRaw.id || userRaw.um_id || userRaw.userId || userRaw.user_id || userRaw.ID || '',
-                user_fullname: userRaw.user_fullname || userRaw.name || userRaw.fullname || '',
-                um_id: userRaw.um_id || userRaw.userId || userRaw.user_id || '',
-                email: userRaw.email || userRaw.user_email || '',
-              };
-              return (
-                <div key={user.id} className="grid grid-cols-12 items-center text-sm text-gray-900 px-8 py-2 border-b border-gray-200 hover:bg-gray-50 text-center">
-                  <div className="col-span-1">{user.id}</div>
-                  <div className="col-span-3">{user.user_fullname}</div>
-                  <div className="col-span-3">{user.um_id}</div>
-                  <div className="col-span-4">{user.email}</div>
-                  <div className="col-span-1 flex justify-center">
-                    <div className="flex flex-row gap-1">
-                      <button
-                        onClick={() => openUpdateModal(userRaw)}
-                        className="bg-[#9C0306] text-white text-[13px] font-semibold px-3 py-1 rounded-[20px] hover:cursor-pointer"
-                      >
-                        Update
-                      </button>
-                      <button
-                        onClick={() => openDeleteModal(userRaw)}
-                        className="bg-white text-[#9C0306] text-[13px] font-semibold border border-[#9C0306] px-3 py-1 rounded-[20px] hover:cursor-pointer"
-                      >
-                        Delete
-                      </button>
+          {(() => {
+            // Filter users based on search query
+            const filteredUsers = users.filter((userRaw) => {
+              if (!query.trim()) return true;
+
+              const searchLower = query.toLowerCase();
+              const email = (userRaw.email || userRaw.user_email || '').toLowerCase();
+              const userId = (userRaw.um_id || userRaw.userId || userRaw.user_id || '').toString().toLowerCase();
+
+              return email.includes(searchLower) || userId.includes(searchLower);
+            });
+
+            if (filteredUsers.length > 0) {
+              return filteredUsers.map((userRaw) => {
+                // Map possible backend keys to expected keys
+                const user = {
+                  id: userRaw.id || userRaw.um_id || userRaw.userId || userRaw.user_id || userRaw.ID || '',
+                  user_fullname: userRaw.user_fullname || userRaw.name || userRaw.fullname || '',
+                  um_id: userRaw.um_id || userRaw.userId || userRaw.user_id || '',
+                  email: userRaw.email || userRaw.user_email || '',
+                };
+                return (
+                  <div key={user.id} className="grid grid-cols-12 items-center text-sm text-gray-900 px-8 py-2 border-b border-gray-200 hover:bg-gray-50 text-center">
+                    <div className="col-span-1">{user.id}</div>
+                    <div className="col-span-3">{user.user_fullname}</div>
+                    <div className="col-span-3">{user.um_id}</div>
+                    <div className="col-span-4">{user.email}</div>
+                    <div className="col-span-1 flex justify-center">
+                      <div className="flex flex-row gap-1">
+                        <button
+                          onClick={() => openUpdateModal(userRaw)}
+                          className="bg-[#9C0306] text-white text-[13px] font-semibold px-3 py-1 rounded-[20px] hover:cursor-pointer"
+                        >
+                          Update
+                        </button>
+                        <button
+                          onClick={() => openDeleteModal(userRaw)}
+                          className="bg-white text-[#9C0306] text-[13px] font-semibold border border-[#9C0306] px-3 py-1 rounded-[20px] hover:cursor-pointer"
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
+                );
+              });
+            } else {
+              return (
+                <div className="px-8 py-6 text-center text-gray-500">No User Available</div>
               );
-            })
-          ) : (
-            <div className="px-8 py-6 text-center text-gray-500">No users found</div>
-          )}
+            }
+          })()}
           {/* Pagination (static for now) */}
           <div className="border-t border-gray-200" />
           <div className="py-7 flex items-center justify-center gap-10 text-sm font-semibold">

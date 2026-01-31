@@ -46,6 +46,7 @@ export default function AddProducts() {
     const [toast, setToast] = useState("");
     const [showingToast, setShowingToast] = useState(false);
     const [expandedProducts, setExpandedProducts] = useState({});
+    const [searchQuery, setSearchQuery] = useState("");
 
     const API = "/admin/products";
 
@@ -129,7 +130,7 @@ export default function AddProducts() {
                     <StatCard
                         title="Total Products"
                         value={Object.keys(groupProductsByName(products)).length}
-                        className="bg-green-700"
+                        className="bg-[#5C975A]"
                     />
                     <StatCard
                         title="Total Variants"
@@ -141,14 +142,14 @@ export default function AddProducts() {
                         value={
                             products.filter(p => p.product_stock > 0 && p.product_stock <= 5).length
                         }
-                        className="bg-orange-500"
+                        className="bg-[#F7962A]"
                     />
                     <StatCard
                         title="Out of Stocks"
                         value={
                             products.filter(p => p.product_stock === 0).length
                         }
-                        className="bg-red-600"
+                        className="bg-[#EF2F2A]"
                     />
                 </div>
 
@@ -158,9 +159,18 @@ export default function AddProducts() {
 
                     <div className="mt-4 flex items-center justify-between gap-6">
                         <div className="flex items-center gap-3 flex-1 max-w-[520px] h-12 bg-white rounded-lg px-4 py-3 border border-gray-200">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"> <path d="M21 21l-4.35-4.35" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" />
+                                <path
+                                    d="M11 19a8 8 0 100-16 8 8 0 000 16z"
+                                    stroke="#9CA3AF"
+                                    strokeWidth="2"
+                                />
+                            </svg>
                             <input
                                 type="text"
-                                placeholder="Search products"
+                                placeholder="Search by product name"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
                                 className="bg-transparent outline-none w-full text-sm"
                             />
                         </div>
@@ -188,12 +198,32 @@ export default function AddProducts() {
 
                         {/* Dynamic Table Body */}
                         <div className="min-h-[520px]">
-                            {products.length === 0 ? (
-                                <div className="text-center py-20 text-gray-400">
-                                    No products added yet
-                                </div>
-                            ) : (
-                                Object.entries(groupProductsByName(products)).map(
+                            {(() => {
+                                if (products.length === 0) {
+                                    return (
+                                        <div className="text-center py-20 text-gray-400">
+                                            No products added yet
+                                        </div>
+                                    );
+                                }
+
+                                const groupedProducts = groupProductsByName(products);
+                                const filteredProducts = Object.entries(groupedProducts).filter(
+                                    ([productName]) => {
+                                        if (!productName) return false;
+                                        return productName.toLowerCase().includes(searchQuery.toLowerCase());
+                                    }
+                                );
+
+                                if (filteredProducts.length === 0) {
+                                    return (
+                                        <div className="text-center py-20 text-gray-400">
+                                            No products found
+                                        </div>
+                                    );
+                                }
+
+                                return filteredProducts.map(
                                     ([productName, variants]) => (
                                         <div key={productName}>
                                             {/* Main Product Row */}
@@ -285,8 +315,8 @@ export default function AddProducts() {
                                                 ))}
                                         </div>
                                     )
-                                )
-                            )}
+                                );
+                            })()}
                         </div>
                     </div>
                 </div>

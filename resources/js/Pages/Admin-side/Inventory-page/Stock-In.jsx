@@ -77,17 +77,17 @@ export default function StockIn() {
                     <StatCard
                         title="Total Stocks"
                         value={stocks.length}
-                        bg="bg-green-700"
+                        bg="bg-[#5C975A]"
                     />
                     <StatCard
                         title="Low Stocks"
                         value={stocks.filter(s => s.stock_qty > 0 && s.stock_qty <= 20).length}
-                        bg="bg-orange-500"
+                        bg="bg-[#F7962A]"
                     />
                     <StatCard
                         title="Out of Stocks"
                         value={stocks.filter(s => s.stock_qty === 0).length}
-                        bg="bg-red-600"
+                        bg="bg-[#EF2F2A]"
                     />
                 </div>
 
@@ -95,12 +95,21 @@ export default function StockIn() {
                 <h2 className="text-2xl font-bold mb-4">Stock In</h2>
 
                 <div className=" flex items-center justify-between mb-4">
-                    <input
-                        type="text"
-                        placeholder="Search transactions"
-                        className="w-[520px] h-12 px-4 py-2 rounded-lg border border-gray-200 bg-white text-sm  outline-none"
-                    />
+                    <div className="flex items-center gap-3 flex-1 max-w-[520px] h-12 bg-white rounded-lg px-4 py-3 border border-gray-200">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"> <path d="M21 21l-4.35-4.35" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" />
+                            <path
+                                d="M11 19a8 8 0 100-16 8 8 0 000 16z"
+                                stroke="#9CA3AF"
+                                strokeWidth="2"
+                            />
+                        </svg>
 
+                        <input
+                            type="text"
+                            placeholder="Search transactions"
+                            className="bg-transparent outline-none w-full text-sm"
+                        />
+                    </div>
                     <button
                         onClick={() => setOpenAdd(true)}
                         className="bg-red-800 hover:bg-red-900 text-white px-8 py-2 rounded-full text-sm font-semibold hover:cursor-pointer"
@@ -108,6 +117,7 @@ export default function StockIn() {
                         Add Stock
                     </button>
                 </div>
+
 
                 {/* TABLE */}
                 <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
@@ -170,11 +180,13 @@ export default function StockIn() {
 
                 <AdminFooter />
             </div>
-            {showingToast && (
-            <div className="fixed bottom-6 right-6 bg-green-600 text-white px-4 py-3 rounded-lg shadow-lg">
-                {toast}
-            </div>
-            )}
+            {
+                showingToast && (
+                    <div className="fixed bottom-6 right-6 bg-green-600 text-white px-4 py-3 rounded-lg shadow-lg">
+                        {toast}
+                    </div>
+                )
+            }
             {/* ADD STOCK MODAL */}
             <AddStock
                 open={openAdd}
@@ -194,6 +206,6 @@ export default function StockIn() {
                 open={receiptFormOpen}
                 onClose={closeReceiptForm}
             />
-        </div>
+        </div >
     );
 }
