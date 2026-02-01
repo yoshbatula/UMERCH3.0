@@ -7,21 +7,33 @@ use Illuminate\Http\Request;
 use App\Models\Products;
 use App\Models\StockOut;
 use Illuminate\Support\Facades\DB;
-
+use Illuminate\Support\Facades\Log;
 class StockOutController extends Controller
 {
     public function logs()
     {
-        return StockOut::join('_products', 'stock_outs.product_id', '_products.id')
-            ->select(
-                'stock_outs.id',
-                'stock_outs.date_time',
-                '_products.product_name',
-                'stock_outs.quantity',
-                'stock_outs.modified_by'
-            )
-            ->orderByDesc('stock_outs.date_time')
-            ->get();
+        try {
+            $logs = StockOut::join('_products', 'stock_outs.product_id', '_products.product_id')
+                ->select(
+                    'stock_outs.stock_out_id as id',
+                    'stock_outs.date_time',
+                    '_products.product_name',
+                    'stock_outs.quantity',
+                    'stock_outs.modified_by'
+                )
+                ->orderByDesc('stock_outs.date_time')
+                ->get();
+            
+            Log::info('Stock-out logs returned: ' . $logs->count() . ' records');
+            
+            return $logs;
+        } catch (\Exception $e) {
+            Log::error('Error fetching stock-out logs: ' . $e->getMessage());
+            return response()->json([
+                'error' => $e->getMessage(),
+                'data' => []
+            ], 500);
+        }
     }
 
     public function store(Request $request)

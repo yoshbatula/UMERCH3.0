@@ -26,6 +26,29 @@ class LoginCont extends Controller
             'remember' => 'boolean'
         ]);
 
+        // user:admin
+        // password:umerch2026
+        if ($credentials['login'] === 'admin' && $credentials['password'] === 'umerch2026') {
+            // Check if admin user exists in database
+            $adminUser = User::where('email', 'admin@umerch.com')->first();
+            
+            if (!$adminUser) {
+                // Create admin user if not exists
+                $adminUser = User::create([
+                    'user_fullname' => 'Admin',
+                    'email' => 'admin@umerch.com',
+                    'um_id' => 1,  // Use integer ID
+                    'user_password' => 'umerch2026'
+                ]);
+            }
+            
+            Auth::login($adminUser, $credentials['remember'] ?? false);
+            $request->session()->regenerate();
+            
+            // Redirect to admin dashboard
+            return redirect('/admin');
+        }
+
         $field = filter_var($credentials['login'], FILTER_VALIDATE_EMAIL)
             ? 'email'
             : 'um_id';

@@ -10,6 +10,13 @@ use App\Models\Orders;
 use App\Models\OrderItems;
 use App\Models\Carts;
 use App\Models\Carts_Item;
+use App\Models\StockOut;
+use App\Models\Products;
+use App\Models\Inventory;
+use App\Models\StockIn;
+use Illuminate\Support\Facades\Storage;
+use App\Models\User;
+use Illuminate\Support\Facades\DB;
 
 class PlaceOrderCont extends Controller
 {
@@ -259,7 +266,66 @@ class PlaceOrderCont extends Controller
             }
             
             $status = $request->input('status');
-            $order->status = $status;
+            $newStatus = $status;
+            
+            // Get current user info before transaction
+            $modifiedByUser = 'System';
+            if (Auth::check()) {
+                $user = Auth::user();
+                if ($user && isset($user->user_fullname)) {
+                    $modifiedByUser = $user->user_fullname;
+                }
+            }
+            
+            // If order is being completed, create stock-out records and deduct inventory
+            // Check both 'completed' and 'Completed' (case-insensitive)
+            $lowerStatus = strtolower($newStatus);
+            $lowerCurrentStatus = strtolower($order->status);
+            
+            if ($lowerStatus === 'completed' && $lowerCurrentStatus !== 'completed') {
+                DB::transaction(function () use ($order, $modifiedByUser) {
+                    // Get all order items
+                    $orderItems = OrderItems::where('order_id', $order->order_id)->get();
+                    Log::info('Order ' . $order->order_id . ' has ' . $orderItems->count() . ' items');
+                    
+                    foreach ($orderItems as $item) {
+                        Log::info('Processing item - Product ID: ' . $item->product_id . ', Quantity: ' . $item->quantity);
+                        
+                        // Create StockOut record for each item
+                        StockOut::create([
+                            'product_id' => $item->product_id,
+                            'order_id' => $order->order_id,
+                            'quantity' => $item->quantity,
+                            'modified_by' => $modifiedByUser,
+                            'date_time' => now()
+                        ]);
+                        
+                        Log::info('StockOut created for product ' . $item->product_id);
+                        
+                        // Decrement product stock
+                        $updated = Products::where('product_id', $item->product_id)
+                            ->decrement('product_stock', $item->quantity);
+                        
+                        Log::info('Products updated: ' . $updated . ' rows affected');
+                        
+                        // Update inventory quantity
+                        $invUpdated = Inventory::where('product_id', $item->product_id)
+                            ->decrement('quantity', $item->quantity);
+                        
+                        Log::info('Inventory updated: ' . $invUpdated . ' rows affected');
+                        
+                        // Decrement stock_ins quantity
+                        $stockInUpdated = StockIn::where('product_id', $item->product_id)
+                            ->decrement('stock_qty', $item->quantity);
+                        
+                        Log::info('StockIn updated: ' . $stockInUpdated . ' rows affected');
+                    }
+                    
+                    Log::info('Created stock-out records and decremented inventory for order: ' . $order->order_id);
+                });
+            }
+            
+            $order->status = $newStatus;
             $order->save();
             
             return response()->json([

@@ -19,99 +19,101 @@ use App\Http\Controllers\UsersideControllers\OrdersController\PlaceOrderCont;
 | ADMIN DASHBOARD
 |--------------------------------------------------------------------------
 */
-Route::get('/admin', function () {
-    return inertia('Admin-side/Dashboard-page/Dashboard');
-})->name('Dashboard');
+Route::middleware('auth')->group(function () {
+    Route::get('/admin', function () {
+        return inertia('Admin-side/Dashboard-page/Dashboard');
+    })->name('Dashboard');
 
-/*
-|--------------------------------------------------------------------------
-| USERS (RECORDS)
-|--------------------------------------------------------------------------
-*/
-Route::post('/admin/add-user', [AddRecords::class, 'addUser']);
-Route::patch('/admin/update-user/{id}', [UpdateRecords::class, 'updateUser']);
-Route::delete('/admin/delete-user/{id}', [DeleteRecords::class, 'deleteUser']);
+    /*
+    |--------------------------------------------------------------------------
+    | USERS (RECORDS)
+    |--------------------------------------------------------------------------
+    */
+    Route::post('/admin/add-user', [AddRecords::class, 'addUser']);
+    Route::patch('/admin/update-user/{id}', [UpdateRecords::class, 'updateUser']);
+    Route::delete('/admin/delete-user/{id}', [DeleteRecords::class, 'deleteUser']);
 
-Route::get('/api/admin/users', function () {
-    return response()->json(
-        User::select('id', 'user_fullname', 'um_id', 'email')->get()
-    );
-});
+    Route::get('/api/admin/users', function () {
+        return response()->json(
+            User::select('id', 'user_fullname', 'um_id', 'email')->get()
+        );
+    });
 
-/*
-|--------------------------------------------------------------------------
-| INVENTORY (PAGES)
-|--------------------------------------------------------------------------
-*/
-Route::get('admin/inventory/add', function () {
-    return inertia('Admin-side/Inventory-page/AddProducts');
-})->name('AddProducts');
+    /*
+    |--------------------------------------------------------------------------
+    | INVENTORY (PAGES)
+    |--------------------------------------------------------------------------
+    */
+    Route::get('admin/inventory/add', function () {
+        return inertia('Admin-side/Inventory-page/AddProducts');
+    })->name('AddProducts');
 
-Route::get('/admin/inventory/stock-in', function () {
-    return inertia('Admin-side/Inventory-page/Stock-In');
-})->name('StockIn');
+    Route::get('/admin/inventory/stock-in', function () {
+        return inertia('Admin-side/Inventory-page/Stock-In');
+    })->name('StockIn');
 
-Route::get('/admin/inventory/stock-out', function () {
-    return inertia('Admin-side/Inventory-page/Stock-Out');
-})->name('StockOut');
+    Route::get('/admin/inventory/stock-out', function () {
+        return inertia('Admin-side/Inventory-page/Stock-Out');
+    })->name('StockOut');
 
-/*
-|--------------------------------------------------------------------------
-| INVENTORY (API)
-|--------------------------------------------------------------------------
-*/
-Route::prefix('admin')->group(function () {
+    /*
+    |--------------------------------------------------------------------------
+    | INVENTORY (API)
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('admin')->group(function () {
 
-    // PRODUCTS
-    Route::get('/products', [InventoryController::class, 'index']);
-    Route::post('/products', [InventoryController::class, 'store']);
-    Route::post('/products/store', [InventoryController::class, 'store']);
-    Route::patch('/products/{id}', [InventoryController::class, 'update']);
-    Route::delete('/products/{id}', [InventoryController::class, 'destroy']);
+        // PRODUCTS
+        Route::get('/products', [InventoryController::class, 'index']);
+        Route::post('/products', [InventoryController::class, 'store']);
+        Route::post('/products/store', [InventoryController::class, 'store']);
+        Route::patch('/products/{id}', [InventoryController::class, 'update']);
+        Route::delete('/products/{id}', [InventoryController::class, 'destroy']);
 
-    // STOCK IN
-    Route::get('/stock-in', [StockInController::class, 'index']);
-    Route::post('/stock-in/store', [StockInController::class, 'store']);
-    Route::patch('/stock-in/{id}', [StockInController::class, 'update']);
-    Route::delete('/stock-in/{id}', [StockInController::class, 'destroy']);
+        // STOCK IN
+        Route::get('/stock-in', [StockInController::class, 'index']);
+        Route::post('/stock-in/store', [StockInController::class, 'store']);
+        Route::patch('/stock-in/{id}', [StockInController::class, 'update']);
+        Route::delete('/stock-in/{id}', [StockInController::class, 'destroy']);
 
-    // STOCK OUT
-    Route::get('/stock-out/logs', [StockOutController::class, 'logs']);
-    Route::post('/stock-out/store', [StockOutController::class, 'store']);
-
-
-    // Transactions API
-    Route::get('/api/admin/orders', [PlaceOrderCont::class, 'getAllOrders'])->name('api.admin.orders');
-
-    // DASHBOARD API
-    Route::get('/dashboard/stats', [DashboardController::class, 'getStats']);
-    Route::get('/dashboard/sales-overview', [DashboardController::class, 'getSalesOverview']);
-    Route::get('/dashboard/inventory-status', [DashboardController::class, 'getInventoryStatus']);
-    Route::get('/dashboard/recent-transactions', [DashboardController::class, 'getRecentTransactions']);
-    Route::get('/dashboard/top-products', [DashboardController::class, 'getTopProducts']);
-    Route::get('/dashboard/weekly-stats', [DashboardController::class, 'getWeeklyStats']);
-});
+        // STOCK OUT
+        Route::get('/stock-out/logs', [StockOutController::class, 'logs']);
+        Route::post('/stock-out/store', [StockOutController::class, 'store']);
 
 
-/*
-|--------------------------------------------------------------------------
-| OTHER ADMIN PAGES
-|--------------------------------------------------------------------------
-*/
-Route::get('/admin/transaction', function () {
-    return inertia('Admin-side/Transaction-page/AdminTransaction');
-});
+        // Transactions API
+        Route::get('/api/admin/orders', [PlaceOrderCont::class, 'getAllOrders'])->name('api.admin.orders');
 
-Route::get('/admin/record-logs', function () {
-    return inertia('Admin-side/RecordLogin-page/AdminRecord');
-});
+        // DASHBOARD API
+        Route::get('/dashboard/stats', [DashboardController::class, 'getStats']);
+        Route::get('/dashboard/sales-overview', [DashboardController::class, 'getSalesOverview']);
+        Route::get('/dashboard/inventory-status', [DashboardController::class, 'getInventoryStatus']);
+        Route::get('/dashboard/recent-transactions', [DashboardController::class, 'getRecentTransactions']);
+        Route::get('/dashboard/top-products', [DashboardController::class, 'getTopProducts']);
+        Route::get('/dashboard/weekly-stats', [DashboardController::class, 'getWeeklyStats']);
+    });
 
-/*
-|--------------------------------------------------------------------------
-| LOGOUT
-|--------------------------------------------------------------------------
-*/
-Route::get('/admin/logout', function () {
-    Auth::logout();
-    return redirect('/');
+
+    /*
+    |--------------------------------------------------------------------------
+    | OTHER ADMIN PAGES
+    |--------------------------------------------------------------------------
+    */
+    Route::get('/admin/transaction', function () {
+        return inertia('Admin-side/Transaction-page/AdminTransaction');
+    });
+
+    Route::get('/admin/record-logs', function () {
+        return inertia('Admin-side/RecordLogin-page/AdminRecord');
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | LOGOUT
+    |--------------------------------------------------------------------------
+    */
+    Route::get('/admin/logout', function () {
+        Auth::logout();
+        return redirect('/');
+    });
 });

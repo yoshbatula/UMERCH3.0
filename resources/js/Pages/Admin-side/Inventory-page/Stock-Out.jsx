@@ -33,12 +33,20 @@ export default function StockOut() {
     const [logs, setLogs] = useState([]);
     const [stocks, setStocks] = useState([]);
 
-    const STOCK_API = "/api/admin/stock-in";       // for StatCards
-    const LOG_API = "/api/admin/stock-out/logs";   // for table
+    const STOCK_API = "/admin/products";       // for StatCards
+    const LOG_API = "/admin/stock-out/logs";   // for table
 
     useEffect(() => {
         fetchStocks();
         fetchLogs();
+        
+        // Auto-refresh every 5 seconds
+        const interval = setInterval(() => {
+            fetchStocks();
+            fetchLogs();
+        }, 5000);
+        
+        return () => clearInterval(interval);
     }, []);
 
     const fetchStocks = async () => {
@@ -53,6 +61,7 @@ export default function StockOut() {
     const fetchLogs = async () => {
         try {
             const res = await axios.get(LOG_API);
+            console.log('📋 Stock-out logs fetched:', res.data);
             setLogs(res.data);
         } catch (err) {
             console.error("Failed to fetch stock-out logs", err);
@@ -84,13 +93,13 @@ export default function StockOut() {
                     />
                     <StatCard
                         title="Low Stocks"
-                        value={stocks.filter(s => s.stock_qty > 0 && s.stock_qty <= 20).length}
+                        value={stocks.filter(s => s.product_stock > 0 && s.product_stock <= 20).length}
                         bg="bg-[#F7962A]"
                         icon={LowStocks}
                     />
                     <StatCard
                         title="Out of Stocks"
-                        value={stocks.filter(s => s.stock_qty === 0).length}
+                        value={stocks.filter(s => s.product_stock === 0).length}
                         bg="bg-[#EF2F2A]"
                         icon={OutOfStocks}
                     />

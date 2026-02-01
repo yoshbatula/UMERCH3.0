@@ -71,7 +71,6 @@ export default function All() {
         return (
             <div className="flex flex-col items-center justify-center p-4 py-10">
                 <p className="text-gray-500">No orders found</p>
-                <p className="text-gray-400 text-sm mt-2">Check browser console (F12) for API errors</p>
             </div>
         );
     }
