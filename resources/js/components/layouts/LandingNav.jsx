@@ -19,7 +19,7 @@ export default function LandingNav() {
         if (url.startsWith(href) && href !== '/') return true;
         return false;
     };
-    
+
     return (
         <>
             <div className="bg-[#9C0306] flex flex-row items-center p-6 h-20 sticky top-0 z-50">

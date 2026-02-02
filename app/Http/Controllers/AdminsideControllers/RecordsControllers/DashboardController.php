@@ -38,6 +38,13 @@ class DashboardController extends Controller
                 return $order->orderItems->sum('subtotal');
             });
 
+        // Total Sales Amount - sum of all order items subtotals (all time)
+        $totalSalesAmount = Orders::with('orderItems')
+            ->get()
+            ->sum(function ($order) {
+                return $order->orderItems->sum('subtotal');
+            });
+
         // Total Login Users - total registered users
         $totalUsers = User::count();
 
@@ -46,6 +53,7 @@ class DashboardController extends Controller
             'todayProducts' => $todayProducts,
             'todaySales' => $todaySales,
             'todaySalesAmount' => $todaySalesAmount,
+            'totalSalesAmount' => $totalSalesAmount,
             'totalUsers' => $totalUsers,
         ]);
     }

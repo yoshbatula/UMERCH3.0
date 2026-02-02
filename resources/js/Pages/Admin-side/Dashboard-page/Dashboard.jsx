@@ -75,6 +75,15 @@ export default function Dashboard() {
         fetchDashboardData();
     }, []);
 
+    // Auto-refresh dashboard data every 30 seconds
+    useEffect(() => {
+        const interval = setInterval(() => {
+            fetchDashboardData();
+        }, 30000); // 30 seconds
+
+        return () => clearInterval(interval);
+    }, []);
+
     useEffect(() => {
         fetchSalesOverview();
     }, [salesPeriod]);
@@ -149,8 +158,8 @@ export default function Dashboard() {
                         bgColor="bg-[#F7962A]"
                     />
                     <StatCard
-                        title="Today Sales"
-                        value={`₱${stats.todaySalesAmount?.toLocaleString() || 0}`}
+                        title="Total Sales"
+                        value={`₱${stats.totalSalesAmount?.toLocaleString() || 0}`}
                         icon={TodaySalesIcon}
                         bgColor="bg-[#EF2F2A]"
                     />
