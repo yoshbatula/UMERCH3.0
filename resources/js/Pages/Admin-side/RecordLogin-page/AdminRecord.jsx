@@ -108,7 +108,7 @@ function AdminRecord() {
         <div className="mt-7">
           <StatCard
             title="Total Users"
-            value={users.length}
+            value={users.filter(u => u.role !== 'admin').length}
             className="bg-green-700"
             icon={
               <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
@@ -178,8 +178,11 @@ function AdminRecord() {
           <div className="border-t border-gray-200" />
           {/* Users List */}
           {(() => {
-            // Filter users based on search query
+            // Filter users based on search query and exclude admins
             const filteredUsers = users.filter((userRaw) => {
+              // Exclude admin users
+              if (userRaw.role === 'admin') return false;
+              
               if (!query.trim()) return true;
 
               const searchLower = query.toLowerCase();

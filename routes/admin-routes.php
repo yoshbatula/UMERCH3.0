@@ -35,7 +35,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/api/admin/users', function () {
         return response()->json(
-            User::select('id', 'user_fullname', 'um_id', 'email')->get()
+            User::where('role', '!=', 'admin')->select('id', 'user_fullname', 'um_id', 'email', 'role')->get()
         );
     });
 
