@@ -1,14 +1,21 @@
 import React, { useRef, useState, useEffect } from "react";
-import { usePage } from '@inertiajs/react';
-import { Inertia } from '@inertiajs/inertia';
+import { usePage, router } from '@inertiajs/react';
 
 export default function Authentication({ email }) {
     const inputLength = 6;
     const [values, setValues] = useState(Array(inputLength).fill(""));
     const inputsRef = useRef([]);
     const [cooldown, setCooldown] = useState(0);
-    const [isLoading, setIsLoading] = useState(false);
-    const { errors } = usePage().props;
+    const [isVerifying, setIsVerifying] = useState(false);
+    const [isResending, setIsResending] = useState(false);
+    const [expiredError, setExpiredError] = useState(false);
+    const [otpError, setOtpError] = useState('');
+    const page = usePage();
+    const { errors } = page.props;
+    
+    // Debug log to see what's in props
+    console.log('Page props:', page.props);
+    console.log('Errors object:', errors);
 
     useEffect(() => {
         if (cooldown > 0) {
@@ -16,6 +23,35 @@ export default function Authentication({ email }) {
             return () => clearTimeout(timer);
         }
     }, [cooldown]);
+
+    // Watch for OTP errors from server
+    useEffect(() => {
+        if (errors.otp) {
+            const errorMessage = Array.isArray(errors.otp) ? errors.otp[0] : errors.otp;
+            setOtpError(errorMessage);
+            console.log('Error from props:', errorMessage);
+            
+            if (errorMessage.toLowerCase().includes('expired')) {
+                setExpiredError(true);
+            } else {
+                setExpiredError(false);
+            }
+        } else {
+            setOtpError('');
+            setExpiredError(false);
+        }
+    }, [errors.otp]);
+
+    // Clear error message after 6 seconds
+    useEffect(() => {
+        if (otpError) {
+            const timer = setTimeout(() => {
+                setOtpError('');
+                setExpiredError(false);
+            }, 6000);
+            return () => clearTimeout(timer);
+        }
+    }, [otpError]);
 
     const handleChange = (e, idx) => {
         const val = e.target.value.replace(/[^0-9]/g, "");
@@ -67,23 +103,20 @@ export default function Authentication({ email }) {
         if (otp.length !== 6) {
             return;
         }
-        setIsLoading(true);
-        Inertia.post('/verify-otp', { otp }, {
-            onFinish: () => setIsLoading(false),
-            onSuccess: () => {
-                console.log('OTP verified successfully');
-            },
-            onError: (errors) => {
-                console.error('OTP verification failed:', errors);
-            }
+        setIsVerifying(true);
+        setExpiredError(false);
+        setOtpError('');
+        
+        router.post('/verify-otp', { otp }, {
+            onFinish: () => setIsVerifying(false),
         });
     };
 
     const handleResend = () => {
         if (cooldown === 0) {
-            setIsLoading(true);
-            Inertia.post('/resend-otp', {}, {
-                onFinish: () => setIsLoading(false),
+            setIsResending(true);
+            router.post('/resend-otp', {}, {
+                onFinish: () => setIsResending(false),
             });
             setCooldown(60);
         }
@@ -117,23 +150,28 @@ export default function Authentication({ email }) {
                         type="button"
                         className="text-[#9C0306] font-medium hover:cursor-pointer"
                         onClick={handleResend}
-                        disabled={cooldown > 0 || isLoading}
+                        disabled={cooldown > 0 || isResending}
                     >
                         {cooldown > 0 ? `Resend code in ${cooldown}s` : 'Resend code'}
                     </button>
                 </div>
-                {errors.otp && (
-                    <div className="mt-4 text-red-600 text-center">
-                        <p>{errors.otp}</p>
+                {otpError && (
+                    <div className="mt-4 text-[#9C0306] text-center">
+                        <p>{otpError}</p>
+                        {expiredError && (
+                            <p className="mt-2 text-sm font-medium">
+                                Please request a new verification code.
+                            </p>
+                        )}
                     </div>
                 )}
                 <div className="mt-7 flex justify-center items-center">
                     <button
                         type="submit"
-                        disabled={isLoading}
+                        disabled={isVerifying}
                         className="bg-[#9C0306] text-white rounded-[20px] w-40 h-8 hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        {isLoading ? 'Verifying...' : 'Verify'}
+                        {isVerifying ? 'Verifying...' : 'Verify'}
                     </button>
                 </div>
             </form>
