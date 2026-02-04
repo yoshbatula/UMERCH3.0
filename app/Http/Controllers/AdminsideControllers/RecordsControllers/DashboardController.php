@@ -16,9 +16,9 @@ class DashboardController extends Controller
     {
         $today = Carbon::today();
         
-        // Today's Earnings - sum of all order items subtotals for today
+        // Today's Earnings - sum of completed order items subtotals for today
         $todayEarnings = Orders::whereDate('created_at', $today)
-            ->with('orderItems')
+            ->where('status', 'Completed')
             ->get()
             ->sum(function ($order) {
                 return $order->orderItems->sum('subtotal');
@@ -32,14 +32,16 @@ class DashboardController extends Controller
         
         // Today's Sales Amount
         $todaySalesAmount = Orders::whereDate('created_at', $today)
+            ->where('status', 'Completed')
             ->with('orderItems')
             ->get()
             ->sum(function ($order) {
                 return $order->orderItems->sum('subtotal');
             });
 
-        // Total Sales Amount - sum of all order items subtotals (all time)
-        $totalSalesAmount = Orders::with('orderItems')
+        // Total Sales Amount - sum of completed order items subtotals (all time)
+        $totalSalesAmount = Orders::where('status', 'Completed')
+            ->with('orderItems')
             ->get()
             ->sum(function ($order) {
                 return $order->orderItems->sum('subtotal');

@@ -18,7 +18,7 @@ class InventoryController extends Controller
     {
         $request->validate([
             'product_name' => 'required',
-            'product_price' => 'required|numeric',
+            'product_price' => 'required|numeric|min:0',
             'variant' => 'required',
             'product_image' => 'nullable|image'
         ]);
@@ -77,6 +77,10 @@ class InventoryController extends Controller
 
     public function update(Request $request, $id)
     {
+        $request->validate([
+            'product_price' => 'required|numeric|min:0',
+        ]);
+        
         $product = Products::findOrFail($id);
 
         $data = [

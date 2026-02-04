@@ -103,8 +103,8 @@ export default function Sidebar() {
               <Link
                 href="/admin/inventory/add"
                 className={`block px-14 py-3 text-sm font-medium transition-all duration-200 ${isActive("/admin/inventory/add")
-                    ? "bg-white text-red-700"
-                    : "text-white"
+                  ? "bg-white text-red-700"
+                  : "text-white"
                   }`}
               >
                 Add Product
@@ -113,8 +113,8 @@ export default function Sidebar() {
               <Link
                 href="/admin/inventory/stock-in"
                 className={`block px-14 py-2 text-sm transition-all duration-200 ${isActive("/admin/inventory/stock-in")
-                    ? "bg-white text-red-700"
-                    : "text-white"
+                  ? "bg-white text-red-700"
+                  : "text-white"
                   }`}
               >
                 Stock In
@@ -123,8 +123,8 @@ export default function Sidebar() {
               <Link
                 href="/admin/inventory/stock-out"
                 className={`block px-14 py-2 text-sm transition-all duration-200 ${isActive("/admin/inventory/stock-out")
-                    ? "bg-white text-red-700"
-                    : "text-white"
+                  ? "bg-white text-red-700"
+                  : "text-white"
                   }`}
               >
                 Stock Out
@@ -140,7 +140,7 @@ export default function Sidebar() {
           active={isActive("/admin/record-logs")}
         />
 
-        <div className="mt-6 border-t border-red-800 pt-4">
+        <div className="border-t border-red-800">
           <NavItem href="/admin/logout" icon={LOGOUTLOGO} label="Logout" />
         </div>
       </nav>
