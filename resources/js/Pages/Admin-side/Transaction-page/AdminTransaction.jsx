@@ -176,6 +176,8 @@ export default function AdminTransaction() {
     const [isDeliverModalOpen, setIsDeliverModalOpen] = useState(false);
     const [isReadyForPickupModalOpen, setIsReadyForPickupModalOpen] = useState(false);
     const [toast, setToast] = useState(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 5;
 
     const showToast = (message, type = 'success') => {
         setToast({ message, type });
@@ -228,6 +230,18 @@ export default function AdminTransaction() {
             return matchQ && matchS;
         });
     }, [orders, query, status]);
+
+    // Pagination logic
+    const totalPages = Math.ceil(filtered.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const paginatedOrders = filtered.slice(startIndex, startIndex + itemsPerPage);
+    const endIndex = Math.min(startIndex + itemsPerPage, filtered.length);
+
+    const goToPage = (page) => {
+        if (page >= 1 && page <= totalPages) {
+            setCurrentPage(page);
+        }
+    };
 
     const stats = [
         {
@@ -403,7 +417,7 @@ export default function AdminTransaction() {
                             No orders found
                         </div>
                     ) : (
-                        filtered.map((order) => (
+                        paginatedOrders.map((order) => (
                             <div
                                 key={order.order_id}
                                 className="bg-white rounded-lg border border-gray-200 p-4 flex items-center justify-between hover:shadow-md transition"
@@ -454,6 +468,42 @@ export default function AdminTransaction() {
                         ))
                     )}
                 </div>
+
+                {/* Pagination */}
+                {filtered.length > 0 && (
+                    <>
+                        <div className="border-t border-gray-200" />
+                        <div className="py-7 flex items-center justify-center gap-10 text-sm font-semibold">
+                            <button 
+                                onClick={() => goToPage(currentPage - 1)} 
+                                disabled={currentPage === 1}
+                                className='text-gray-900 hover:text-[#9C0306] disabled:opacity-50 disabled:cursor-not-allowed'
+                            >
+                                Prev
+                            </button>
+                            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                                <button 
+                                    key={page}
+                                    onClick={() => goToPage(page)}
+                                    className={`${
+                                        page === currentPage 
+                                            ? 'text-[#9C0306]' 
+                                            : 'text-gray-900 hover:text-[#9C0306]'
+                                    }`}
+                                >
+                                    {page}
+                                </button>
+                            ))}
+                            <button 
+                                onClick={() => goToPage(currentPage + 1)} 
+                                disabled={currentPage === totalPages}
+                                className='text-gray-900 hover:text-[#9C0306] disabled:opacity-50 disabled:cursor-not-allowed'
+                            >
+                                Next
+                            </button>
+                        </div>
+                    </>
+                )}
                 <AdminFooter />
             </main>
 

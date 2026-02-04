@@ -31,7 +31,8 @@ function AdminRecord() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [isDeleteOpen, setDeleteOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
-  
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
 
   const fetchUsers = () => {
@@ -149,7 +150,10 @@ function AdminRecord() {
 
             <input
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setCurrentPage(1);
+              }}
               placeholder="Search by Email or UserId"
               className="bg-transparent outline-none w-full text-sm text-gray-700 placeholder:text-gray-400"
             />
@@ -192,8 +196,19 @@ function AdminRecord() {
               return email.includes(searchLower) || userId.includes(searchLower);
             });
 
-            if (filteredUsers.length > 0) {
-              return filteredUsers.map((userRaw) => {
+            // Pagination logic
+            const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const paginatedUsers = filteredUsers.slice(startIndex, startIndex + itemsPerPage);
+
+            const goToPage = (page) => {
+              if (page >= 1 && page <= totalPages) {
+                setCurrentPage(page);
+              }
+            };
+
+            if (paginatedUsers.length > 0) {
+              return paginatedUsers.map((userRaw) => {
                 // Map possible backend keys to expected keys
                 const user = {
                   id: userRaw.id || userRaw.um_id || userRaw.userId || userRaw.user_id || userRaw.ID || '',
@@ -232,15 +247,62 @@ function AdminRecord() {
               );
             }
           })()}
-          {/* Pagination (static for now) */}
-          <div className="border-t border-gray-200" />
-          <div className="py-7 flex items-center justify-center gap-10 text-sm font-semibold">
-            <button className="text-gray-900">Prev</button>
-            <button className="text-red-700">1</button>
-            <button className="text-gray-900">2</button>
-            <button className="text-gray-900">3</button>
-            <button className="text-gray-900">Next</button>
-          </div>
+          {/* Pagination */}
+          {(() => {
+            const filteredUsers = users.filter((userRaw) => {
+              if (userRaw.role === 'admin') return false;
+              if (!query.trim()) return true;
+              const searchLower = query.toLowerCase();
+              const email = (userRaw.email || userRaw.user_email || '').toLowerCase();
+              const userId = (userRaw.um_id || userRaw.userId || userRaw.user_id || '').toString().toLowerCase();
+              return email.includes(searchLower) || userId.includes(searchLower);
+            });
+
+            const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+            const goToPage = (page) => {
+              if (page >= 1 && page <= totalPages) {
+                setCurrentPage(page);
+              }
+            };
+
+            if (filteredUsers.length > 0) {
+              return (
+                <>
+                  <div className="border-t border-gray-200" />
+                  <div className="py-7 flex items-center justify-center gap-10 text-sm font-semibold">
+                    <button 
+                      onClick={() => goToPage(currentPage - 1)} 
+                      disabled={currentPage === 1}
+                      className='text-gray-900 hover:text-[#9C0306] disabled:opacity-50 disabled:cursor-not-allowed'
+                    >
+                      Prev
+                    </button>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                      <button 
+                        key={page}
+                        onClick={() => goToPage(page)}
+                        className={`${
+                          page === currentPage 
+                            ? 'text-[#9C0306]' 
+                            : 'text-gray-900 hover:text-[#9C0306]'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    ))}
+                    <button 
+                      onClick={() => goToPage(currentPage + 1)} 
+                      disabled={currentPage === totalPages}
+                      className='text-gray-900 hover:text-[#9C0306] disabled:opacity-50 disabled:cursor-not-allowed'
+                    >
+                      Next
+                    </button>
+                  </div>
+                </>
+              );
+            }
+            return null;
+          })()}
         </div>
         {/* Modals */}
         <AddUsersModal isOpen={isAddUsersOpen} onClose={closeAddUsersModal} onUserAdded={handleUserAdded} />
