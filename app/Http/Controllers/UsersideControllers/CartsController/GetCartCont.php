@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Carts;
 use App\Models\Carts_Item;
+use App\Models\Inventory;
 
 class GetCartCont extends Controller {
     
@@ -58,6 +59,31 @@ class GetCartCont extends Controller {
             return response()->json(['message' => 'Item updated successfully'], 200);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Error updating item'], 500);
+        }
+    }
+
+    public function checkInventory(Request $request) {
+        if (!Auth::check()) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $request->validate([
+            'product_id' => 'required|integer',
+            'variant' => 'required|string'
+        ]);
+
+        try {
+            $inventory = Inventory::where('product_id', $request->product_id)
+                ->where('variant', $request->variant)
+                ->first();
+
+            if (!$inventory) {
+                return response()->json(['quantity' => 0], 200);
+            }
+
+            return response()->json(['quantity' => $inventory->quantity], 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error checking inventory'], 500);
         }
     }
 }

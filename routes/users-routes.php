@@ -1,5 +1,6 @@
 <?php
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\UsersideControllers\LoginControllers\LoginCont;
 use App\Http\Controllers\Controller;
 use App\Models\User;
@@ -30,6 +31,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/get-cart', [GetCartCont::class, 'getCart'])->name('get.cart');
     Route::delete('/remove-from-cart/{cartItemId}', [GetCartCont::class, 'removeFromCart'])->name('remove.from.cart');
     Route::put('/update-cart-item/{cartItemId}', [GetCartCont::class, 'updateCartItem'])->name('update.cart.item');
+    Route::get('/api/check-inventory', [GetCartCont::class, 'checkInventory'])->name('check.inventory');
 
     // Order routes
     Route::post('/place-order', [PlaceOrderCont::class, 'placeOrder'])->name('place.order');
@@ -50,7 +52,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/Cart', [CartsCont::class, 'index'])->name('cart');
 
     Route::get('/Checkout', function () {
-        return inertia('User-side/Cart-page/Checkout');
+        return inertia('User-side/Cart-page/Checkout', [
+            'user' => Auth::user()
+        ]);
     })->name('checkout');
 
     Route::get('/Orders', function () {

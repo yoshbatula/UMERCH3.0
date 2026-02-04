@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, router } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import LandingNav from '../../../components/layouts/LandingNav';
 import CartsNav from '../../../components/layouts/CartsNav';
 import BackgroundModel from '@images/BackgroundModel.png';
@@ -10,6 +10,7 @@ import ReceiptForm from '../../../components/modals/ReceiptFormModal';
 import { useState, useEffect } from 'react';
 
 export default function Checkout() {
+    const page = usePage();
     const [cartItems, setCartItems] = useState([]);
     const [loading, setLoading] = useState(false);
     const [toast, setToast] = useState(null);
@@ -17,7 +18,23 @@ export default function Checkout() {
     const [campus, setCampus] = useState('');
     const [isPlaceOrderModalOpen, setIsPlaceOrderModalOpen] = useState(false);
     const [isReceiptFormOpen, setIsReceiptFormOpen] = useState(false);
+    const [customerData, setCustomerData] = useState({ name: 'Customer', id: 'N/A' });
     const intervalRef = React.useRef(null);
+
+    // Set customer data from both auth.user and props.user
+    React.useEffect(() => {
+        const user = page.props.user || (page.props.auth && page.props.auth.user);
+        if (user) {
+            console.log('Setting customer from user:', user);
+            const customerName = user.user_fullname || user.name || 'Customer';
+            const customerId = user.um_id || user.id || 'N/A';
+            console.log('Customer name:', customerName, 'Customer ID:', customerId);
+            setCustomerData({
+                name: customerName,
+                id: customerId
+            });
+        }
+    }, [page.props.user, page.props.auth]);
 
     useEffect(() => {
         // Function to load items from sessionStorage
@@ -280,6 +297,8 @@ export default function Checkout() {
                 cartItems={cartItems}
                 onGoHome={handleGoHome}
                 onTrackOrders={handleTrackOrders}
+                customerName={customerData.name}
+                customerId={customerData.id}
             />
 
             {/* Toast Notification */}

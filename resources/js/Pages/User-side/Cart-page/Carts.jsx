@@ -98,14 +98,37 @@ export default function Carts({ cartItems: initialCartItems = [] }) {
 
     const handleVariantChange = async (cartItemId, newVariant) => {
         try {
+            // Get the cart item
+            const cartItem = cartItems.find(item => item.cart_item_id === cartItemId);
+            if (!cartItem) return;
+
+            // Check inventory for this variant
+            const inventoryResponse = await axios.get('/api/check-inventory', {
+                params: {
+                    product_id: cartItem.product_id,
+                    variant: newVariant
+                }
+            });
+
+            const inventory = inventoryResponse.data;
+            
+            // If no stock for this variant, show error toast
+            if (!inventory || inventory.quantity === 0 || inventory.quantity < 1) {
+                showToast(`This size (${newVariant}) is out of stock`, 'error');
+                return;
+            }
+
+            // Update the variant
             await axios.put(`/update-cart-item/${cartItemId}`, { variant: newVariant });
             setCartItems(cartItems.map(item => 
                 item.cart_item_id === cartItemId 
                     ? { ...item, variant: newVariant }
                     : item
             ));
+            showToast('Variant updated successfully!', 'success');
         } catch (error) {
             console.error('Error updating variant:', error);
+            showToast('Error updating variant. Please try again.', 'error');
         }
     };
 
