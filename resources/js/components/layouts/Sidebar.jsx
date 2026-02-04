@@ -9,21 +9,19 @@ import RECORDLOGO from "@images/RecordLogs-icon.svg";
 import LOGOUTLOGO from "@images/Logout-icon.svg";
 
 const RED_FILTER =
-  "[filter:brightness(0)_saturate(100%)_invert(12%)_sepia(95%)_saturate(7480%)_hue-rotate(1deg)_brightness(97%)_contrast(115%)]";
+  "[filter:brightness(0)_saturate(100%)_invert(11%)_sepia(90%)_saturate(5000%)_hue-rotate(-2deg)_brightness(95%)_contrast(105%)]";
 
 const NavItem = ({ href, icon, label, active = false, onClick, asButton }) => {
   const classes = [
     "group w-full flex items-center gap-3 px-4 py-3 text-base font-medium transition-all duration-200",
     active
-      ? "bg-white text-red-700"
+      ? "bg-white text-red-700 "
       : "text-white",
   ].join(" ");
 
   const iconClass = [
     "h-6 w-6 transition-all duration-200",
-    active
-      ? `filter ${RED_FILTER}`
-      : "",
+    active ? RED_FILTER : "",
   ].join(" ");
 
   if (asButton) {
@@ -67,10 +65,10 @@ export default function Sidebar() {
   }, []);
 
   return (
-    <aside className="w-72 bg-red-700 text-white min-h-screen flex flex-col">
+    <aside className="w-60 bg-[#9C0306] text-white min-h-screen flex flex-col">
       {/* Header */}
       <div className="px-5 py-5 flex flex-col items-center border-b border-red-800">
-        <img src={Logo} alt="UMERCH logo" className="h-40 w-auto" />
+        <img src={Logo} alt="UMERCH logo" className="h-30 w-auto" />
         <div className="text-2xl font-bold">ADMIN</div>
       </div>
 
