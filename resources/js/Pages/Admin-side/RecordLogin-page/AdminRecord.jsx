@@ -256,8 +256,6 @@ function AdminRecord() {
           user={userToDelete}
           onDeleted={handleDeleteSuccess}
         />
-
-        
         <AdminFooter />
         {/* Toast Success */}
         {showingToast && (
@@ -271,4 +269,3 @@ function AdminRecord() {
 }
 
 export default AdminRecord;
-

@@ -25,7 +25,8 @@ class AuthCont extends Controller {
 
         if ($request->otp == $sessionOtp) {
             session()->forget(['otp', 'otp_expires']);
-            return redirect()->route('landing');
+            session(['otp_verified' => true]);
+            return Inertia::location('/Landing');
         }
 
         return back()->withErrors(['otp' => 'Invalid OTP.']);

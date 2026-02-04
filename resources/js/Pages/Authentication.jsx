@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect } from "react";
+import { usePage } from '@inertiajs/react';
 import { Inertia } from '@inertiajs/inertia';
 
 export default function Authentication({ email }) {
@@ -6,6 +7,8 @@ export default function Authentication({ email }) {
     const [values, setValues] = useState(Array(inputLength).fill(""));
     const inputsRef = useRef([]);
     const [cooldown, setCooldown] = useState(0);
+    const [isLoading, setIsLoading] = useState(false);
+    const { errors } = usePage().props;
 
     useEffect(() => {
         if (cooldown > 0) {
@@ -61,13 +64,28 @@ export default function Authentication({ email }) {
     const handleSubmit = (e) => {
         e.preventDefault();
         const otp = values.join('');
-        Inertia.post('/verify-otp', { otp });
+        if (otp.length !== 6) {
+            return;
+        }
+        setIsLoading(true);
+        Inertia.post('/verify-otp', { otp }, {
+            onFinish: () => setIsLoading(false),
+            onSuccess: () => {
+                console.log('OTP verified successfully');
+            },
+            onError: (errors) => {
+                console.error('OTP verification failed:', errors);
+            }
+        });
     };
 
     const handleResend = () => {
         if (cooldown === 0) {
-            Inertia.post('/resend-otp');
-            setCooldown(60); 
+            setIsLoading(true);
+            Inertia.post('/resend-otp', {}, {
+                onFinish: () => setIsLoading(false),
+            });
+            setCooldown(60);
         }
     };
 
@@ -99,13 +117,24 @@ export default function Authentication({ email }) {
                         type="button"
                         className="text-[#9C0306] font-medium hover:cursor-pointer"
                         onClick={handleResend}
-                        disabled={cooldown > 0}
+                        disabled={cooldown > 0 || isLoading}
                     >
                         {cooldown > 0 ? `Resend code in ${cooldown}s` : 'Resend code'}
                     </button>
                 </div>
+                {errors.otp && (
+                    <div className="mt-4 text-red-600 text-center">
+                        <p>{errors.otp}</p>
+                    </div>
+                )}
                 <div className="mt-7 flex justify-center items-center">
-                    <button type="submit" className="bg-[#9C0306] text-white rounded-[20px] w-40 h-8 hover:cursor-pointer">Verify</button>
+                    <button
+                        type="submit"
+                        disabled={isLoading}
+                        className="bg-[#9C0306] text-white rounded-[20px] w-40 h-8 hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {isLoading ? 'Verifying...' : 'Verify'}
+                    </button>
                 </div>
             </form>
         </div>
