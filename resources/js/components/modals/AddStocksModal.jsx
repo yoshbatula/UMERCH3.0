@@ -36,7 +36,7 @@ export default function AddStock({ open, onClose, onSuccess }) {
             // Find all products with the same product_name to get all variants
             const sameNameProducts = products.filter(p => p.product_name === productId);
             const variants = sameNameProducts.map(p => p.variant).filter(v => v);
-            
+
             // Deduplicate while preserving order
             const seen = new Set();
             const unique = variants.filter(v => {
@@ -44,7 +44,7 @@ export default function AddStock({ open, onClose, onSuccess }) {
                 seen.add(v);
                 return true;
             });
-            
+
             setVariantOptions(unique.length > 0 ? unique : ["XS", "S", "M", "L", "XL"]);
             setVariation("");
         } else {
@@ -143,7 +143,27 @@ export default function AddStock({ open, onClose, onSuccess }) {
                                 placeholder="Enter Quantity"
                                 className="w-full mt-1 border rounded-lg px-3 py-2 text-sm"
                                 value={quantity}
-                                onChange={e => setQuantity(e.target.value)}
+                                min="0"
+                                onChange={e => {
+                                    const value = e.target.value;
+                                    // Prevent negative values
+                                    if (value === '' || parseFloat(value) >= 0) {
+                                        setQuantity(value);
+                                    }
+                                }}
+                                onKeyDown={e => {
+                                    // Prevent typing minus sign
+                                    if (e.key === '-' || e.key === 'e' || e.key === 'E') {
+                                        e.preventDefault();
+                                    }
+                                }}
+                                onPaste={e => {
+                                    // Handle paste events
+                                    const pastedData = e.clipboardData.getData('text');
+                                    if (parseFloat(pastedData) < 0) {
+                                        e.preventDefault();
+                                    }
+                                }}
                             />
                         </div>
 
@@ -176,7 +196,7 @@ export default function AddStock({ open, onClose, onSuccess }) {
                         <div className="bg-white rounded-xl w-[320px] p-6 text-center space-y-4">
                             <p className="font-semibold">
                                 Are you sure you want to add a stock?
-                            </p>    
+                            </p>
 
                             <div className="flex justify-center gap-4">
                                 <button

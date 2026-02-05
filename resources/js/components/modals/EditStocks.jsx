@@ -72,7 +72,27 @@ export default function EditStocks({ open, onClose, stock, onSuccess }) {
                                     type="number"
                                     className="w-full mt-1 border rounded-lg px-3 py-2 text-sm"
                                     value={quantity}
-                                    onChange={e => setQuantity(e.target.value)}
+                                    min="0"
+                                    onChange={e => {
+                                        const value = e.target.value;
+                                        // Prevent negative values
+                                        if (value === '' || parseFloat(value) >= 0) {
+                                            setQuantity(value);
+                                        }
+                                    }}
+                                    onKeyDown={e => {
+                                        // Prevent typing minus sign
+                                        if (e.key === '-' || e.key === 'e' || e.key === 'E') {
+                                            e.preventDefault();
+                                        }
+                                    }}
+                                    onPaste={e => {
+                                        // Handle paste events
+                                        const pastedData = e.clipboardData.getData('text');
+                                        if (parseFloat(pastedData) < 0) {
+                                            e.preventDefault();
+                                        }
+                                    }}
                                 />
                             </div>
 

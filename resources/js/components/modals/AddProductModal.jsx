@@ -35,6 +35,13 @@ export default function AddProductModal({ open, isOpen, onClose, onSuccess }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
+
+        // Validate price is not negative
+        if (data.product_price && parseFloat(data.product_price) < 0) {
+            alert("Price cannot be negative. Please enter a valid price.");
+            return;
+        }
+
         post("/admin/products", {
             onSuccess: () => {
                 if (onSuccess) onSuccess();
@@ -107,6 +114,8 @@ export default function AddProductModal({ open, isOpen, onClose, onSuccess }) {
                         <label className="text-sm font-semibold mb-2 block">Add Price:</label>
                         <input
                             type="number"
+                            min="1"
+                            step="0.01"
                             placeholder="Enter Price"
                             name="product_price"
                             value={data.product_price}

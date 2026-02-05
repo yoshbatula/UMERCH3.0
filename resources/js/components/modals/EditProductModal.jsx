@@ -41,6 +41,13 @@ export default function AdminEditProduct({ open, onClose, product, onSuccess }) 
 
     const handleSave = (e) => {
         e.preventDefault();
+
+        // Validate price is not negative
+        if (data.product_price && parseFloat(data.product_price) < 0) {
+            alert("Price cannot be negative. Please enter a valid price.");
+            return;
+        }
+
         patch(`/admin/products/${product.product_id}`, {
             onSuccess: () => {
                 if (onSuccess) onSuccess();
@@ -105,6 +112,8 @@ export default function AdminEditProduct({ open, onClose, product, onSuccess }) 
                         <label className="text-sm font-semibold">Price:</label>
                         <input
                             type="number"
+                            min="1"
+                            step="0.01"
                             name="product_price"
                             value={data.product_price}
                             onChange={handleInput}
