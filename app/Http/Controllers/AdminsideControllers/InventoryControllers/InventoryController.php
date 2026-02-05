@@ -5,6 +5,7 @@ namespace App\Http\Controllers\AdminsideControllers\InventoryControllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Products;
+use App\Models\InventoryLog;
 use Illuminate\Support\Facades\Storage;
 
 class InventoryController extends Controller
@@ -72,6 +73,16 @@ class InventoryController extends Controller
             'product_image' => $imagePath ? Storage::url($imagePath) : null,
         ]);
 
+        // Log the add product operation
+        InventoryLog::create([
+            'product_id' => $product->product_id,
+            'item_name' => $product->product_name . ' - ' . $product->variant,
+            'type' => 'Add Product',
+            'quantity' => 0,
+            'total' => 0,
+            'admin_action' => 'Admin_1' // Update with actual admin
+        ]);
+
         return redirect()->back()->with('success', 'Product added successfully!');
     }
 
@@ -97,13 +108,35 @@ class InventoryController extends Controller
 
         $product->update(array_filter($data, fn($v) => !is_null($v)));
 
+        // Log the edit product operation
+        InventoryLog::create([
+            'product_id' => $product->product_id,
+            'item_name' => $product->product_name . ' - ' . $product->variant,
+            'type' => 'Edit Product',
+            'quantity' => 0,
+            'total' => $product->product_stock,
+            'admin_action' => 'Admin_1' // Update with actual admin
+        ]);
+
         
         return redirect()->back()->with('success', 'Product updated successfully!');
     }
 
     public function destroy($id)
     {
-        Products::findOrFail($id)->delete();
+        $product = Products::findOrFail($id);
+        
+        // Log the delete product operation
+        InventoryLog::create([
+            'product_id' => $product->product_id,
+            'item_name' => $product->product_name . ' - ' . $product->variant,
+            'type' => 'Delete Product',
+            'quantity' => 0,
+            'total' => $product->product_stock,
+            'admin_action' => 'Admin_1' // Update with actual admin
+        ]);
+
+        $product->delete();
         
         return redirect()->back()->with('success', 'Product deleted successfully!');
     }

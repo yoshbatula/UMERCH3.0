@@ -24,8 +24,8 @@ const StatCard = ({ title, value, subtitle, icon, bgColor }) => (
             <div className="text-4xl font-bold mt-1">{value}</div>
             {subtitle && <div className="text-xs opacity-75 mt-1">{subtitle}</div>}
         </div>
-        <div className="w-12 h-12 rounded-lg bg-white/15 flex items-center justify-center">
-            <img src={icon} alt={title} className="w-12 h-12" />
+        <div className="w-14 h-14 rounded-lg flex items-center justify-center">
+            <img src={icon} alt={title} className="w-20 h-20" />
         </div>
     </div>
 );

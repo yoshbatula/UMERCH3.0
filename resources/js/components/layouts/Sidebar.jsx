@@ -44,7 +44,9 @@ const NavItem = ({ href, icon, label, active = false, onClick, asButton }) => {
 export default function Sidebar() {
   const { url } = usePage();
   const [inventoryOpen, setInventoryOpen] = useState(false);
+  const [recordLogsOpen, setRecordLogsOpen] = useState(false);
   const inventoryRef = useRef(null);
+  const recordLogsRef = useRef(null);
 
   const isActive = (path) => url.startsWith(path);
 
@@ -52,12 +54,18 @@ export default function Sidebar() {
     if (isActive("/admin/inventory")) {
       setInventoryOpen(true);
     }
+    if (isActive("/admin/record-logs")) {
+      setRecordLogsOpen(true);
+    }
   }, [url]);
 
   useEffect(() => {
     function handleClickOutside(e) {
       if (inventoryRef.current && !inventoryRef.current.contains(e.target)) {
         setInventoryOpen(false);
+      }
+      if (recordLogsRef.current && !recordLogsRef.current.contains(e.target)) {
+        setRecordLogsOpen(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -133,12 +141,50 @@ export default function Sidebar() {
           )}
         </div>
 
-        <NavItem
-          href="/admin/record-logs"
-          icon={RECORDLOGO}
-          label="Record Logs"
-          active={isActive("/admin/record-logs")}
-        />
+        {/* Record Logs */}
+        <div ref={recordLogsRef}>
+          <NavItem
+            asButton
+            icon={RECORDLOGO}
+            label="Record Logs"
+            active={recordLogsOpen}
+            onClick={() => setRecordLogsOpen((o) => !o)}
+          />
+
+          {recordLogsOpen && (
+            <div>
+              <Link
+                href="/admin/record-logs/activity"
+                className={`block px-14 py-3 text-sm font-medium transition-all duration-200 ${isActive("/admin/record-logs/activity")
+                  ? "bg-white text-red-700"
+                  : "text-white"
+                  }`}
+              >
+                Activity Logs
+              </Link>
+
+              <Link
+                href="/admin/record-logs/user"
+                className={`block px-14 py-2 text-sm transition-all duration-200 ${isActive("/admin/record-logs/user")
+                  ? "bg-white text-red-700"
+                  : "text-white"
+                  }`}
+              >
+                User Logs
+              </Link>
+
+              <Link
+                href="/admin/record-logs/inventory"
+                className={`block px-14 py-2 text-sm transition-all duration-200 ${isActive("/admin/record-logs/inventory")
+                  ? "bg-white text-red-700"
+                  : "text-white"
+                  }`}
+              >
+                Inventory Logs
+              </Link>
+            </div>
+          )}
+        </div>
 
         <div className="border-t border-red-800">
           <NavItem href="/admin/logout" icon={LOGOUTLOGO} label="Logout" />

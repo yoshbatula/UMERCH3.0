@@ -56,6 +56,13 @@ class LoginCont extends Controller
         $user = User::where($field, $credentials['login'])->first();
 
         if ($user) {
+            // Check if user account is inactive
+            if (isset($user->status) && $user->status === 'inactive') {
+                return back()->withErrors([
+                    'login' => 'Your account has been deactivated. Please contact an administrator.',
+                ]);
+            }
+
             $dbPassword = $user->user_password;
             $inputPassword = $credentials['password'];
 

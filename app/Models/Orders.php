@@ -27,6 +27,10 @@ class Orders extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class, 'user_id', 'id');
+        return $this->belongsTo(User::class, 'user_id', 'id')->withDefault([
+            'user_fullname' => 'Deleted User',
+            'email' => 'N/A',
+            'um_id' => 'N/A',
+        ]);
     }
 }

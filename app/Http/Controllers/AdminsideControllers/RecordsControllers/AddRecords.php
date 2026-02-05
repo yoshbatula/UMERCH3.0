@@ -21,7 +21,8 @@ class AddRecords extends Controller {
                 'user_fullname' => $request->name,
                 'email' => $request->email,
                 'um_id' => $request->userId,
-                'user_password' => bcrypt($request->password), 
+                'user_password' => bcrypt($request->password),
+                'role' => 'customer',
             ]);
 
             Log::info('User created successfully:', ['user_id' => $user->id, 'email' => $user->email]);

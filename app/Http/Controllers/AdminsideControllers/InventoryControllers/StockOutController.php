@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Products;
 use App\Models\StockOut;
+use App\Models\InventoryLog;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 class StockOutController extends Controller
@@ -58,6 +59,16 @@ class StockOutController extends Controller
                 'quantity' => $request->quantity,
                 'modified_by' => $request->modified_by,
                 'date_time' => now()
+            ]);
+
+            // Log the stock out operation
+            InventoryLog::create([
+                'product_id' => $product->id,
+                'item_name' => $product->product_name,
+                'type' => 'Stock Out',
+                'quantity' => -$request->quantity, // Negative for stock out
+                'total' => $product->product_stock,
+                'admin_action' => $request->modified_by
             ]);
         });
 

@@ -9,6 +9,7 @@ use App\Http\Controllers\AdminsideControllers\InventoryControllers\InventoryCont
 use App\Http\Controllers\AdminsideControllers\RecordsControllers\AddRecords;
 use App\Http\Controllers\AdminsideControllers\RecordsControllers\UpdateRecords;
 use App\Http\Controllers\AdminsideControllers\RecordsControllers\DeleteRecords;
+use App\Http\Controllers\AdminsideControllers\RecordsControllers\InventoryLogsController;
 use App\Http\Controllers\AdminsideControllers\InventoryControllers\StockInController;
 use App\Http\Controllers\AdminsideControllers\InventoryControllers\StockOutController;
 use App\Http\Controllers\AdminsideControllers\RecordsControllers\DashboardController;
@@ -32,12 +33,17 @@ Route::middleware('auth')->group(function () {
     Route::post('/admin/add-user', [AddRecords::class, 'addUser']);
     Route::patch('/admin/update-user/{id}', [UpdateRecords::class, 'updateUser']);
     Route::delete('/admin/delete-user/{id}', [DeleteRecords::class, 'deleteUser']);
+    Route::patch('/admin/deactivate-user/{id}', [UpdateRecords::class, 'deactivateUser']);
+    Route::patch('/admin/reactivate-user/{id}', [UpdateRecords::class, 'reactivateUser']);
 
     Route::get('/api/admin/users', function () {
         return response()->json(
-            User::where('role', '!=', 'admin')->select('id', 'user_fullname', 'um_id', 'email', 'role')->get()
+            User::where('role', '!=', 'admin')->select('id', 'user_fullname', 'um_id', 'email', 'role', 'status')->get()
         );
     });
+
+    // INVENTORY LOGS API
+    Route::get('/api/admin/inventory-logs', [InventoryLogsController::class, 'getLogs']);
 
     /*
     |--------------------------------------------------------------------------
@@ -103,9 +109,11 @@ Route::middleware('auth')->group(function () {
         return inertia('Admin-side/Transaction-page/AdminTransaction');
     });
 
-    Route::get('/admin/record-logs', function () {
-        return inertia('Admin-side/RecordLogin-page/AdminRecord');
+    Route::get('/admin/record-logs/user', function () {
+        return inertia('Admin-side/RecordLogin-page/UserLogs');
     });
+
+    Route::get('/admin/record-logs/inventory', [InventoryLogsController::class, 'index'])->name('InventoryLogs');
 
     /*
     |--------------------------------------------------------------------------

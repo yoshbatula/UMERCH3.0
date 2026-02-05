@@ -22,6 +22,8 @@ class User extends Authenticatable
         'um_id',
         'user_fullname',
         'user_password',
+        'role',
+        'status',
     ];
 
     /**

@@ -8,7 +8,7 @@ const MiniStatCard = ({ icon, label, value, change, iconBgColor }) => (
         </div>
         <div>
             <div className="text-xs text-gray-500">{label}</div>
-            <div className="text-lg font-bold text-gray-800">₱ {value?.toLocaleString() || 0}</div>
+            <div className="text-lg font-bold text-gray-800"> {value?.toLocaleString() || 0}</div>
             {change !== undefined && (
                 <div className={`text-xs ${change >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                     {change >= 0 ? '+' : ''}{change}% This Week

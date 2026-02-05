@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Products;
 use App\Models\StockIn;
 use App\Models\Inventory;
+use App\Models\InventoryLog;
 use Illuminate\Support\Facades\DB;
 
 class StockInController extends Controller
@@ -108,6 +109,16 @@ class StockInController extends Controller
                     }
                 }
             }
+
+            // Log the stock in operation
+            InventoryLog::create([
+                'product_id' => $product->product_id,
+                'item_name' => $product->product_name . ' - ' . $variant,
+                'type' => 'Stock In',
+                'quantity' => $request->stock_qty,
+                'total' => $product->product_stock,
+                'admin_action' => 'Admin_1' // You can update this to use actual admin name/ID
+            ]);
         });
 
         return redirect()->back()->with('success', 'Stock added successfully!');

@@ -56,4 +56,36 @@ class UpdateRecords extends Controller {
             return redirect()->back()->withErrors(['error' => 'Failed to update user. Please try again.']);
         }
     }
+
+    // Function to deactivate a user
+    public function deactivateUser($id) {
+        try {
+            $user = User::findOrFail($id);
+            $user->status = 'inactive';
+            $user->save();
+            
+            Log::info('User deactivated successfully:', ['user_id' => $user->id]);
+            
+            return response()->json(['message' => 'User deactivated successfully!', 'user' => $user], 200);
+        } catch (\Exception $e) {
+            Log::error('User deactivation failed:', ['error' => $e->getMessage()]);
+            return response()->json(['error' => 'Failed to deactivate user. Please try again.'], 500);
+        }
+    }
+
+    // Function to reactivate a user
+    public function reactivateUser($id) {
+        try {
+            $user = User::findOrFail($id);
+            $user->status = 'active';
+            $user->save();
+            
+            Log::info('User reactivated successfully:', ['user_id' => $user->id]);
+            
+            return response()->json(['message' => 'User reactivated successfully!', 'user' => $user], 200);
+        } catch (\Exception $e) {
+            Log::error('User reactivation failed:', ['error' => $e->getMessage()]);
+            return response()->json(['error' => 'Failed to reactivate user. Please try again.'], 500);
+        }
+    }
 }

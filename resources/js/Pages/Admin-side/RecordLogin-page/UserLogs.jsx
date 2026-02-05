@@ -1,0 +1,247 @@
+import React from "react";
+import Sidebar from "../../../components/layouts/Sidebar";
+import AdminFooter from "../../../components/layouts/AdminFooter";
+import AddUsersModal from "../../../components/modals/AddUsersModals";
+import EditUsersModals from "../../../components/modals/EditUsersModals";
+import DeleteUsersModals from "../../../components/modals/DeleteUsersModals";
+import UserLogsActionModal from "../../../components/modals/UserLogsActionModal";
+import { useUserLogs } from "./RecordLoginFunction/UserLoginFunctions";
+
+import TotalLoginUsers from "@images/TotalLoginUsers.svg";
+import DeactivatedAccount from "@images/DeactivatedAccount.svg";
+
+const StatCard = ({ title, value, className = "bg-green-700", icon }) => (
+  <div
+    className={`w-[300px] h-[130px] rounded-xl px-6 py-4 text-white flex items-center justify-between ${className}`}
+  >
+    <div>
+      <div className="text-lg opacity-90">{title}</div>
+      <div className="text-4xl font-bold mt-1">{value}</div>
+    </div>
+    <div className="w-12 h-12 rounded-lg flex items-center justify-center">
+      {icon}
+    </div>
+  </div>
+);
+
+function UserLogs() {
+  const {
+    query, setQuery, isAddUsersOpen, users, toast, showingToast, isEditOpen, selectedUser, isDeleteOpen, userToDelete, currentPage,
+    setCurrentPage, actionModalOpen, setActionModalOpen, itemsPerPage, openAddUsersModal, closeAddUsersModal, handleUserAdded, openUpdateModal,
+    closeEditModal, handleUpdateSuccess, openDeleteModal, closeDeleteModal, handleDeleteSuccess, handleReactivate,
+    handleDeactivate, filterUsers, getPaginatedUsers, getTotalPages, goToPage, mapUser,
+  } = useUserLogs();
+
+  return (
+    <div className="flex min-h-screen bg-[#f5f5f5]">
+      <div className="h-screen sticky top-0">
+        <Sidebar />
+      </div>
+      <main className="flex-1 px-10 py-10">
+        {/* Header */}
+        <h1 className="text-4xl font-extrabold tracking-[0.25em]">RECORD LOGS</h1>
+        <p className="text-gray-500 mt-2">Welcome back Admin, everything looks great.</p>
+        {/* Success Message */}
+        {/* ✅ StatCard */}
+        <div className="mt-7 flex gap-6">
+          <StatCard
+            title="Total Login Users"
+            value={users.filter(u => u.role !== 'Admin' && (u.status === 'active' || u.status === 'Active')).length}
+            className="bg-green-700"
+            icon={<img src={TotalLoginUsers} alt="Total Login Users" className="w-20 h-20" />}
+          />
+          <StatCard
+            title="Deactivated Account"
+            value={users.filter(u => u.role !== 'Admin' && (u.status === 'inactive' || u.status === 'Inactive')).length}
+            className="bg-red-600"
+            icon={<img src={DeactivatedAccount} alt="Deactivated Account" className="w-20 h-20" />}
+          />
+        </div>
+
+        {/* Users */}
+        <h2 className="text-2xl font-bold mt-10">Users Logs</h2>
+
+        {/* Search + Add User */}
+        <div className="mt-4 flex items-center justify-between gap-6">
+          <div className="flex items-center gap-3 flex-1 max-w-130 bg-white rounded-lg px-4 py-3 border border-gray-200">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M21 21l-4.35-4.35"
+                stroke="#9CA3AF"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+              <path
+                d="M11 19a8 8 0 100-16 8 8 0 000 16z"
+                stroke="#9CA3AF"
+                strokeWidth="2"
+              />
+            </svg>
+
+            <input
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setCurrentPage(1);
+              }}
+              placeholder="Search by Email or UserId"
+              className="bg-transparent outline-none w-full text-sm text-gray-700 placeholder:text-gray-400"
+            />
+          </div>
+
+          <button
+            type="button"
+            className="bg-red-800 hover:bg-red-900 text-white px-10 py-3 rounded-full text-sm font-semibold hover:cursor-pointer"
+            onClick={openAddUsersModal}
+          >
+            Add User
+          </button>
+
+        </div>
+        {/* Table */}
+        <div className="bg-white rounded-xl mt-6 shadow-sm border border-gray-200 overflow-visible">
+          <div className="px-8 py-6">
+            <div className="grid grid-cols-12 text-sm font-bold text-red-700 text-center">
+              <div className="col-span-1">ID</div>
+              <div className="col-span-2">Name</div>
+              <div className="col-span-2">UserId</div>
+              <div className="col-span-3">Email</div>
+              <div className="col-span-2">Status</div>
+              <div className="col-span-2 text-center">Action</div>
+            </div>
+          </div>
+          <div className="border-t border-gray-200" />
+          {/* Users List */}
+          {(() => {
+            const filteredUsers = filterUsers(users, query);
+            const totalPages = getTotalPages(filteredUsers, itemsPerPage);
+            const paginatedUsers = getPaginatedUsers(filteredUsers, currentPage, itemsPerPage);
+
+            if (paginatedUsers.length > 0) {
+              return paginatedUsers.map((userRaw) => {
+                const user = mapUser(userRaw);
+                return (
+
+                  <div key={user.id} className="grid grid-cols-12 items-center text-sm text-gray-900 px-8 py-2 border-b border-gray-200 hover:bg-gray-50 text-center">
+                    <div className="col-span-1">{user.id}</div>
+                    <div className="col-span-2">{user.user_fullname}</div>
+                    <div className="col-span-2">{user.um_id}</div>
+                    <div className="col-span-3">{user.email}</div>
+                    <div className="col-span-2">
+                      <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${user.status === 'active' || user.status === 'Active'
+                        ? 'bg-green-100 text-green-700'
+                        : 'bg-red-100 text-red-700'
+                        }`}>
+                        {user.status === 'active' || user.status === 'Active' ? 'Active' : 'Inactive'}
+                      </span>
+
+                    </div>
+
+                    <div className="col-span-2 flex justify-center">
+
+                      <div className="relative">
+
+                        <button
+                          onClick={() => setActionModalOpen(actionModalOpen === user.id ? null : user.id)}
+                          className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                        >
+
+                          <svg width="4" height="16" viewBox="0 0 4 16" fill="currentColor">
+                            <circle cx="2" cy="2" r="2" />
+                            <circle cx="2" cy="8" r="2" />
+                            <circle cx="2" cy="14" r="2" />
+                          </svg>
+
+                        </button>
+                        <UserLogsActionModal
+                          isOpen={actionModalOpen === user.id}
+                          onClose={() => setActionModalOpen(null)}
+                          user={userRaw}
+                          onEdit={openUpdateModal}
+                          onReactivate={handleReactivate}
+                          onDeactivate={handleDeactivate}
+                          onDelete={openDeleteModal}
+                        />
+                      </div>
+                    </div>
+
+                  </div>
+
+                );
+              });
+            } else {
+              return (
+                <div className="px-8 py-6 text-center text-gray-500">No User Available</div>
+              );
+            }
+          })()}
+          {/* Pagination */}
+          {(() => {
+            const filteredUsers = filterUsers(users, query);
+            const totalPages = getTotalPages(filteredUsers, itemsPerPage);
+
+            if (filteredUsers.length > 0) {
+              return (
+                <>
+                  <div className="border-t border-gray-200" />
+                  <div className="py-7 flex items-center justify-center gap-10 text-sm font-semibold">
+                    <button
+                      onClick={() => goToPage(currentPage - 1, totalPages)}
+                      disabled={currentPage === 1}
+                      className='text-gray-900 hover:text-[#9C0306] disabled:opacity-50 disabled:cursor-not-allowed'
+                    >
+                      Prev
+                    </button>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                      <button
+                        key={page}
+                        onClick={() => goToPage(page, totalPages)}
+                        className={`${page === currentPage
+                          ? 'text-[#9C0306]'
+                          : 'text-gray-900 hover:text-[#9C0306]'
+                          }`}
+                      >
+                        {page}
+                      </button>
+                    ))}
+                    <button
+                      onClick={() => goToPage(currentPage + 1, totalPages)}
+                      disabled={currentPage === totalPages}
+                      className='text-gray-900 hover:text-[#9C0306] disabled:opacity-50 disabled:cursor-not-allowed'
+                    >
+                      Next
+                    </button>
+                  </div>
+                </>
+              );
+            }
+            return null;
+          })()}
+        </div>
+        {/* Modals */}
+        <AddUsersModal isOpen={isAddUsersOpen} onClose={closeAddUsersModal} onUserAdded={handleUserAdded} />
+        <EditUsersModals
+          isOpen={isEditOpen}
+          onClose={closeEditModal}
+          user={selectedUser}
+          onSuccess={handleUpdateSuccess}
+        />
+        <DeleteUsersModals
+          isOpen={isDeleteOpen}
+          onClose={closeDeleteModal}
+          user={userToDelete}
+          onDeleted={handleDeleteSuccess}
+        />
+        <AdminFooter />
+        {/* Toast Success */}
+        {showingToast && (
+          <div className="fixed bottom-6 right-6 bg-green-600 text-white px-4 py-3 rounded-lg shadow-lg">
+            {toast}
+          </div>
+        )}
+      </main>
+    </div>
+  );
+}
+
+export default UserLogs;
