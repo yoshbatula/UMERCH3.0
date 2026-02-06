@@ -29,17 +29,17 @@ export default function ProductCardModal({ isOpen, onClose, product, onShowToast
                     availableSizes = parsed;
                 }
             }
-            
+
             // Fetch from inventory table for accurate per-variant stock
             const res = await axios.get('/api/inventory');
             const inventoryData = res.data || [];
-            
+
             // Initialize stocks with 0 for all available sizes
             let stocks = {};
             availableSizes.forEach(size => {
                 stocks[size] = 0;
             });
-            
+
             // Override with actual stock values from database
             inventoryData.forEach(inv => {
                 if (inv.product_id === product.product_id) {
@@ -50,9 +50,9 @@ export default function ProductCardModal({ isOpen, onClose, product, onShowToast
         } catch (error) {
             // Fallback: fetch from products table if inventory endpoint fails
             try {
-                const res = await axios.get('/admin/products');
+                const res = await axios.get('/api/products');
                 const allProducts = res.data || [];
-                
+
                 let availableSizes = ['XS', 'S', 'M', 'L', 'XL'];
                 if (product?.variant) {
                     const parsed = product.variant.split(',').map(v => v.trim()).filter(Boolean);
@@ -60,12 +60,12 @@ export default function ProductCardModal({ isOpen, onClose, product, onShowToast
                         availableSizes = parsed;
                     }
                 }
-                
+
                 let stocks = {};
                 availableSizes.forEach(size => {
                     stocks[size] = 0;
                 });
-                
+
                 allProducts.forEach(p => {
                     if (p.product_name === product.product_name) {
                         stocks[p.variant] = p.product_stock;
@@ -82,14 +82,14 @@ export default function ProductCardModal({ isOpen, onClose, product, onShowToast
     useEffect(() => {
         if (isOpen) {
             let defaultSizes = ['XS', 'S', 'M', 'L', 'XL'];
-            
+
             if (product?.variant) {
                 const parsed = product.variant.split(',').map(v => v.trim()).filter(Boolean);
                 if (parsed.length > 1) {
                     defaultSizes = parsed;
                 }
             }
-            
+
             setSelectedSize(defaultSizes[0]);
         }
     }, [isOpen, product?.product_id]);
@@ -145,19 +145,19 @@ export default function ProductCardModal({ isOpen, onClose, product, onShowToast
                 quantity: quantity,
                 price: product.product_price
             });
-            
+
             // Get the updated cart and prepare checkout items
             const cartResponse = await axios.get('/get-cart');
             const cartItems = cartResponse.data || [];
-            
+
             // Store the last item in sessionStorage for checkout
             if (cartItems.length > 0) {
                 const lastItem = cartItems[cartItems.length - 1];
                 sessionStorage.setItem('checkoutItems', JSON.stringify([lastItem]));
             }
-            
+
             onShowToast('Item added to cart!', 'success');
-            
+
             // Close the modal and navigate to checkout
             onClose();
             setTimeout(() => {
@@ -171,7 +171,7 @@ export default function ProductCardModal({ isOpen, onClose, product, onShowToast
             setLoading(false);
         }
     };
-    
+
     if (!isOpen) return null;
 
     try {
@@ -191,7 +191,7 @@ export default function ProductCardModal({ isOpen, onClose, product, onShowToast
         const description = (product?.product_description) || 'No description available.';
         const price = Number(product?.product_price || 0);
         const stock = Number(product?.product_stock || 0);
-        
+
         let sizes = ['XS', 'S', 'M', 'L', 'XL'];
         try {
             const raw = product?.variant;
@@ -205,121 +205,120 @@ export default function ProductCardModal({ isOpen, onClose, product, onShowToast
         } catch (e) {
             console.warn('Error parsing sizes:', e);
         }
-        
+
         const formatPrice = (v) => `₱${Number(v || 0).toFixed(2)}`;
 
         return (
             <>
-            <div
-                className='fixed inset-0 z-50 flex justify-center items-center backdrop-blur-xs bg-white/5'
-                onClick={onClose}
-            >
                 <div
-                    className="bg-white p-2 rounded-[20px] shadow-lg relative w-210 h-115"
-                    onClick={e => e.stopPropagation()}
-                >
-                    <div className='flex flex-row p-8 gap-5'>
-                        <div className='flex items-start justify-center'>
-                            <img
-                                src={imgSrc}
-                                alt={name}
-                                className='w-[400px] h-auto rounded-[20px]'
-                                onError={(e) => { e.currentTarget.src = DefaultImage; }}
-                            />
-                        </div>
-                        <div className='flex flex-col justify-start'>
-                            <div>
-                                <h2 className='font-semibold text-[24px] leading-tight text-based/6 whitespace-nowrap'>{name}</h2>
-                            </div>
-                            <div className='mt-2 text-[12px]'>
-                                {description}
-                            </div>
-                            <div className='mt-3 flex flex-row gap-2'>
-                                <h1 className='text-[#9C0306] font-semibold text-[24px]'>{formatPrice(price)}</h1>
-                            </div>
-                            <div className='mt-5 flex flex-row'>
-                                <span className='text-[12px] py-3'>Size</span>
-                                <div className='flex flex-row flex-wrap gap-y-1 px-6 items-center'>
-                                    {sizes.map(size => (
-                                        <button
-                                            key={size}
-                                            onClick={() => setSelectedSize(size)}
-                                            className={`w-18 h-10 font-semibold hover:cursor-pointer transition-all ${
-                                                selectedSize === size
-                                                    ? 'bg-[#9C0306] text-white border-2 border-[#9C0306]'
-                                                    : 'bg-white text-black border-2 border-[#DDDDDD] hover:border-[#9C0306]'
-                                            }`}
-                                        >
-                                            {size}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                            <div className='mt-5'>
-                                <button onClick={() => setShowSizeChart(true)} className='text-[#0058B2] hover:underline hover:cursor-pointer'>Size Chart &gt;</button>
-                            </div>
-                            <div className='mt-5 flex flex-row gap-4 items-center'>
-                                <span className='text-[12px]'>Quantity</span>
-                                <div className='flex flex-row'>
-                                    <button
-                                        type="button"
-                                        className="w-6 h-6 flex items-center justify-center border border-[#DDDDDD] text-lg font-bold bg-white"
-                                        onClick={() => setQuantity(q => Math.max(1, q - 1))}
-                                    >
-                                        -
-                                    </button>
-                                    <span className="w-13 h-6 text-center text-[#9C0306] border border-[#DDDDDD]">{quantity}</span>
-                                    <button
-                                        type="button"
-                                        className="w-6 h-6 flex items-center justify-center border border-[#DDDDDD] text-lg font-bold bg-white"
-                                        onClick={() => setQuantity(q => q + 1)}
-                                    >
-                                        +
-                                    </button>
-                                </div>
-                                <span className='text-[#7F7F7F] text-[10px] font-light'>{sizeStocks[selectedSize] !== undefined ? sizeStocks[selectedSize] : 0} pieces available</span>
-                            </div>
-                            <div className='mt-6 flex flex-row gap-3'>
-                                <div className='absolute flex flex-row gap-3'>
-                                    <button 
-                                        onClick={handleAddToCart}
-                                        disabled={loading || sizeStocks[selectedSize] === 0}
-                                        className='bg-white border border-[#9C0306] w-40 h-10 rounded-[10px] flex justify-center items-center hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
-                                    >
-                                        <img src={AddToCart} alt="Add to Cart" className='mr-2'/>
-                                        <span className='text-[#9C0306] text-[16px] font-semibold'>{loading ? 'Adding...' : 'Add to Cart'}</span>
-                                    </button>
-                                    <button 
-                                        onClick={handleBuyNow}
-                                        disabled={loading || sizeStocks[selectedSize] === 0}
-                                        className='bg-[#9C0306] w-40 h-10 rounded-[10px] flex justify-center items-center hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
-                                    >
-                                        <span className='text-white text-[16px] font-semibold'>{loading ? 'Processing...' : 'Buy Now'}</span>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {showSizeChart && (
-                <div
-                    className='fixed inset-0 z-[60] flex justify-center items-center backdrop-blur-xs bg-white/5'
-                    onClick={() => setShowSizeChart(false)}
+                    className='fixed inset-0 z-50 flex justify-center items-center backdrop-blur-xs bg-white/5'
+                    onClick={onClose}
                 >
                     <div
-                        className="bg-white p-4 rounded-[20px] shadow-lg relative max-w-[600px] w-full mx-4"
+                        className="bg-white p-2 rounded-[20px] shadow-lg relative w-210 h-115"
                         onClick={e => e.stopPropagation()}
                     >
-                        <img
-                            src={SizeChart}
-                            alt="Size Chart"
-                            className='w-full h-auto rounded-[10px]'
-                        />
+                        <div className='flex flex-row p-8 gap-5'>
+                            <div className='flex items-start justify-center'>
+                                <img
+                                    src={imgSrc}
+                                    alt={name}
+                                    className='w-[400px] h-auto rounded-[20px]'
+                                    onError={(e) => { e.currentTarget.src = DefaultImage; }}
+                                />
+                            </div>
+                            <div className='flex flex-col justify-start'>
+                                <div>
+                                    <h2 className='font-semibold text-[24px] leading-tight text-based/6 whitespace-nowrap'>{name}</h2>
+                                </div>
+                                <div className='mt-2 text-[12px]'>
+                                    {description}
+                                </div>
+                                <div className='mt-3 flex flex-row gap-2'>
+                                    <h1 className='text-[#9C0306] font-semibold text-[24px]'>{formatPrice(price)}</h1>
+                                </div>
+                                <div className='mt-5 flex flex-row'>
+                                    <span className='text-[12px] py-3'>Size</span>
+                                    <div className='flex flex-row flex-wrap gap-y-1 px-6 items-center'>
+                                        {sizes.map(size => (
+                                            <button
+                                                key={size}
+                                                onClick={() => setSelectedSize(size)}
+                                                className={`w-18 h-10 font-semibold hover:cursor-pointer transition-all ${selectedSize === size
+                                                        ? 'bg-[#9C0306] text-white border-2 border-[#9C0306]'
+                                                        : 'bg-white text-black border-2 border-[#DDDDDD] hover:border-[#9C0306]'
+                                                    }`}
+                                            >
+                                                {size}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div className='mt-5'>
+                                    <button onClick={() => setShowSizeChart(true)} className='text-[#0058B2] hover:underline hover:cursor-pointer'>Size Chart &gt;</button>
+                                </div>
+                                <div className='mt-5 flex flex-row gap-4 items-center'>
+                                    <span className='text-[12px]'>Quantity</span>
+                                    <div className='flex flex-row'>
+                                        <button
+                                            type="button"
+                                            className="w-6 h-6 flex items-center justify-center border border-[#DDDDDD] text-lg font-bold bg-white"
+                                            onClick={() => setQuantity(q => Math.max(1, q - 1))}
+                                        >
+                                            -
+                                        </button>
+                                        <span className="w-13 h-6 text-center text-[#9C0306] border border-[#DDDDDD]">{quantity}</span>
+                                        <button
+                                            type="button"
+                                            className="w-6 h-6 flex items-center justify-center border border-[#DDDDDD] text-lg font-bold bg-white"
+                                            onClick={() => setQuantity(q => q + 1)}
+                                        >
+                                            +
+                                        </button>
+                                    </div>
+                                    <span className='text-[#7F7F7F] text-[10px] font-light'>{sizeStocks[selectedSize] !== undefined ? sizeStocks[selectedSize] : 0} pieces available</span>
+                                </div>
+                                <div className='mt-6 flex flex-row gap-3'>
+                                    <div className='absolute flex flex-row gap-3'>
+                                        <button
+                                            onClick={handleAddToCart}
+                                            disabled={loading || sizeStocks[selectedSize] === 0}
+                                            className='bg-white border border-[#9C0306] w-40 h-10 rounded-[10px] flex justify-center items-center hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
+                                        >
+                                            <img src={AddToCart} alt="Add to Cart" className='mr-2' />
+                                            <span className='text-[#9C0306] text-[16px] font-semibold'>{loading ? 'Adding...' : 'Add to Cart'}</span>
+                                        </button>
+                                        <button
+                                            onClick={handleBuyNow}
+                                            disabled={loading || sizeStocks[selectedSize] === 0}
+                                            className='bg-[#9C0306] w-40 h-10 rounded-[10px] flex justify-center items-center hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
+                                        >
+                                            <span className='text-white text-[16px] font-semibold'>{loading ? 'Processing...' : 'Buy Now'}</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            )}
+
+                {showSizeChart && (
+                    <div
+                        className='fixed inset-0 z-[60] flex justify-center items-center backdrop-blur-xs bg-white/5'
+                        onClick={() => setShowSizeChart(false)}
+                    >
+                        <div
+                            className="bg-white p-4 rounded-[20px] shadow-lg relative max-w-[600px] w-full mx-4"
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <img
+                                src={SizeChart}
+                                alt="Size Chart"
+                                className='w-full h-auto rounded-[10px]'
+                            />
+                        </div>
+                    </div>
+                )}
             </>
         );
     } catch (error) {

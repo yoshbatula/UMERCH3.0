@@ -1,360 +1,285 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Sidebar from "../../../components/layouts/Sidebar";
 import AdminFooter from "../../../components/layouts/AdminFooter";
 import EditProductModal from "../../../components/modals/EditProductModal";
 import DeleteProductModal from "../../../components/modals/DeleteProductModal";
-import axios from "axios";
 import AddProductModal from "../../../components/modals/AddProductModal";
+import ProductActionModal from "../../../components/modals/ProductActionModal";
+import { useAddProducts } from "./InventoryFunction/AddProductsFunctions";
 import placeholderImg from "@images/product-placeholder.svg";
+import SearchIcon from "@images/SearchIcon.svg";
 
 // StatCard component
 const StatCard = ({ title, value, className, icon }) => (
-<div className={`w-[300px] h-[130px] rounded-xl px-6 py-4 text-white flex items-center justify-between ${className}`}>
-    <div>
-        <div className="text-lg opacity-90">{title}</div>
-        <div className="text-4xl font-bold leading-tight mt-1">{value}</div>
-    </div>
-    {icon && (
-        <div className="w-12 h-12 rounded-lg bg-white/15 flex items-center justify-center">
-            {icon}
+    <div className={`w-[300px] h-[130px] rounded-xl px-6 py-4 text-white flex items-center justify-between ${className}`}>
+        <div>
+            <div className="text-lg opacity-90">{title}</div>
+            <div className="text-4xl font-bold leading-tight mt-1">{value}</div>
         </div>
-    )}
-</div>
+        {icon && (
+            <div className="w-12 h-12 rounded-lg bg-white/15 flex items-center justify-center">
+                {icon}
+            </div>
+        )}
+    </div>
 );
-
-// Reusable Action Button
-const ActionButton = ({ type, children, onClick }) => {
-const base = "text-xs font-semibold px-4 py-1.5 rounded-full";
-const styles =
-    type === "edit"
-        ? "bg-red-700 hover:bg-red-800 text-white"
-        : "border border-red-700 text-red-700 hover:bg-red-50";
-
-return (
-    <button onClick={onClick} className={`${base} ${styles}`}>
-        {children}
-    </button>
-);
-};
 
 export default function AddProducts() {
-const [products, setProducts] = useState([]);
-const [openAdd, setOpenAdd] = useState(false);
-const [openEdit, setOpenEdit] = useState(false);
-const [selectedProduct, setSelectedProduct] = useState(null);
-const [openDelete, setOpenDelete] = useState(false);
-const [toast, setToast] = useState("");
-const [showingToast, setShowingToast] = useState(false);
-const [expandedProducts, setExpandedProducts] = useState({});
-const [searchQuery, setSearchQuery] = useState("");
+    const { products, openAdd, setOpenAdd, openEdit, setOpenEdit, selectedProduct, setSelectedProduct,
+        openDelete, setOpenDelete, toast, showingToast, expandedProducts, searchQuery, setSearchQuery,
+        normalizeImageUrl, groupProductsByName, fetchProducts, showToast, toggleExpanded,
+        handleDelete, handleArchive, handleRestore, } = useAddProducts();
 
-const API = "/admin/products";
-
-const normalizeImageUrl = (u) => {
-    if (!u) return placeholderImg;
-    if (u.startsWith('http')) return u;
-    if (u.startsWith('/')) return u;
-    return '/' + u;
-};
-
-// ✅ GROUP PRODUCTS BY NAME
-const groupProductsByName = (productList) => {
-    const grouped = {};
-    productList.forEach((product) => {
-        if (!grouped[product.product_name]) {
-            grouped[product.product_name] = [];
-        }
-        grouped[product.product_name].push(product);
-    });
-    return grouped;
-};
-
-// ✅ FETCH PRODUCTS FROM DATABASE
-const fetchProducts = async () => {
-    try {
-        const res = await axios.get(API);
-        setProducts(res.data);
-    } catch (error) {
-        console.error("Error fetching products", error);
-    }
-};
-
-useEffect(() => {
-    fetchProducts();
-}, []);
-
-const showToast = (message) => {
-    setToast(message);
-    setShowingToast(true);
-    setTimeout(() => setShowingToast(false), 5000);
-};
-
-const toggleExpanded = (productName) => {
-    setExpandedProducts(prev => ({
-        ...prev,
-        [productName]: !prev[productName]
-    }));
-};
-
-// ✅ DELETE PRODUCT (DB, NOT ARRAY INDEX)
-const handleDelete = async (id) => {
-    if (!confirm("Are you sure you want to delete this product?")) return;
-
-    try {
-        await axios.delete(`${API}/${id}`);
-        fetchProducts();
-    } catch (error) {
-        console.error("Delete failed", error);
-    }
-};
-
-return (<>
-    <div className="flex min-h-screen bg-gray-100">
-        <div className="h-screen sticky top-0">
-            <Sidebar />
-        </div>
-
-        <div className="flex-1 px-10 py-10">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2 gap-4">
-                <h1 className="text-4xl font-extrabold tracking-[0.25em]">
-                    INVENTORY
-                </h1>
+    return (<>
+        <div className="flex min-h-screen bg-gray-100">
+            <div className="h-screen sticky top-0">
+                <Sidebar />
             </div>
 
-            <p className="text-gray-500 mb-6">
-                Welcome back Admin, everything looks great.
-            </p>
-
-            {/* Stats */}
-            <div className="flex flex-wrap gap-6 mb-6">
-                <StatCard
-                    title="Total Products"
-                    value={Object.keys(groupProductsByName(products)).length}
-                    className="bg-[#5C975A]"
-                />
-                <StatCard
-                    title="Total Variants"
-                    value={products.length}
-                    className="bg-blue-700"
-                />
-                <StatCard
-                    title="Low Stocks"
-                    value={
-                        products.filter(p => p.product_stock > 0 && p.product_stock <= 5).length
-                    }
-                    className="bg-[#F7962A]"
-                />
-                <StatCard
-                    title="Out of Stocks"
-                    value={
-                        products.filter(p => p.product_stock === 0).length
-                    }
-                    className="bg-[#EF2F2A]"
-                />
-            </div>
-
-            {/* Products Section */}
-            <div>
-                <h2 className="text-2xl font-bold mt-10">Products</h2>
-
-                <div className="mt-4 flex items-center justify-between gap-6">
-                    <div className="flex items-center gap-3 flex-1 max-w-[520px] h-12 bg-white rounded-lg px-4 py-3 border border-gray-200">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"> <path d="M21 21l-4.35-4.35" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" />
-                            <path
-                                d="M11 19a8 8 0 100-16 8 8 0 000 16z"
-                                stroke="#9CA3AF"
-                                strokeWidth="2"
-                            />
-                        </svg>
-                        <input
-                            type="text"
-                            placeholder="Search by product name"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="bg-transparent outline-none w-full text-sm"
-                        />
-                    </div>
-
-                    <button
-                        onClick={() => setOpenAdd(true)}
-                        className="bg-red-800 hover:bg-red-900 text-white px-10 py-3 rounded-full text-sm font-semibold hover:cursor-pointer"
-                    >
-                        Add Product
-                    </button>
+            <div className="flex-1 px-10 py-10">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2 gap-4">
+                    <h1 className="text-4xl font-extrabold tracking-[0.25em]">
+                        INVENTORY
+                    </h1>
                 </div>
 
-                {/* Table */}
-                <div className="bg-white rounded-xl mt-6 shadow-sm border border-gray-200 overflow-hidden">
-                    <div className="px-8 py-6">
-                        <div className="grid grid-cols-12 text-sm font-bold text-red-700 gap-4">
-                            <div className="col-span-5">Product</div>
-                            <div className="col-span-3">Cost</div>
-                            <div className="col-span-2">Variants</div>
-                            <div className="col-span-2 text-right">Action</div>
+                <p className="text-gray-500 mb-6">
+                    Welcome back Admin, everything looks great.
+                </p>
+
+                {/* Stats */}
+                <div className="flex flex-wrap gap-6 mb-6">
+                    <StatCard
+                        title="Total Products"
+                        value={Object.keys(groupProductsByName(products)).length}
+                        className="bg-[#5C975A]"
+                    />
+                    <StatCard
+                        title="Total Variants"
+                        value={products.length}
+                        className="bg-blue-700"
+                    />
+                </div>
+
+                {/* Products Section */}
+                <div>
+                    <h2 className="text-2xl font-bold mt-10">Products</h2>
+
+                    <div className="mt-4 flex items-center justify-between gap-6">
+                        <div className="flex items-center gap-3 flex-1 max-w-[520px] h-12 bg-white rounded-lg px-4 py-3 border border-gray-200">
+                            <img src={SearchIcon} alt="Search" className="w-5 h-5" />
+                            <input
+                                type="text"
+                                placeholder="Search Product Name"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="bg-transparent outline-none w-full text-sm"
+                            />
                         </div>
+
+                        <button
+                            onClick={() => setOpenAdd(true)}
+                            className="bg-red-800 hover:bg-red-900 text-white px-10 py-3 rounded-full text-sm font-semibold hover:cursor-pointer"
+                        >
+                            Add Product
+                        </button>
                     </div>
 
-                    <div className="border-t border-gray-200" />
+                    {/* Table */}
+                    <div className="bg-white rounded-xl mt-6 shadow-sm border border-gray-200 overflow-hidden">
+                        <div className="px-8 py-6">
+                            <div className="grid grid-cols-12 text-sm font-bold text-red-700 gap-4">
+                                <div className="col-span-4">Product</div>
+                                <div className="col-span-2">Cost</div>
+                                <div className="col-span-2">Variants</div>
+                                <div className="col-span-2">Status</div>
+                                <div className="col-span-2 text-right">Action</div>
+                            </div>
+                        </div>
 
-                    {/* Dynamic Table Body */}
-                    <div className="min-h-[520px]">
-                        {(() => {
-                            if (products.length === 0) {
-                                return (
-                                    <div className="text-center py-20 text-gray-400">
-                                        No products added yet
-                                    </div>
-                                );
-                            }
+                        <div className="border-t border-gray-200" />
 
-                            const groupedProducts = groupProductsByName(products);
-                            const filteredProducts = Object.entries(groupedProducts).filter(
-                                ([productName]) => {
-                                    if (!productName) return false;
-                                    return productName.toLowerCase().includes(searchQuery.toLowerCase());
+                        {/* Dynamic Table Body */}
+                        <div className="min-h-[520px]">
+                            {(() => {
+                                if (products.length === 0) {
+                                    return (
+                                        <div className="text-center py-20 text-gray-400">
+                                            No products added yet
+                                        </div>
+                                    );
                                 }
-                            );
 
-                            if (filteredProducts.length === 0) {
-                                return (
-                                    <div className="text-center py-20 text-gray-400">
-                                        No products found
-                                    </div>
+                                const groupedProducts = groupProductsByName(products);
+                                const filteredProducts = Object.entries(groupedProducts).filter(
+                                    ([productName]) => {
+                                        if (!productName) return false;
+                                        return productName.toLowerCase().includes(searchQuery.toLowerCase());
+                                    }
                                 );
-                            }
 
-                            return filteredProducts.map(
-                                ([productName, variants]) => (
-                                    <div key={productName}>
-                                        {/* Main Product Row */}
-                                        <div className="grid grid-cols-12 py-4 px-8 border-b border-gray-200 hover:bg-gray-50 bg-gray-50 font-semibold gap-4">
-                                            <div className="col-span-5 flex items-center gap-3">
-                                                <button
-                                                    onClick={() => toggleExpanded(productName)}
-                                                    className="text-lg cursor-pointer w-6 flex-shrink-0"
-                                                >
-                                                    {expandedProducts[productName] ? "▼" : "▶"}
-                                                </button>
-                                                <div className="w-10 h-10 rounded overflow-hidden flex items-center justify-center bg-gray-200 flex-shrink-0">
-                                                    <img
-                                                        src={normalizeImageUrl(variants[0].product_image)}
-                                                        alt={productName}
-                                                        className="w-10 h-10 object-cover rounded"
-                                                        onError={(e) => {
-                                                            e.currentTarget.src = placeholderImg;
+                                if (filteredProducts.length === 0) {
+                                    return (
+                                        <div className="text-center py-20 text-gray-400">
+                                            No products found
+                                        </div>
+                                    );
+                                }
+
+                                return filteredProducts.map(
+                                    ([productName, variants]) => (
+                                        <div key={productName}>
+                                            {/* Main Product Row */}
+                                            <div className="grid grid-cols-12 py-4 px-8 border-b border-gray-200 hover:bg-gray-50 bg-gray-50 font-semibold gap-4">
+                                                <div className="col-span-4 flex items-center gap-3">
+                                                    <button
+                                                        onClick={() => toggleExpanded(productName)}
+                                                        className="text-lg cursor-pointer w-6 flex-shrink-0"
+                                                    >
+                                                        {expandedProducts[productName] ? "▼" : "▶"}
+                                                    </button>
+                                                    <div className="w-10 h-10 rounded overflow-hidden flex items-center justify-center bg-gray-200 flex-shrink-0">
+                                                        <img
+                                                            src={normalizeImageUrl(variants[0].product_image)}
+                                                            alt={productName}
+                                                            className="w-10 h-10 object-cover rounded"
+                                                            onError={(e) => {
+                                                                e.currentTarget.src = placeholderImg;
+                                                            }}
+                                                        />
+                                                    </div>
+                                                    <span className="truncate">{productName}</span>
+                                                </div>
+
+                                                <div className="col-span-2 flex items-center">
+                                                    ₱{variants[0].product_price}
+                                                </div>
+
+                                                <div className="col-span-2 flex items-center text-gray-600">
+                                                    {variants.length}
+                                                </div>
+
+                                                <div className="col-span-2 flex items-center">
+                                                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${variants[0].status === 'active'
+                                                        ? 'bg-green-100 text-green-700'
+                                                        : 'bg-gray-100 text-gray-700'
+                                                        }`}>
+                                                        {variants[0].status === 'active' ? 'Active' : 'Archived'}
+                                                    </span>
+                                                </div>
+
+                                                <div className="col-span-2 flex justify-end items-center">
+                                                    <ProductActionModal
+                                                        product={variants[0]}
+                                                        onEdit={() => {
+                                                            setSelectedProduct(variants[0]);
+                                                            setOpenEdit(true);
+                                                        }}
+                                                        onArchive={() => handleArchive(variants[0].product_id)}
+                                                        onRestore={() => handleRestore(variants[0].product_id)}
+                                                        onDelete={() => {
+                                                            setSelectedProduct(variants[0]);
+                                                            setOpenDelete(true);
                                                         }}
                                                     />
                                                 </div>
-                                                <span className="truncate">{productName}</span>
                                             </div>
 
-                                            <div className="col-span-3">
-                                                ₱{variants[0].product_price}
-                                            </div>
+                                            {/* Expanded Variants */}
+                                            {expandedProducts[productName] &&
+                                                variants.map((variant) => (
+                                                    <div
+                                                        key={variant.product_id}
+                                                        className="grid grid-cols-12 py-3 px-8 border-b border-gray-200 hover:bg-gray-50 text-sm bg-white gap-4"
+                                                    >
+                                                        <div className="col-span-4 flex items-center gap-3 pl-10">
+                                                            <span className="text-gray-600 font-medium">
+                                                                {variant.variant}
+                                                            </span>
+                                                        </div>
 
-                                            <div className="col-span-2 text-gray-600">
-                                                {variants.length}
-                                            </div>
+                                                        <div className="col-span-2 flex items-center">
+                                                            ₱{variant.product_price}
+                                                        </div>
 
-                                            <div className="col-span-2 flex justify-end gap-2">
-                                                <ActionButton
-                                                    type="edit"
-                                                    onClick={() => {
-                                                        setSelectedProduct(variants[0]);
-                                                        setOpenEdit(true);
-                                                    }}
-                                                >
-                                                    Edit
-                                                </ActionButton>
-                                            </div>
+                                                        <div className="col-span-2 flex items-center text-gray-400 text-xs">
+                                                            -
+                                                        </div>
+
+                                                        <div className="col-span-2 flex items-center">
+                                                            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${variant.status === 'active'
+                                                                ? 'bg-green-100 text-green-700'
+                                                                : 'bg-gray-100 text-gray-700'
+                                                                }`}>
+                                                                {variant.status === 'active' ? 'Active' : 'Archived'}
+                                                            </span>
+                                                        </div>
+
+                                                        <div className="col-span-2 flex justify-end items-center">
+                                                            <ProductActionModal
+                                                                product={variant}
+                                                                onEdit={() => {
+                                                                    setSelectedProduct(variant);
+                                                                    setOpenEdit(true);
+                                                                }}
+                                                                onArchive={() => handleArchive(variant.product_id)}
+                                                                onRestore={() => handleRestore(variant.product_id)}
+                                                                onDelete={() => {
+                                                                    setSelectedProduct(variant);
+                                                                    setOpenDelete(true);
+                                                                }}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                ))}
                                         </div>
-
-                                        {/* Expanded Variants */}
-                                        {expandedProducts[productName] &&
-                                            variants.map((variant) => (
-                                                <div
-                                                    key={variant.product_id}
-                                                    className="grid grid-cols-12 py-3 px-8 border-b border-gray-200 hover:bg-gray-50 text-sm bg-white gap-4"
-                                                >
-                                                    <div className="col-span-5 flex items-center gap-3 pl-10">
-                                                        <span className="text-gray-600 font-medium">
-                                                            {variant.variant}
-                                                        </span>
-                                                    </div>
-
-                                                    <div className="col-span-3">
-                                                        ₱{variant.product_price}
-                                                    </div>
-
-                                                    <div className="col-span-2 text-gray-400 text-xs">
-                                                        -
-                                                    </div>
-
-                                                    <div className="col-span-2 flex justify-end gap-2">
-                                                        <ActionButton
-                                                            type="edit"
-                                                            onClick={() => {
-                                                                setSelectedProduct(variant);
-                                                                setOpenEdit(true);
-                                                            }}
-                                                        >
-                                                            Edit
-                                                        </ActionButton>
-
-                                                        <ActionButton
-                                                            type="delete"
-                                                            onClick={() => {
-                                                                setSelectedProduct(variant);
-                                                                setOpenDelete(true);
-                                                            }}
-                                                        >
-                                                            Delete
-                                                        </ActionButton>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                    </div>
-                                )
-                            );
-                        })()}
+                                    )
+                                );
+                            })()}
+                        </div>
                     </div>
                 </div>
+
+                <AdminFooter />
             </div>
 
-            <AdminFooter />
+            {/* Modals */}
+            <AddProductModal
+                open={openAdd}
+                onClose={() => setOpenAdd(false)}
+                onSuccess={() => {
+                    fetchProducts();
+                    showToast("Product added successfully!");
+                }}
+            />
+
+            <EditProductModal
+                open={openEdit}
+                onClose={() => setOpenEdit(false)}
+                product={selectedProduct}
+                onSuccess={() => {
+                    fetchProducts();
+                    showToast("Product updated successfully!");
+                }}
+            />
+
+            <DeleteProductModal
+                open={openDelete}
+                onClose={() => setOpenDelete(false)}
+                product={selectedProduct}
+                onDeleted={() => { fetchProducts(); showToast("Product deleted successfully!"); }}
+            />
         </div>
-
-        {/* Modals */}
-        <AddProductModal
-            open={openAdd}
-            onClose={() => setOpenAdd(false)}
-            onSuccess={() => {
-                fetchProducts();
-                showToast("Product added successfully!");
-            }}
-        />
-
-        <EditProductModal
-            open={openEdit}
-            onClose={() => setOpenEdit(false)}
-            product={selectedProduct}
-            onSuccess={() => {
-                fetchProducts();
-                showToast("Product updated successfully!");
-            }}
-        />
-
-        <DeleteProductModal
-            open={openDelete}
-            onClose={() => setOpenDelete(false)}
-            product={selectedProduct}
-            onDeleted={() => { fetchProducts(); showToast("Product deleted successfully!"); }}
-        />
-    </div>
-    {showingToast && (
-        <div className="fixed bottom-6 right-6 bg-green-600 text-white px-4 py-3 rounded-lg shadow-lg">
-            {toast}
-        </div>
-    )}
-</>);
+        {showingToast && (
+            <div className="fixed bottom-8 right-8 bg-green-600 text-white px-6 py-4 rounded-xl shadow-2xl animate-slide-in-right z-[9999] flex items-center gap-3 min-w-[320px]">
+                <div className="flex-shrink-0">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="12" cy="12" r="10" fill="white" fillOpacity="0.2" />
+                        <path d="M20 6L9 17l-5-5" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                </div>
+                <span className="font-semibold text-base">{toast}</span>
+            </div>
+        )}
+    </>);
 }

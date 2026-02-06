@@ -3,6 +3,7 @@ namespace App\Http\Controllers\UsersideControllers\LoginControllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Models\ActivityLog;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
@@ -45,6 +46,9 @@ class LoginCont extends Controller
             Auth::login($adminUser, $credentials['remember'] ?? false);
             $request->session()->regenerate();
             
+            // Log the login activity
+            ActivityLog::logLogin($adminUser);
+            
             // Redirect to admin dashboard
             return redirect('/admin');
         }
@@ -75,6 +79,9 @@ class LoginCont extends Controller
                 Auth::login($user, $credentials['remember'] ?? false);
                 $request->session()->regenerate();
 
+                // Log the login activity
+                ActivityLog::logLogin($user);
+
                 // Generate and send OTP
                 $otp = random_int(100000, 999999);
                 session(['otp' => $otp, 'otp_expires' => now()->addMinutes(5)]);
@@ -92,7 +99,22 @@ class LoginCont extends Controller
         ]);
     }
 
-    
+    /**
+     * Handle user logout
+     */
+    public function logout(Request $request)
+    {
+        $user = Auth::user();
+        
+        if ($user) {
+            // Log the logout activity before logging out
+            ActivityLog::logLogout($user);
+        }
+        
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        
+        return redirect('/');
+    }
 }
-
-

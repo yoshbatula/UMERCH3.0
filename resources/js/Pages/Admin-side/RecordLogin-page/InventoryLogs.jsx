@@ -1,7 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import Sidebar from "../../../components/layouts/Sidebar";
 import AdminFooter from "../../../components/layouts/AdminFooter";
-import axios from "axios";
+import { useInventoryLogs } from "./RecordLoginFunction/InventoryLogsFunction";
+
+import TotalLogsIcon from "@images/TotalLogs.svg";
+import SearchIcon from "@images/SearchIcon.svg";
 
 const StatCard = ({ title, value, className = "bg-green-700", icon }) => (
     <div
@@ -18,83 +21,8 @@ const StatCard = ({ title, value, className = "bg-green-700", icon }) => (
 );
 
 function InventoryLogs() {
-    const [logs, setLogs] = useState([]);
-    const [allLogs, setAllLogs] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [query, setQuery] = useState("");
-    const [typeFilter, setTypeFilter] = useState("all");
-    const [currentPage, setCurrentPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(1);
-    const [perPage] = useState(10);
-
-    // Fetch logs from API
-    const fetchLogs = async () => {
-        setLoading(true);
-        try {
-            const response = await axios.get("/api/admin/inventory-logs", {
-                params: {
-                    search: query,
-                    type: typeFilter,
-                    page: currentPage,
-                    per_page: perPage,
-                },
-            });
-            setLogs(response.data.data);
-            setTotalPages(response.data.last_page);
-        } catch (error) {
-            console.error("Error fetching inventory logs:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    // Fetch all logs for stats (without pagination)
-    const fetchAllLogs = async () => {
-        try {
-            const response = await axios.get("/api/admin/inventory-logs", {
-                params: {
-                    per_page: 10000, // Get all logs
-                },
-            });
-            setAllLogs(response.data.data);
-        } catch (error) {
-            console.error("Error fetching all logs:", error);
-        }
-    };
-
-    useEffect(() => {
-        fetchLogs();
-    }, [currentPage, typeFilter, query]);
-
-    useEffect(() => {
-        fetchAllLogs();
-    }, []);
-
-    // Format date
-    const formatDate = (dateString) => {
-        const date = new Date(dateString);
-        return date.toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-        });
-    };
-
-    // Get badge color based on type
-    const getTypeBadgeColor = (type) => {
-        const colors = {
-            "Stock In": "bg-green-100 text-green-800",
-            "Stock Out": "bg-red-100 text-red-800",
-            "Add Product": "bg-blue-100 text-blue-800",
-            "Edit Product": "bg-yellow-100 text-yellow-800",
-            "Delete Product": "bg-gray-100 text-gray-800",
-            "Archived": "bg-orange-100 text-orange-800",
-            "Restored": "bg-purple-100 text-purple-800",
-        };
-        return colors[type] || "bg-gray-100 text-gray-800";
-    };
+    const { logs, allLogs, loading, query, setQuery, typeFilter, setTypeFilter, currentPage, setCurrentPage,
+        totalPages, formatDate, getTypeBadgeColor, } = useInventoryLogs();
 
     return (
         <div className="flex min-h-screen bg-[#f5f5f5]">
@@ -104,29 +32,27 @@ function InventoryLogs() {
             <main className="flex-1 px-10 py-10">
                 {/* Header */}
                 <h1 className="text-4xl font-extrabold tracking-[0.25em]">
-                    INVENTORY LOGS
+                    RECORD LOGS
                 </h1>
                 <p className="text-gray-500 mt-2">
                     Track all inventory movements and changes
                 </p>
 
+                {/* Stat Cards */}
+                <div className="mt-7 flex gap-6">
+                    <StatCard
+                        title="Total Logs" value={allLogs.length} className="bg-blue-600"
+                        icon={<img src={TotalLogsIcon} alt="Total Logs" className="w-20 h-20" />}
+                    />
+                </div>
+                {/* Users */}
+                <h2 className="text-2xl font-bold mt-10">Inventory Logs</h2>
+
                 {/* Filters and Search */}
                 <div className="mt-7 flex items-center justify-between gap-6">
                     {/* Search */}
                     <div className="flex items-center gap-3 flex-1 max-w-130 bg-white rounded-lg px-4 py-3 border border-gray-200">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                            <path
-                                d="M21 21l-4.35-4.35"
-                                stroke="#9CA3AF"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                            />
-                            <path
-                                d="M11 19a8 8 0 100-16 8 8 0 000 16z"
-                                stroke="#9CA3AF"
-                                strokeWidth="2"
-                            />
-                        </svg>
+                        <img src={SearchIcon} alt="Search" className="w-5 h-5" />
                         <input
                             value={query}
                             onChange={(e) => {
@@ -163,7 +89,7 @@ function InventoryLogs() {
                     <div className="overflow-x-auto">
                         <table className="w-full">
                             <thead className="border-b border-gray-200">
-                                <tr className="text-left text-gray-600 text-sm font-semibold">
+                                <tr className="text-left text-red-700 text-sm font-semibold">
                                     <th className="px-6 py-4">Date/Time</th>
                                     <th className="px-6 py-4">ID</th>
                                     <th className="px-6 py-4">Item Name</th>

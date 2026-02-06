@@ -17,7 +17,7 @@ export default function FeaturedProducts() {
     };
 
     useEffect(() => {
-        axios.get('/admin/products')
+        axios.get('/api/products')
             .then(res => {
                 const list = Array.isArray(res.data) ? res.data : [];
                 const grouped = groupProductsByName(list);

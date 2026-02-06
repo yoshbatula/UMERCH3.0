@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React from "react";
 import Sidebar from "../../../components/layouts/Sidebar";
 import AdminFooter from "../../../components/layouts/AdminFooter";
 import PrepareModal from "../../../components/modals/PrepareModal";
@@ -6,346 +6,47 @@ import DeclineModal from "../../../components/modals/DeclineModal";
 import DeliverModal from "../../../components/modals/DeliverModal";
 import ReadyForPickupModal from "../../../components/modals/ReadyForPickupModal";
 import ViewReceiptFormModal from "../../../components/modals/ViewReceiptFormModal";
-import axios from "axios";
+import { useTransaction, StatCard, OrderModal } from "./TransactionFunction/TransactionFunctions";
 
-
-
-const StatCard = ({ title, value, className, icon }) => (
-    <div
-        className={`w-[300px] h-[130px] rounded-xl px-6 py-4 text-white flex items-center justify-between ${className}`}
-    >
-        <div>
-            <div className="text-lg opacity-90">{title}</div>
-            <div className="text-4xl font-bold leading-tight mt-1">{value}</div>
-        </div>
-
-        <div className="w-12 h-12 rounded-lg bg-white/15 flex items-center justify-center">
-            {icon}
-        </div>
-    </div>
-);
-
-const Icon = ({ children }) => (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-        {children}
-    </svg>
-);
-
-const OrderModal = ({ order, isOpen, onClose, onReceiptOpen, onPrepareOpen, onDeclineOpen, onDeliverOpen, onReadyForPickupOpen }) => {
-    if (!isOpen || !order) return null;
-
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
-            <div className="bg-white rounded-lg shadow-lg p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-                {/* Header */}
-                <div className="flex justify-between items-start mb-8">
-                    <div>
-                        <h2 className="text-2xl font-bold text-red-700">{order.user_fullname || 'Customer'}</h2>
-                        <p className="text-gray-600 text-sm">Order ID: {order.order_id}</p>
-                    </div>
-                    <div className="flex gap-3">
-                        {order.receipt_form && (
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onClose();
-                                    onReceiptOpen();
-                                }}
-                                className="text-red-700 hover:text-red-900 font-semibold"
-                            >
-                                View File
-                            </button>
-                        )}
-                        <span className={`px-4 py-1 rounded-full text-sm font-semibold ${
-                            order.order_status?.toLowerCase() === 'pending' ? 'bg-gray-300 text-gray-700' :
-                            order.order_status?.toLowerCase() === 'completed' ? 'bg-green-100 text-green-800' :
-                            'bg-blue-100 text-blue-800'
-                        }`}>
-                            {order.order_status || 'Pending'}
-                        </span>
-                    </div>
-                </div>
-
-                {/* Products */}
-                <div className="space-y-4 mb-8 pb-8 border-b">
-                    {order.order_items?.map((item, idx) => (
-                        <div key={idx} className="flex gap-4">
-                            {item.product?.product_image && (
-                                <img
-                                    src={item.product.product_image}
-                                    alt={item.product.product_name}
-                                    className="w-20 h-20 rounded object-cover"
-                                />
-                            )}
-                            <div className="flex-1">
-                                <h3 className="font-semibold text-lg">{item.product?.product_name || 'Product'}</h3>
-                                <p className="text-gray-600 text-sm">{item.variant || 'Standard'}</p>
-                                <div className="flex justify-between items-end mt-2">
-                                    <p className="text-sm text-gray-600">x{item.quantity}</p>
-                                    <p className="text-red-700 font-bold text-lg">₱{Number(item.price || 0).toFixed(2)}</p>
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-
-                {/* Details */}
-                <div className="space-y-4 mb-8">
-                    <div className="flex justify-between">
-                        <span className="text-gray-700">Payment Method:</span>
-                        <span className="font-semibold">{order.payment_method || 'Cashier Payment'}</span>
-                    </div>
-                    <div className="flex justify-between">
-                        <span className="text-gray-700">Fulfillment Method:</span>
-                        <span className="font-semibold">{order.fulfillment_method || 'Delivery'}</span>
-                    </div>
-                </div>
-
-                {/* Order Total */}
-                <div className="flex justify-between items-center mb-8 pb-8 border-b">
-                    <span className="text-gray-700 font-medium">Order Total:</span>
-                    <span className="text-red-700 text-3xl font-bold">₱{Number(order.order_total || 0).toFixed(2)}</span>
-                </div>
-
-                {/* Actions */}
-                <div className="flex gap-4">
-                    {order.order_status?.toLowerCase() === 'pending' && (
-                        <>
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onClose();
-                                    onPrepareOpen();
-                                }}
-                                className="flex-1 bg-[#9C0306] hover:cursor-pointer text-white py-3 rounded-[10px] font-semibold"
-                            >
-                                Prepare
-                            </button>
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onClose();
-                                    onDeclineOpen();
-                                }}
-                                className="flex-1 border-2 border-[#9C0306] text-[#9C0306] hover:cursor-pointer py-3 rounded-[10px] font-semibold"
-                            >
-                                Decline
-                            </button>
-                        </>
-                    )}
-                    {order.order_status?.toLowerCase() === 'processing' && (
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onClose();
-                                onDeliverOpen();
-                            }}
-                            className="flex-1 bg-[#9C0306] hover:cursor-pointer text-white py-3 rounded-[10px] font-semibold"
-                        >
-                            To Deliver
-                        </button>
-                    )}
-                    {order.order_status?.toLowerCase() === 'out-of-delivery' && (
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onClose();
-                                onReadyForPickupOpen();
-                            }}
-                            className="flex-1 bg-[#9C0306] hover:cursor-pointer text-white py-3 rounded-[10px] font-semibold"
-                        >
-                            Ready for Pickup
-                        </button>
-                    )}
-                </div>
-            </div>
-        </div>
-    );
-};
+import CompletedIcon from "@images/Completed.svg";
+import PendingIcon from "@images/Pending.svg";
+import ProcessingIcon from "@images/Processing.svg";
+import OutForDeliveryIcon from "@images/OutForDelivery.svg";
+import CancelledIcon from "@images/Cancelled.svg";
+import SearchIcon from "@images/SearchIcon.svg";
 
 export default function AdminTransaction() {
-    const [query, setQuery] = useState("");
-    const [status, setStatus] = useState("All statuses");
-    const [orders, setOrders] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [selectedOrder, setSelectedOrder] = useState(null);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
-    const [isPrepareModalOpen, setIsPrepareModalOpen] = useState(false);
-    const [isDeclineModalOpen, setIsDeclineModalOpen] = useState(false);
-    const [isDeliverModalOpen, setIsDeliverModalOpen] = useState(false);
-    const [isReadyForPickupModalOpen, setIsReadyForPickupModalOpen] = useState(false);
-    const [toast, setToast] = useState(null);
-    const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 5;
-
-    const showToast = (message, type = 'success') => {
-        setToast({ message, type });
-        setTimeout(() => setToast(null), 3000);
-    };
-
-    useEffect(() => {
-        fetchOrders();
-        // Auto-refresh orders every 3 seconds
-        const interval = setInterval(fetchOrders, 3000);
-        return () => clearInterval(interval);
-    }, []);
-
-    const fetchOrders = async () => {
-        try {
-            const response = await axios.get('/api/admin/orders');
-            console.log('✅ Admin Orders:', response.data);
-            setOrders(Array.isArray(response.data) ? response.data : response.data?.data || []);
-        } catch (error) {
-            console.error('❌ Error fetching orders:', error);
-            setOrders([]);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleOrderUpdated = async () => {
-        // Refresh orders and update selected order
-        await fetchOrders();
-        // Refresh the selected order data
-        if (selectedOrder) {
-            try {
-                const response = await axios.get('/api/admin/orders');
-                const updated = Array.isArray(response.data) ? response.data : response.data?.data || [];
-                const refreshedOrder = updated.find(o => o.order_id === selectedOrder.order_id);
-                if (refreshedOrder) {
-                    setSelectedOrder(refreshedOrder);
-                }
-            } catch (error) {
-                console.error('❌ Error refreshing selected order:', error);
-            }
-        }
-    };
-
-    const filtered = useMemo(() => {
-        const q = query.trim().toLowerCase();
-        return orders.filter((order) => {
-            const matchQ = !q || order?.order_id?.toString().toLowerCase().includes(q);
-            const matchS = status === "All statuses" || order?.order_status === status;
-            return matchQ && matchS;
-        });
-    }, [orders, query, status]);
-
-    // Pagination logic
-    const totalPages = Math.ceil(filtered.length / itemsPerPage);
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const paginatedOrders = filtered.slice(startIndex, startIndex + itemsPerPage);
-    const endIndex = Math.min(startIndex + itemsPerPage, filtered.length);
-
-    const goToPage = (page) => {
-        if (page >= 1 && page <= totalPages) {
-            setCurrentPage(page);
-        }
-    };
+    const { query, setQuery, status, setStatus, orders, loading, selectedOrder, setSelectedOrder, isModalOpen,
+        setIsModalOpen, isReceiptModalOpen, setIsReceiptModalOpen, isPrepareModalOpen, setIsPrepareModalOpen, isDeclineModalOpen,
+        setIsDeclineModalOpen, isDeliverModalOpen, setIsDeliverModalOpen, isReadyForPickupModalOpen, setIsReadyForPickupModalOpen,
+        toast, currentPage, showToast, handleOrderUpdated, filtered, totalPages, paginatedOrders,
+        goToPage, stats: statsData, } = useTransaction();
 
     const stats = [
         {
-            title: "Completed",
-            value: orders.filter(o => o.order_status?.toLowerCase() === 'completed').length,
+            ...statsData[0],
             className: "bg-[#5C975A]",
-            icon: (
-                <Icon>
-                    <path
-                        d="M20 6L9 17l-5-5"
-                        stroke="white"
-                        strokeWidth="2.2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                    />
-                </Icon>
-            ),
+            icon: <img src={CompletedIcon} alt="Completed" className="w-20 h-20" />,
         },
         {
-            title: "Pending",
-            value: orders.filter(o => o.order_status?.toLowerCase() === 'pending').length,
+            ...statsData[1],
             className: "bg-[#F7962A]",
-            icon: (
-                <Icon>
-                    <path
-                        d="M12 6v6l4 2"
-                        stroke="white"
-                        strokeWidth="2.2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                    />
-                    <path
-                        d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                        stroke="white"
-                        strokeWidth="2.2"
-                    />
-                </Icon>
-            ),
+            icon: <img src={PendingIcon} alt="Pending" className="w-20 h-20" />,
         },
         {
-            title: "Processing",
-            value: orders.filter(o => o.order_status?.toLowerCase() === 'processing').length,
+            ...statsData[2],
             className: "bg-[#4F46E5]",
-            icon: (
-                <Icon>
-                    <path
-                        d="M12 6v6l4 2"
-                        stroke="white"
-                        strokeWidth="2.2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                    />
-                    <path
-                        d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                        stroke="white"
-                        strokeWidth="2.2"
-                    />
-                </Icon>
-            ),
+            icon: <img src={ProcessingIcon} alt="Processing" className="w-20 h-20" />,
         },
         {
-            title: "Out for Delivery",
-            value: orders.filter(o => o.order_status?.toLowerCase() === 'out-of-delivery').length,
+            ...statsData[3],
             className: "bg-[#EF2F2A]",
-            icon: (
-                <Icon>
-                    <path
-                        d="M3 7h11v10H3V7z"
-                        stroke="white"
-                        strokeWidth="2.2"
-                        strokeLinejoin="round"
-                    />
-                    <path
-                        d="M14 10h4l3 3v4h-7v-7z"
-                        stroke="white"
-                        strokeWidth="2.2"
-                        strokeLinejoin="round"
-                    />
-                    <path
-                        d="M7 20a1.5 1.5 0 100-3 1.5 1.5 0 000 3zM18 20a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"
-                        fill="white"
-                    />
-                </Icon>
-            ),
+            icon: <img src={OutForDeliveryIcon} alt="Out for Delivery" className="w-20 h-20" />,
         },
         {
-            title: "Cancelled",
-            value: orders.filter(o => o.order_status?.toLowerCase() === 'cancelled').length,
+            ...statsData[4],
             className: "bg-[#9C0306]",
-            icon: (
-                <Icon>
-                    <path
-                        d="M12 22a10 10 0 100-20 10 10 0 000 20z"
-                        stroke="white"
-                        strokeWidth="2.2"
-                    />
-                    <path
-                        d="M15 9l-6 6M9 9l6 6"
-                        stroke="white"
-                        strokeWidth="2.2"
-                        strokeLinecap="round"
-                    />
-                </Icon>
-            ),
+            icon: <img src={CancelledIcon} alt="Cancelled" className="w-20 h-20" />,
         },
     ];
 
@@ -375,13 +76,7 @@ export default function AdminTransaction() {
                 {/* SEARCH + STATUS */}
                 <div className="flex items-center justify-between gap-6 mb-4">
                     <div className="flex items-center gap-3 flex-1 max-w-[520px] bg-white border border-gray-200 rounded-lg px-4 py-3">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"> <path d="M21 21l-4.35-4.35" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" />
-                            <path
-                                d="M11 19a8 8 0 100-16 8 8 0 000 16z"
-                                stroke="#9CA3AF"
-                                strokeWidth="2"
-                            />
-                        </svg>
+                        <img src={SearchIcon} alt="Search" className="w-5 h-5" />
 
                         <input
                             value={query}
@@ -433,17 +128,15 @@ export default function AdminTransaction() {
 
                                 {/* Middle - Status Badges */}
                                 <div className="flex items-start gap-3 flex-1">
-                                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                                        order.order_status?.toLowerCase() === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${order.order_status?.toLowerCase() === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                                         order.order_status?.toLowerCase() === 'completed' ? 'bg-green-100 text-green-800' :
-                                        order.order_status?.toLowerCase() === 'processing' ? 'bg-blue-100 text-blue-800' :
-                                        'bg-red-100 text-red-800'
-                                    }`}>
+                                            order.order_status?.toLowerCase() === 'processing' ? 'bg-blue-100 text-blue-800' :
+                                                'bg-red-100 text-red-800'
+                                        }`}>
                                         {order.order_status || 'Pending'}
                                     </span>
-                                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                                        order.receipt_form ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                                    }`}>
+                                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${order.receipt_form ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                                        }`}>
                                         {order.receipt_form ? 'File Uploaded' : 'No file uploaded'}
                                     </span>
                                 </div>
@@ -474,28 +167,27 @@ export default function AdminTransaction() {
                     <>
                         <div className="border-t border-gray-200" />
                         <div className="py-7 flex items-center justify-center gap-10 text-sm font-semibold">
-                            <button 
-                                onClick={() => goToPage(currentPage - 1)} 
+                            <button
+                                onClick={() => goToPage(currentPage - 1)}
                                 disabled={currentPage === 1}
                                 className='text-gray-900 hover:text-[#9C0306] disabled:opacity-50 disabled:cursor-not-allowed'
                             >
                                 Prev
                             </button>
                             {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                                <button 
+                                <button
                                     key={page}
                                     onClick={() => goToPage(page)}
-                                    className={`${
-                                        page === currentPage 
-                                            ? 'text-[#9C0306]' 
-                                            : 'text-gray-900 hover:text-[#9C0306]'
-                                    }`}
+                                    className={`${page === currentPage
+                                        ? 'text-[#9C0306]'
+                                        : 'text-gray-900 hover:text-[#9C0306]'
+                                        }`}
                                 >
                                     {page}
                                 </button>
                             ))}
-                            <button 
-                                onClick={() => goToPage(currentPage + 1)} 
+                            <button
+                                onClick={() => goToPage(currentPage + 1)}
                                 disabled={currentPage === totalPages}
                                 className='text-gray-900 hover:text-[#9C0306] disabled:opacity-50 disabled:cursor-not-allowed'
                             >
@@ -590,9 +282,8 @@ export default function AdminTransaction() {
             {/* Toast Notification */}
             {toast && (
                 <div
-                    className={`fixed bottom-6 right-6 px-6 py-3 rounded-lg shadow-lg text-white z-[70] animate-pulse ${
-                        toast.type === 'success' ? 'bg-green-500' : 'bg-red-500'
-                    }`}
+                    className={`fixed bottom-6 right-6 px-6 py-3 rounded-lg shadow-lg text-white z-[70] animate-pulse ${toast.type === 'success' ? 'bg-green-500' : 'bg-red-500'
+                        }`}
                 >
                     {toast.message}
                 </div>

@@ -1,62 +1,37 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Sidebar from "../../../components/layouts/Sidebar";
 import AdminFooter from "../../../components/layouts/AdminFooter";
 import AddStock from "../../../components/modals/AddStocksModal";
 import EditStock from "../../../components/modals/EditStocks";
 import ReceiptForm from "../../../components/modals/ReceiptFormModal";
-import axios from "axios";
+import { useStockIn } from "./InventoryFunction/StockInFunctions";
+
+/* ✅ ICONS */
+import TotalStocks from "@images/TotalStocks.svg";
+import LowStocks from "@images/LowStocks.svg";
+import OutOfStocks from "@images/OutOfStocks.svg";
+import SearchIcon from "@images/SearchIcon.svg";
 
 // ✅ Stat Card (SIZE UNCHANGED, ICON BIG)
-const StatCard = ({ title, value, bg }) => (
+const StatCard = ({ title, value, bg, icon }) => (
     <div className={`w-[300px] h-[130px] rounded-xl px-6 py-4 text-white flex items-center justify-between ${bg}`}>
         <div>
             <p className="text-lg opacity-90">{title}</p>
             <p className="text-4xl font-bold mt-1">{value}</p>
         </div>
-        <div className="text-3xl font-bold opacity-30">
-            #
-        </div>
+        {/* BIG ICON – no background */}
+        <img
+            src={icon}
+            alt={title}
+            className="w-16 h-16"   // 👈 icon size (≈ 2xl)
+        />
     </div>
 );
 
 export default function StockIn() {
-    const [stocks, setStocks] = useState([]);
-    const [openAdd, setOpenAdd] = useState(false);
-    const [openEdit, setOpenEdit] = useState(false);
-    const [selectedStock, setSelectedStock] = useState(null);
-    const [toast, setToast] = useState("");
-    const [showingToast, setShowingToast] = useState(false);
-    const [receiptFormOpen, setReceiptFormOpen] = useState(false);
-
-    const openReceiptForm = () => {
-        setReceiptFormOpen(true);
-    };
-
-    const closeReceiptForm = () => {
-        setReceiptFormOpen(false);
-    };
-
-    const API = "/admin/stock-in";
-
-    const fetchStocks = () => {
-        axios.get(API).then(res => setStocks(res.data));
-    };
-
-    useEffect(() => {
-        fetchStocks();
-    }, []);
-
-    const showToast = (message) => {
-        setToast(message);
-        setShowingToast(true);
-        setTimeout(() => setShowingToast(false), 5000);
-    };
-
-    const getStatus = qty => {
-        if (qty === 0) return { label: "Out of Stock", color: "text-red-600" };
-        if (qty <= 20) return { label: "Low Stock", color: "text-orange-500" };
-        return { label: "Active", color: "text-green-600" };
-    };
+    const { stocks, openAdd, setOpenAdd, openEdit, setOpenEdit, selectedStock, setSelectedStock,
+        toast, showingToast, receiptFormOpen, openReceiptForm,
+        closeReceiptForm, fetchStocks, showToast, getStatus, } = useStockIn();
 
     return (
         <div className="flex min-h-screen bg-gray-100">
@@ -78,16 +53,19 @@ export default function StockIn() {
                         title="Total Stocks"
                         value={stocks.length}
                         bg="bg-[#5C975A]"
+                        icon={TotalStocks}
                     />
                     <StatCard
                         title="Low Stocks"
                         value={stocks.filter(s => s.stock_qty > 0 && s.stock_qty <= 20).length}
                         bg="bg-[#F7962A]"
+                        icon={LowStocks}
                     />
                     <StatCard
                         title="Out of Stocks"
                         value={stocks.filter(s => s.stock_qty === 0).length}
                         bg="bg-[#EF2F2A]"
+                        icon={OutOfStocks}
                     />
                 </div>
 
@@ -96,17 +74,11 @@ export default function StockIn() {
 
                 <div className=" flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3 flex-1 max-w-[520px] h-12 bg-white rounded-lg px-4 py-3 border border-gray-200">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"> <path d="M21 21l-4.35-4.35" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" />
-                            <path
-                                d="M11 19a8 8 0 100-16 8 8 0 000 16z"
-                                stroke="#9CA3AF"
-                                strokeWidth="2"
-                            />
-                        </svg>
+                        <img src={SearchIcon} alt="Search" className="w-5 h-5" />
 
                         <input
                             type="text"
-                            placeholder="Search transactions"
+                            placeholder="Search Product Name"
                             className="bg-transparent outline-none w-full text-sm"
                         />
                     </div>

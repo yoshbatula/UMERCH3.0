@@ -10,10 +10,12 @@ use App\Http\Controllers\AdminsideControllers\RecordsControllers\AddRecords;
 use App\Http\Controllers\AdminsideControllers\RecordsControllers\UpdateRecords;
 use App\Http\Controllers\AdminsideControllers\RecordsControllers\DeleteRecords;
 use App\Http\Controllers\AdminsideControllers\RecordsControllers\InventoryLogsController;
+use App\Http\Controllers\AdminsideControllers\RecordsControllers\ActivityLogsController;
 use App\Http\Controllers\AdminsideControllers\InventoryControllers\StockInController;
 use App\Http\Controllers\AdminsideControllers\InventoryControllers\StockOutController;
 use App\Http\Controllers\AdminsideControllers\RecordsControllers\DashboardController;
 use App\Http\Controllers\UsersideControllers\OrdersController\PlaceOrderCont;
+use App\Http\Controllers\UsersideControllers\LoginControllers\LoginCont;
 
 /*
 |--------------------------------------------------------------------------
@@ -45,6 +47,10 @@ Route::middleware('auth')->group(function () {
     // INVENTORY LOGS API
     Route::get('/api/admin/inventory-logs', [InventoryLogsController::class, 'getLogs']);
 
+    // ACTIVITY LOGS API
+    Route::get('/api/admin/activity-logs', [ActivityLogsController::class, 'getLogs']);
+    Route::get('/api/admin/activity-logs/stats', [ActivityLogsController::class, 'getStats']);
+
     /*
     |--------------------------------------------------------------------------
     | INVENTORY (PAGES)
@@ -75,6 +81,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/products/store', [InventoryController::class, 'store']);
         Route::patch('/products/{id}', [InventoryController::class, 'update']);
         Route::delete('/products/{id}', [InventoryController::class, 'destroy']);
+        Route::patch('/products/{id}/archive', [InventoryController::class, 'archive']);
+        Route::patch('/products/{id}/restore', [InventoryController::class, 'restore']);
 
         // STOCK IN
         Route::get('/stock-in', [StockInController::class, 'index']);
@@ -115,13 +123,14 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/admin/record-logs/inventory', [InventoryLogsController::class, 'index'])->name('InventoryLogs');
 
+    Route::get('/admin/record-logs/activity', function () {
+        return inertia('Admin-side/RecordLogin-page/ActivityLogs');
+    })->name('ActivityLogs');
+
     /*
     |--------------------------------------------------------------------------
     | LOGOUT
     |--------------------------------------------------------------------------
     */
-    Route::get('/admin/logout', function () {
-        Auth::logout();
-        return redirect('/');
-    });
+    Route::get('/admin/logout', [LoginCont::class, 'logout'])->name('admin.logout');
 });

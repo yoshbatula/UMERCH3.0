@@ -9,6 +9,7 @@ use App\Http\Controllers\UsersideControllers\CartsController\AddCartCont;
 use App\Http\Controllers\UsersideControllers\CartsController\GetCartCont;
 use App\Http\Controllers\UsersideControllers\CartsController\CartsCont;
 use App\Http\Controllers\UsersideControllers\OrdersController\PlaceOrderCont;
+use App\Http\Controllers\AdminsideControllers\InventoryControllers\InventoryController;
 use Illuminate\Auth\Events\Login;
 use Inertia\Middleware;
 use Inertia\Inertia;
@@ -17,6 +18,9 @@ use Inertia\Inertia;
 // User authentication routes
 Route::get('/login', [LoginCont::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginCont::class, 'login'])->name('login.submit');
+
+// Public products route (only active products)
+Route::get('/api/products', [InventoryController::class, 'userProducts'])->name('api.products');
 
 // Protected routes for authenticated users
 Route::middleware(['auth'])->group(function () {

@@ -9,6 +9,8 @@ import { useUserLogs } from "./RecordLoginFunction/UserLoginFunctions";
 
 import TotalLoginUsers from "@images/TotalLoginUsers.svg";
 import DeactivatedAccount from "@images/DeactivatedAccount.svg";
+import VerticalEllipsis from "@images/VerticalEllipsis.svg";
+import SearchIcon from "@images/SearchIcon.svg";
 
 const StatCard = ({ title, value, className = "bg-green-700", icon }) => (
   <div
@@ -64,19 +66,7 @@ function UserLogs() {
         {/* Search + Add User */}
         <div className="mt-4 flex items-center justify-between gap-6">
           <div className="flex items-center gap-3 flex-1 max-w-130 bg-white rounded-lg px-4 py-3 border border-gray-200">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M21 21l-4.35-4.35"
-                stroke="#9CA3AF"
-                strokeWidth="2"
-                strokeLinecap="round"
-              />
-              <path
-                d="M11 19a8 8 0 100-16 8 8 0 000 16z"
-                stroke="#9CA3AF"
-                strokeWidth="2"
-              />
-            </svg>
+            <img src={SearchIcon} alt="Search" className="w-5 h-5" />
 
             <input
               value={query}
@@ -145,13 +135,7 @@ function UserLogs() {
                           onClick={() => setActionModalOpen(actionModalOpen === user.id ? null : user.id)}
                           className="p-2 hover:bg-gray-100 rounded-full transition-colors"
                         >
-
-                          <svg width="4" height="16" viewBox="0 0 4 16" fill="currentColor">
-                            <circle cx="2" cy="2" r="2" />
-                            <circle cx="2" cy="8" r="2" />
-                            <circle cx="2" cy="14" r="2" />
-                          </svg>
-
+                          <img src={VerticalEllipsis} alt="Actions" className="w-4 h-4" />
                         </button>
                         <UserLogsActionModal
                           isOpen={actionModalOpen === user.id}

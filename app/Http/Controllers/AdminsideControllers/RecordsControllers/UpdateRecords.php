@@ -4,6 +4,7 @@ namespace App\Http\Controllers\AdminsideControllers\RecordsControllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Models\ActivityLog;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
@@ -64,6 +65,9 @@ class UpdateRecords extends Controller {
             $user->status = 'inactive';
             $user->save();
             
+            // Log the deactivation activity
+            ActivityLog::logDeactivated($user);
+            
             Log::info('User deactivated successfully:', ['user_id' => $user->id]);
             
             return response()->json(['message' => 'User deactivated successfully!', 'user' => $user], 200);
@@ -79,6 +83,9 @@ class UpdateRecords extends Controller {
             $user = User::findOrFail($id);
             $user->status = 'active';
             $user->save();
+            
+            // Log the activation activity
+            ActivityLog::logActivated($user);
             
             Log::info('User reactivated successfully:', ['user_id' => $user->id]);
             

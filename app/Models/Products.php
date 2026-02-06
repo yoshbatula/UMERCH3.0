@@ -18,5 +18,6 @@ class Products extends Model
         'product_price',
         'product_stock',
         'variant',
+        'status',
     ];
 }

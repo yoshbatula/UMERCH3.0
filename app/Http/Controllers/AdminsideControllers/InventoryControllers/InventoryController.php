@@ -6,13 +6,20 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Products;
 use App\Models\InventoryLog;
+use App\Models\ActivityLog;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 
 class InventoryController extends Controller
 {
     public function index()
     {
         return Products::all();
+    }
+
+    public function userProducts()
+    {
+        return Products::where('status', 'active')->get();
     }
 
     public function store(Request $request)
@@ -41,6 +48,7 @@ class InventoryController extends Controller
                 'product_price' => $request->product_price,
                 'product_description' => $request->product_description,
                 'product_image' => $imagePath ? Storage::url($imagePath) : $existingProduct->product_image,
+                'status' => 'active',
             ]);
 
             return redirect()->back()->with('success', 'Product updated successfully!');
@@ -58,6 +66,7 @@ class InventoryController extends Controller
                 'product_description' => $request->product_description,
                 'product_stock' => 0,
                 'product_image' => $imagePath ? Storage::url($imagePath) : $sameNameProduct->product_image,
+                'status' => 'active',
             ]);
 
             return redirect()->back()->with('success', 'New variant added to existing product!');
@@ -71,6 +80,7 @@ class InventoryController extends Controller
             'product_description' => $request->product_description,
             'product_stock' => 0,
             'product_image' => $imagePath ? Storage::url($imagePath) : null,
+            'status' => 'active',
         ]);
 
         // Log the add product operation
@@ -139,5 +149,55 @@ class InventoryController extends Controller
         $product->delete();
         
         return redirect()->back()->with('success', 'Product deleted successfully!');
+    }
+
+    public function archive($id)
+    {
+        $product = Products::findOrFail($id);
+        
+        $product->update(['status' => 'archived']);
+        
+        // Log the archive product operation
+        InventoryLog::create([
+            'product_id' => $product->product_id,
+            'item_name' => $product->product_name . ' - ' . $product->variant,
+            'type' => 'Archived',
+            'quantity' => 0,
+            'total' => $product->product_stock,
+            'admin_action' => 'Admin_1' // Update with actual admin
+        ]);
+        
+        // Log to activity log
+        $user = Auth::user();
+        if ($user) {
+            ActivityLog::logProductArchive($user, $product->product_name, $product->variant);
+        }
+        
+        return response()->json(['message' => 'Product archived successfully!']);
+    }
+
+    public function restore($id)
+    {
+        $product = Products::findOrFail($id);
+        
+        $product->update(['status' => 'active']);
+        
+        // Log the restore product operation
+        InventoryLog::create([
+            'product_id' => $product->product_id,
+            'item_name' => $product->product_name . ' - ' . $product->variant,
+            'type' => 'Restored',
+            'quantity' => 0,
+            'total' => $product->product_stock,
+            'admin_action' => 'Admin_1' // Update with actual admin
+        ]);
+        
+        // Log to activity log
+        $user = Auth::user();
+        if ($user) {
+            ActivityLog::logProductRestore($user, $product->product_name, $product->variant);
+        }
+        
+        return response()->json(['message' => 'Product restored successfully!']);
     }
 }

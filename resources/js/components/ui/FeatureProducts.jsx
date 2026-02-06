@@ -6,7 +6,7 @@ import { Link } from '@inertiajs/react';
 
 export default function FeatureProducts() {
     const [items, setItems] = useState([]);
-    const API = '/admin/products';
+    const API = '/api/products';
 
     const normalizeImageUrl = (u) => {
         if (!u) return Placeholder;

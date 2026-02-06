@@ -5,7 +5,7 @@
 @source '../**/*.js';
 
 body {
-    font-family: 'Montserrat', sans-serif, 'Cormorant Garamond', serif;
+  font-family: 'Montserrat', sans-serif, 'Cormorant Garamond', serif;
 }
 
 
@@ -19,7 +19,24 @@ body {
   from {
     transform: translate3d(0, 0, 0);
   }
+
   to {
     transform: translate3d(-50%, 0, 0);
   }
+}
+
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.3s ease-out;
 }

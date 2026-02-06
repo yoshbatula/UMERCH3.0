@@ -1,15 +1,16 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Sidebar from "../../../components/layouts/Sidebar";
 import AdminFooter from "../../../components/layouts/AdminFooter";
-import axios from "axios";
+import { useStockOut } from "./InventoryFunction/StockOutFunctions";
 
 /* ✅ ICONS */
 import TotalStocks from "@images/TotalStocks.svg";
 import LowStocks from "@images/LowStocks.svg";
 import OutOfStocks from "@images/OutOfStocks.svg";
+import SearchIcon from "@images/SearchIcon.svg";
 
 /* ===============================
-   Stat Card (SAME SIZE & STYLE)
+Stat Card (SAME SIZE & STYLE)
 ================================ */
 const StatCard = ({ title, value, bg, icon }) => (
     <div
@@ -24,49 +25,13 @@ const StatCard = ({ title, value, bg, icon }) => (
         <img
             src={icon}
             alt={title}
-            className="w-12 h-12"   // 👈 icon size (≈ 2xl)
+            className="w-16 h-16"   // 👈 icon size (≈ 2xl)
         />
     </div>
 );
 
 export default function StockOut() {
-    const [logs, setLogs] = useState([]);
-    const [stocks, setStocks] = useState([]);
-
-    const STOCK_API = "/admin/products";       // for StatCards
-    const LOG_API = "/admin/stock-out/logs";   // for table
-
-    useEffect(() => {
-        fetchStocks();
-        fetchLogs();
-        
-        // Auto-refresh every 5 seconds
-        const interval = setInterval(() => {
-            fetchStocks();
-            fetchLogs();
-        }, 5000);
-        
-        return () => clearInterval(interval);
-    }, []);
-
-    const fetchStocks = async () => {
-        try {
-            const res = await axios.get(STOCK_API);
-            setStocks(res.data);
-        } catch (err) {
-            console.error("Failed to fetch stocks", err);
-        }
-    };
-
-    const fetchLogs = async () => {
-        try {
-            const res = await axios.get(LOG_API);
-            console.log('📋 Stock-out logs fetched:', res.data);
-            setLogs(res.data);
-        } catch (err) {
-            console.error("Failed to fetch stock-out logs", err);
-        }
-    };
+    const { logs, stocks, fetchStocks, fetchLogs, } = useStockOut();
 
     return (
         <div className="flex min-h-screen bg-gray-100">
@@ -111,17 +76,11 @@ export default function StockOut() {
                 {/* Search */}
                 <div className="mt-4 mb-4 flex items-center justify-between gap-6">
                     <div className="flex items-center gap-3 flex-1 max-w-[520px] h-12 bg-white rounded-lg px-4 py-3 border border-gray-200">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"> <path d="M21 21l-4.35-4.35" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" />
-                            <path
-                                d="M11 19a8 8 0 100-16 8 8 0 000 16z"
-                                stroke="#9CA3AF"
-                                strokeWidth="2"
-                            />
-                        </svg>
+                        <img src={SearchIcon} alt="Search" className="w-5 h-5" />
 
                         <input
                             type="text"
-                            placeholder="Search transactions"
+                            placeholder="Search Product Name"
                             className="bg-transparent outline-none w-full text-sm"
                         />
                     </div>
