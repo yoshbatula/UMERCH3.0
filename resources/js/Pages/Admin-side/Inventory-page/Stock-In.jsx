@@ -29,7 +29,7 @@ const StatCard = ({ title, value, bg, icon }) => (
 );
 
 export default function StockIn() {
-    const { stocks, openAdd, setOpenAdd, openEdit, setOpenEdit, selectedStock, setSelectedStock,
+    const { stocks, filteredStocks, searchQuery, setSearchQuery, openAdd, setOpenAdd, openEdit, setOpenEdit, selectedStock, setSelectedStock,
         toast, showingToast, receiptFormOpen, openReceiptForm,
         closeReceiptForm, fetchStocks, showToast, getStatus, } = useStockIn();
 
@@ -80,6 +80,8 @@ export default function StockIn() {
                             type="text"
                             placeholder="Search Product Name"
                             className="bg-transparent outline-none w-full text-sm"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
                         />
                     </div>
                     <button
@@ -102,7 +104,7 @@ export default function StockIn() {
                     </div>
 
                     <div className="min-h-[420px]">
-                        {stocks.map(stock => {
+                        {filteredStocks.map(stock => {
                             const status = getStatus(stock.stock_qty);
                             return (
                                 <div

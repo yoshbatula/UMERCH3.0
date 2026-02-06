@@ -3,6 +3,7 @@ import axios from "axios";
 
 export const useStockIn = () => {
     const [stocks, setStocks] = useState([]);
+    const [searchQuery, setSearchQuery] = useState("");
     const [openAdd, setOpenAdd] = useState(false);
     const [openEdit, setOpenEdit] = useState(false);
     const [selectedStock, setSelectedStock] = useState(null);
@@ -40,9 +41,17 @@ export const useStockIn = () => {
         return { label: "Active", color: "text-green-600" };
     };
 
+    // Filter stocks based on search query
+    const filteredStocks = stocks.filter(stock => 
+        stock.product_name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
     return {
         // State
         stocks,
+        filteredStocks,
+        searchQuery,
+        setSearchQuery,
         openAdd,
         setOpenAdd,
         openEdit,

@@ -8,6 +8,7 @@ import ProductActionModal from "../../../components/modals/ProductActionModal";
 import { useAddProducts } from "./InventoryFunction/AddProductsFunctions";
 import placeholderImg from "@images/product-placeholder.svg";
 import SearchIcon from "@images/SearchIcon.svg";
+import VerticalEllipsis from "@images/VerticalEllipsis.svg";
 
 // StatCard component
 const StatCard = ({ title, value, className, icon }) => (

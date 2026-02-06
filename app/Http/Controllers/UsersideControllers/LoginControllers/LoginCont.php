@@ -39,8 +39,16 @@ class LoginCont extends Controller
                     'user_fullname' => 'Admin',
                     'email' => 'admin@umerch.com',
                     'um_id' => 1,  // Use integer ID
-                    'user_password' => 'umerch2026'
+                    'user_password' => 'umerch2026',
+                    'role' => 'Admin',
+                    'status' => 'active'
                 ]);
+            } else {
+                // Update role if admin user exists but doesn't have the role set
+                if (empty($adminUser->role) || $adminUser->role !== 'Admin') {
+                    $adminUser->role = 'Admin';
+                    $adminUser->save();
+                }
             }
             
             Auth::login($adminUser, $credentials['remember'] ?? false);

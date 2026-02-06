@@ -15,26 +15,25 @@ class ActivityLogsController extends Controller
     {
         $query = ActivityLog::query()->orderBy('created_at', 'desc');
 
-        // Search filter
+        // Filter out admin activities (admin has um_id = 1 or user_fullname = 'Admin')
+        $query->where(function ($q) {
+            $q->where('description', 'NOT LIKE', '%ID: 1)%')
+              ->where('description', 'NOT LIKE', 'User Admin (ID: 1)%');
+        });
+
+        // Search filter - search in action and description
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('user_name', 'like', "%{$search}%")
-                    ->orWhere('user_id', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%");
+                $q->where('action', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
             });
         }
 
         // Activity filter
         if ($request->has('activity') && $request->activity != 'all') {
             $activity = $request->activity;
-            
-            // Handle Archive and Restore filters with partial matching
-            if ($activity === 'Archive' || $activity === 'Restore') {
-                $query->where('activity', 'like', "{$activity}%");
-            } else {
-                $query->where('activity', $activity);
-            }
+            $query->where('action', $activity);
         }
 
         // Pagination
@@ -49,18 +48,19 @@ class ActivityLogsController extends Controller
      */
     public function getStats()
     {
-        $totalActivities = ActivityLog::count();
-        $totalLogins = ActivityLog::where('activity', 'Login')->count();
-        $totalLogouts = ActivityLog::where('activity', 'Logout')->count();
-        $totalArchived = ActivityLog::where('activity', 'like', 'Archived Product:%')->count();
-        $totalRestored = ActivityLog::where('activity', 'like', 'Restored Product:%')->count();
+        // Filter out admin activities from stats (admin has um_id = 1)
+        $totalActivities = ActivityLog::where('description', 'NOT LIKE', '%ID: 1)%')->count();
+        $totalLogins = ActivityLog::where('action', 'Login')
+            ->where('description', 'NOT LIKE', '%ID: 1)%')
+            ->count();
+        $totalLogouts = ActivityLog::where('action', 'Logout')
+            ->where('description', 'NOT LIKE', '%ID: 1)%')
+            ->count();
 
         return response()->json([
             'total_activities' => $totalActivities,
             'total_logins' => $totalLogins,
             'total_logouts' => $totalLogouts,
-            'total_archived' => $totalArchived,
-            'total_restored' => $totalRestored,
         ]);
     }
 }

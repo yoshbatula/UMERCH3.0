@@ -37,7 +37,7 @@ export const useActivityLogs = () => {
         try {
             const response = await axios.get("/api/admin/activity-logs", {
                 params: {
-                    per_page: 10000, // Get all logs
+                    per_page: 10000, // Get all logs (admin activities already filtered in backend)
                 },
             });
             setAllLogs(response.data.data);
@@ -67,22 +67,12 @@ export const useActivityLogs = () => {
     };
 
     // Get badge color based on activity type
-    const getActivityBadgeColor = (activity) => {
-        // Check for partial matches first (for Archive/Restore)
-        if (activity.startsWith("Archived Product:")) {
-            return "bg-orange-100 text-orange-800";
-        }
-        if (activity.startsWith("Restored Product:")) {
-            return "bg-blue-100 text-blue-800";
-        }
-
+    const getActivityBadgeColor = (action) => {
         const colors = {
             "Login": "bg-green-100 text-green-800",
             "Logout": "bg-red-100 text-red-800",
-            "Activated": "bg-blue-100 text-blue-800",
-            "Deactivated": "bg-orange-100 text-orange-800",
         };
-        return colors[activity] || "bg-gray-100 text-gray-800";
+        return colors[action] || "bg-gray-100 text-gray-800";
     };
 
     return {

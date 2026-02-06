@@ -13,7 +13,9 @@ export default function AddStock({ open, onClose, onSuccess }) {
     useEffect(() => {
         if (open) {
             axios.get("/admin/products").then(res => {
-                setProducts(res.data);
+                // Filter only active products
+                const activeProducts = res.data.filter(p => p.status === 'active');
+                setProducts(activeProducts);
             });
         }
     }, [open]);
@@ -33,8 +35,8 @@ export default function AddStock({ open, onClose, onSuccess }) {
     // Derive variant options from selected product's `variant` field
     useEffect(() => {
         if (productId) {
-            // Find all products with the same product_name to get all variants
-            const sameNameProducts = products.filter(p => p.product_name === productId);
+            // Find all active products with the same product_name to get all variants
+            const sameNameProducts = products.filter(p => p.product_name === productId && p.status === 'active');
             const variants = sameNameProducts.map(p => p.variant).filter(v => v);
 
             // Deduplicate while preserving order
@@ -45,7 +47,23 @@ export default function AddStock({ open, onClose, onSuccess }) {
                 return true;
             });
 
-            setVariantOptions(unique.length > 0 ? unique : ["XS", "S", "M", "L", "XL"]);
+            // Determine variant type based on existing variants
+            let options = [];
+            if (unique.some(v => ["XS", "S", "M", "L", "XL"].includes(v))) {
+                // Size variants
+                options = ["XS", "S", "M", "L", "XL"].filter(size => unique.includes(size));
+            } else if (unique.some(v => ["350ml", "500ml", "750ml"].includes(v))) {
+                // Mug or Tumbler variants
+                options = ["350ml", "500ml", "750ml"].filter(vol => unique.includes(vol));
+            } else if (unique.some(v => ["50 pages", "80 pages", "100 pages"].includes(v))) {
+                // Notebook variants
+                options = ["50 pages", "80 pages", "100 pages"].filter(page => unique.includes(page));
+            } else {
+                // Other variants (Pen, Umbrella, Keychain, Tote bag, Pillow)
+                options = unique;
+            }
+
+            setVariantOptions(options.length > 0 ? options : unique);
             setVariation("");
         } else {
             setVariantOptions([]);
@@ -62,7 +80,22 @@ export default function AddStock({ open, onClose, onSuccess }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        
+        // Find the selected product with matching name and variant
         const selected = products.find(p => p.variant === variation && p.product_name === productId);
+        
+        // Validate if product variant exists
+        if (!selected) {
+            alert(`The selected variation "${variation}" is not available for this product. Please select a valid variation.`);
+            return;
+        }
+        
+        // Validate if product is active
+        if (selected.status !== 'active') {
+            alert(`Cannot add stock to an archived product. Please restore the product first.`);
+            return;
+        }
+        
         const derivedCost = selected ? Number(selected.product_price) : 0;
         router.post("/admin/stock-in/store", {
             product_id: selected?.product_id,

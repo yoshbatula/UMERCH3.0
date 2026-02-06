@@ -46,11 +46,11 @@ function ActivityLogs() {
                         icon={<img src={TotalActivitiesIcon} alt="Total Activities" className="w-20 h-20" />}
                     />
                     <StatCard
-                        title="Total Logins" value={allLogs.filter(log => log.activity === "Login").length} className="bg-green-700"
+                        title="Total Logins" value={allLogs.filter(log => log.action === "Login").length} className="bg-green-700"
                         icon={<img src={TotalLoginsIcon} alt="Total Logins" className="w-20 h-20" />}
                     />
                     <StatCard
-                        title="Total Logouts" value={allLogs.filter(log => log.activity === "Logout").length} className="bg-red-600"
+                        title="Total Logouts" value={allLogs.filter(log => log.action === "Logout").length} className="bg-red-600"
                         icon={<img src={TotalLogoutsIcon} alt="Total Logouts" className="w-20 h-20" />}
                     />
                 </div>
@@ -69,7 +69,7 @@ function ActivityLogs() {
                                 setQuery(e.target.value);
                                 setCurrentPage(1);
                             }}
-                            placeholder="Search Name, UserId, Email"
+                            placeholder="Search Action, Description"
                             className="bg-transparent outline-none w-full text-sm text-gray-700 placeholder:text-gray-400"
                         />
                     </div>
@@ -83,10 +83,6 @@ function ActivityLogs() {
                         <option value="all">All Activities</option>
                         <option value="Login">Login</option>
                         <option value="Logout">Logout</option>
-                        <option value="Activated">Activated</option>
-                        <option value="Deactivated">Deactivated</option>
-                        <option value="Archive">Archived Products</option>
-                        <option value="Restore">Restored Products</option>
                     </select>
                 </div>
 
@@ -97,52 +93,44 @@ function ActivityLogs() {
                             <thead className="border-b border-gray-200">
                                 <tr className="text-left text-red-700 text-sm font-semibold">
                                     <th className="px-6 py-4">ID</th>
-                                    <th className="px-6 py-4">Name</th>
-                                    <th className="px-6 py-4">UserId</th>
-                                    <th className="px-6 py-4">Email</th>
                                     <th className="px-6 py-4">Action</th>
+                                    <th className="px-6 py-4">Description</th>
                                     <th className="px-6 py-4">Date/Time</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {loading ? (
                                     <tr>
-                                        <td colSpan="6" className="text-center py-10 text-gray-500">
+                                        <td colSpan="4" className="text-center py-10 text-gray-500">
                                             Loading...
                                         </td>
                                     </tr>
                                 ) : logs.length === 0 ? (
                                     <tr>
-                                        <td colSpan="6" className="text-center py-10 text-gray-500">
+                                        <td colSpan="4" className="text-center py-10 text-gray-500">
                                             No activity logs found
                                         </td>
                                     </tr>
                                 ) : (
                                     logs.map((log) => (
                                         <tr
-                                            key={log.id}
+                                            key={log.activity_logs_id}
                                             className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
                                         >
                                             <td className="px-6 py-4 text-sm text-gray-700">
-                                                {log.id}
-                                            </td>
-                                            <td className="px-6 py-4 text-sm text-gray-900 font-medium">
-                                                {log.user_name}
-                                            </td>
-                                            <td className="px-6 py-4 text-sm text-gray-700">
-                                                {log.user_id}
-                                            </td>
-                                            <td className="px-6 py-4 text-sm text-gray-700">
-                                                {log.email}
+                                                {log.activity_logs_id}
                                             </td>
                                             <td className="px-6 py-4">
                                                 <span
                                                     className={`px-3 py-1 rounded-full text-xs font-semibold ${getActivityBadgeColor(
-                                                        log.activity
+                                                        log.action
                                                     )}`}
                                                 >
-                                                    {log.activity}
+                                                    {log.action}
                                                 </span>
+                                            </td>
+                                            <td className="px-6 py-4 text-sm text-gray-700">
+                                                {log.description}
                                             </td>
                                             <td className="px-6 py-4 text-sm text-gray-700">
                                                 {formatDate(log.created_at)}

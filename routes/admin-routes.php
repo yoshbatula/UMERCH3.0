@@ -40,7 +40,11 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/api/admin/users', function () {
         return response()->json(
-            User::where('role', '!=', 'admin')->select('id', 'user_fullname', 'um_id', 'email', 'role', 'status')->get()
+            User::where('role', '!=', 'Admin')
+                ->where('um_id', '!=', 1)
+                ->where('email', '!=', 'admin@umerch.com')
+                ->select('id', 'user_fullname', 'um_id', 'email', 'role', 'status')
+                ->get()
         );
     });
 

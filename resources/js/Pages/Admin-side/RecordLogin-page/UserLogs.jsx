@@ -48,13 +48,13 @@ function UserLogs() {
         <div className="mt-7 flex gap-6">
           <StatCard
             title="Total Login Users"
-            value={users.filter(u => u.role !== 'Admin' && (u.status === 'active' || u.status === 'Active')).length}
+            value={users.filter(u => u.role !== 'Admin' && u.um_id !== 1 && u.email !== 'admin@umerch.com' && (u.status === 'active' || u.status === 'Active')).length}
             className="bg-green-700"
             icon={<img src={TotalLoginUsers} alt="Total Login Users" className="w-20 h-20" />}
           />
           <StatCard
             title="Deactivated Account"
-            value={users.filter(u => u.role !== 'Admin' && (u.status === 'inactive' || u.status === 'Inactive')).length}
+            value={users.filter(u => u.role !== 'Admin' && u.um_id !== 1 && u.email !== 'admin@umerch.com' && (u.status === 'inactive' || u.status === 'Inactive')).length}
             className="bg-red-600"
             icon={<img src={DeactivatedAccount} alt="Deactivated Account" className="w-20 h-20" />}
           />

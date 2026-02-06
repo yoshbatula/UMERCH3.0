@@ -8,6 +8,9 @@ class ActivityLog extends Model
 {
     protected $table = 'activity_logs';
 
+    // Disable updated_at since the table only has created_at
+    const UPDATED_AT = null;
+
     protected $fillable = [
         'action',
         'description',
@@ -15,7 +18,6 @@ class ActivityLog extends Model
 
     protected $casts = [
         'created_at' => 'datetime',
-        'updated_at' => 'datetime',
     ];
 
     /**
@@ -29,13 +31,15 @@ class ActivityLog extends Model
     /**
      * Log user login activity
      */
-    public static function logLogin($user)
+    public static function logLogin($user, $admin = null)
     {
+        $description = $admin 
+            ? "Admin {$admin->admin_fullname} (ID: {$admin->admin_id}) logged in"
+            : "User {$user->user_fullname} (ID: {$user->um_id}) logged in";
+
         return self::create([
-            'user_id' => $user->um_id ?? $user->id,
-            'user_name' => $user->user_fullname ?? $user->name,
-            'email' => $user->email,
-            'activity' => 'Login',
+            'action' => 'Login',
+            'description' => $description,
         ]);
     }
 
@@ -45,62 +49,8 @@ class ActivityLog extends Model
     public static function logLogout($user)
     {
         return self::create([
-            'user_id' => $user->um_id ?? $user->id,
-            'user_name' => $user->user_fullname ?? $user->name,
-            'email' => $user->email,
-            'activity' => 'Logout',
-        ]);
-    }
-
-    /**
-     * Log user activation activity
-     */
-    public static function logActivated($user)
-    {
-        return self::create([
-            'user_id' => $user->um_id ?? $user->id,
-            'user_name' => $user->user_fullname ?? $user->name,
-            'email' => $user->email,
-            'activity' => 'Activated',
-        ]);
-    }
-
-    /**
-     * Log user deactivation activity
-     */
-    public static function logDeactivated($user)
-    {
-        return self::create([
-            'user_id' => $user->um_id ?? $user->id,
-            'user_name' => $user->user_fullname ?? $user->name,
-            'email' => $user->email,
-            'activity' => 'Deactivated',
-        ]);
-    }
-
-    /**
-     * Log product archive activity
-     */
-    public static function logProductArchive($user, $productName, $variant)
-    {
-        return self::create([
-            'user_id' => $user->um_id ?? $user->id,
-            'user_name' => $user->user_fullname ?? $user->name,
-            'email' => $user->email,
-            'activity' => "Archived Product: {$productName} - {$variant}",
-        ]);
-    }
-
-    /**
-     * Log product restore activity
-     */
-    public static function logProductRestore($user, $productName, $variant)
-    {
-        return self::create([
-            'user_id' => $user->um_id ?? $user->id,
-            'user_name' => $user->user_fullname ?? $user->name,
-            'email' => $user->email,
-            'activity' => "Restored Product: {$productName} - {$variant}",
+            'action' => 'Logout',
+            'description' => "User {$user->user_fullname} (ID: {$user->um_id}) logged out",
         ]);
     }
 }

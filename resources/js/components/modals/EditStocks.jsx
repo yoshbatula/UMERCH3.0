@@ -1,28 +1,58 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { router } from "@inertiajs/react";
+import axios from "axios";
 
 export default function EditStocks({ open, onClose, stock, onSuccess }) {
-const [quantity, setQuantity] = useState(stock?.stock_qty || "");
-const [variant, setVariant] = useState(stock?.variant || "");
-const [confirm, setConfirm] = useState(false);
+    const [quantity, setQuantity] = useState(stock?.stock_qty || "");
+    const [confirm, setConfirm] = useState(false);
+    const [products, setProducts] = useState([]);
 
-if (!open || !stock) return null;
+    useEffect(() => {
+        if (open && stock) {
+            // Fetch products to validate
+            axios.get("/admin/products").then(res => {
+                const activeProducts = res.data.filter(p => p.status === 'active');
+                setProducts(activeProducts);
+            });
+            
+            setQuantity(stock.stock_qty);
+        }
+    }, [open, stock]);
 
-const handleUpdate = (e) => {
-    e.preventDefault();
-    router.patch(`/admin/stock-in/${stock.stock_in_id}`, {
-        stock_qty: Number(quantity),
-        variant: variant,
-    }, {
-        onSuccess: () => {
-            if (onSuccess) onSuccess();
-            onClose();
-            setConfirm(false);
-        },
-        preserveScroll: true,
-        replace: true,
-    });
-};
+    if (!open || !stock) return null;
+
+    const handleUpdate = (e) => {
+        e.preventDefault();
+        
+        // Validate if the product with this variant exists in active products
+        const productExists = products.find(
+            p => p.product_name === stock.product_name && p.variant === stock.variant
+        );
+        
+        if (!productExists) {
+            alert(`The product variant is not available. Please check the product table.`);
+            return;
+        }
+        
+        // Validate if product is active
+        if (productExists.status !== 'active') {
+            alert(`Cannot edit stock for an archived product. Please restore the product first.`);
+            return;
+        }
+        
+        router.patch(`/admin/stock-in/${stock.stock_in_id}`, {
+            stock_qty: Number(quantity),
+            variant: stock.variant,
+        }, {
+            onSuccess: () => {
+                if (onSuccess) onSuccess();
+                onClose();
+                setConfirm(false);
+            },
+            preserveScroll: true,
+            replace: true,
+        });
+    };
 
 return (
     <>
@@ -100,18 +130,13 @@ return (
                             <label className="text-sm font-semibold">
                                 Variation
                             </label>
-                            <select
-                                className="w-full mt-1 border rounded-lg px-3 py-2 text-sm"
-                                value={variant}
-                                onChange={e => setVariant(e.target.value)}
-                            >
-                                <option value="">Select Variation</option>
-                                <option value="XS">XS</option>
-                                <option value="S">S</option>
-                                <option value="M">M</option>
-                                <option value="L">L</option>
-                                <option value="XL">XL</option>
-                            </select>
+                            <input
+                                type="text"
+                                className="w-full mt-1 border rounded-lg px-3 py-2 text-sm bg-gray-100 cursor-not-allowed"
+                                value={stock.variant}
+                                readOnly
+                                disabled
+                            />
                         </div>
                     </div>
 
