@@ -12,16 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('activity_logs', function (Blueprint $table) {
-            $table->id();
-            $table->string('user_id');
-            $table->string('user_name');
-            $table->string('email');
-            $table->enum('activity', ['Login', 'Logout', 'Activated', 'Deactivated']);
-            $table->timestamps();
-
-            $table->index('user_id');
-            $table->index('activity');
-            $table->index('created_at');
+            $table->id('activity_logs_id');
+            $table->string('action');
+            $table->string('description');
+            $table->dateTime('created_at')->useCurrent();
         });
     }
 
