@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
+    // getting the stats for the dashboard
     public function getStats()
     {
         $today = Carbon::today();
