@@ -91,5 +91,8 @@ cp .env.example .env
 ### 9. Generate Application Key
 php artisan key:generate
 
-### 10. Development Server
+### 10. Database Migrate
+php artisan migrate
+
+### 11. Development Server
 composer run dev
