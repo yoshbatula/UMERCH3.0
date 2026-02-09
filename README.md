@@ -63,7 +63,7 @@ The UM Merchandise Store is committed to serving students, employees, and alumni
 ```bash
 ### 1. Clone the Repositories
 git clone https://github.com/yoshbatula/UMERCH3.0.git
-cd um-merch-management-system
+cd UMERCH3.0
 
 ### 2. Install Backend Dependencies (Laravel)
 composer install
@@ -71,11 +71,28 @@ composer install
 ### 3. Install Frontend Dependencies (React + Tailwind)
 npm install
 
-### 4. Create and Configure Environment File
+### 4. Install React Framework
+npm install --save-dev @vitejs/plugin-react
+
+### 5. Install Inertia (Server Side)
+composer require inertiajs/inertia-laravel
+
+### 6. Install Inertia (Client Side React)
+npm install @inertiajs/react
+
+### 7. Other Dependencies that needed for the system
+npm install xlsx jspdf jspdf-autotable
+npm install exceljs
+npm install qrcode
+
+### 8. Create and Configure Environment File
 cp .env.example .env
 
-### 5. Generate Application Key
+### 9. Generate Application Key
 php artisan key:generate
 
-### 6. Development Server
+### 10. Database Migrate
+php artisan migrate
+
+### 11. Development Server
 composer run dev
