@@ -13,7 +13,7 @@ return new class extends Migration
     public function up(): void
     {
         // Alter the activity enum to include Activated and Deactivated
-        DB::statement("ALTER TABLE activity_logs MODIFY COLUMN activity ENUM('Login', 'Logout', 'Activated', 'Deactivated') NOT NULL");
+        DB::statement("ALTER TABLE activity_logs MODIFY COLUMN action ENUM('Login', 'Activated', 'Deactivated') NOT NULL");
     }
 
     /**
@@ -22,6 +22,6 @@ return new class extends Migration
     public function down(): void
     {
         // Revert back to original enum values
-        DB::statement("ALTER TABLE activity_logs MODIFY COLUMN activity ENUM('Login', 'Logout') NOT NULL");
+        DB::statement("ALTER TABLE activity_logs MODIFY COLUMN action ENUM('Login') NOT NULL");
     }
 };
