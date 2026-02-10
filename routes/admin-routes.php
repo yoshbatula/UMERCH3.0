@@ -13,6 +13,7 @@ use App\Http\Controllers\AdminsideControllers\RecordsControllers\InventoryLogsCo
 use App\Http\Controllers\AdminsideControllers\RecordsControllers\ActivityLogsController;
 use App\Http\Controllers\AdminsideControllers\InventoryControllers\StockInController;
 use App\Http\Controllers\AdminsideControllers\InventoryControllers\StockOutController;
+use App\Http\Controllers\AdminsideControllers\InventoryControllers\InventoryReportController;
 use App\Http\Controllers\AdminsideControllers\RecordsControllers\DashboardController;
 use App\Http\Controllers\UsersideControllers\OrdersController\PlaceOrderCont;
 use App\Http\Controllers\UsersideControllers\LoginControllers\LoginCont;
@@ -72,6 +73,10 @@ Route::middleware('auth')->group(function () {
         return inertia('Admin-side/Inventory-page/Stock-Out');
     })->name('StockOut');
 
+    Route::get('/admin/inventory/report', function () {
+        return inertia('Admin-side/Inventory-page/InventoryReport');
+    })->name('InventoryReport');
+
     /*
     |--------------------------------------------------------------------------
     | INVENTORY (API)
@@ -97,6 +102,11 @@ Route::middleware('auth')->group(function () {
         // STOCK OUT
         Route::get('/stock-out/logs', [StockOutController::class, 'logs']);
         Route::post('/stock-out/store', [StockOutController::class, 'store']);
+
+        // INVENTORY REPORT
+        Route::get('/inventory-report', [InventoryReportController::class, 'getReport']);
+        Route::get('/inventory-report/export-csv', [InventoryReportController::class, 'exportCSV']);
+        Route::get('/inventory-report/export-excel', [InventoryReportController::class, 'exportExcel']);
 
 
         // Transactions API

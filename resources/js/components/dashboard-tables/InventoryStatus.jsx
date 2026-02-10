@@ -1,6 +1,16 @@
 import React from 'react';
 
 export default function InventoryStatus({ inventoryStatus }) {
+    // Provide default values if inventoryStatus is not loaded
+    const {
+        lowStock = 0,
+        outOfStock = 0,
+        inStock = 0,
+        lowStockPercent = 0,
+        outOfStockPercent = 0,
+        inStockPercent = 0,
+    } = inventoryStatus || {};
+
     return (
         <div className="w-[280px] bg-white rounded-xl p-6 shadow-sm border border-gray-200">
             <div className="flex items-center justify-between mb-4">
@@ -29,7 +39,7 @@ export default function InventoryStatus({ inventoryStatus }) {
                             fill="none"
                             stroke="#EAB308"
                             strokeWidth="12"
-                            strokeDasharray={`${inventoryStatus.lowStockPercent * 2.51} 251`}
+                            strokeDasharray={`${lowStockPercent * 2.51} 251`}
                             strokeDashoffset="0"
                         />
                         {/* Out of Stock (Red) */}
@@ -40,8 +50,8 @@ export default function InventoryStatus({ inventoryStatus }) {
                             fill="none"
                             stroke="#DC2626"
                             strokeWidth="12"
-                            strokeDasharray={`${inventoryStatus.outOfStockPercent * 2.51} 251`}
-                            strokeDashoffset={`-${inventoryStatus.lowStockPercent * 2.51}`}
+                            strokeDasharray={`${outOfStockPercent * 2.51} 251`}
+                            strokeDashoffset={`-${lowStockPercent * 2.51}`}
                         />
                         {/* In Stock (Green) */}
                         <circle
@@ -51,12 +61,12 @@ export default function InventoryStatus({ inventoryStatus }) {
                             fill="none"
                             stroke="#22C55E"
                             strokeWidth="12"
-                            strokeDasharray={`${inventoryStatus.inStockPercent * 2.51} 251`}
-                            strokeDashoffset={`-${(inventoryStatus.lowStockPercent + inventoryStatus.outOfStockPercent) * 2.51}`}
+                            strokeDasharray={`${inStockPercent * 2.51} 251`}
+                            strokeDashoffset={`-${(lowStockPercent + outOfStockPercent) * 2.51}`}
                         />
                     </svg>
                     <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-2xl font-bold">{inventoryStatus.inStockPercent}%</span>
+                        <span className="text-2xl font-bold">{inStockPercent}%</span>
                     </div>
                 </div>
             </div>
@@ -68,21 +78,21 @@ export default function InventoryStatus({ inventoryStatus }) {
                         <div className="w-3 h-3 bg-yellow-500 rounded-full" />
                         <span className="text-sm">Low Stock</span>
                     </div>
-                    <span className="text-sm font-semibold">{inventoryStatus.lowStock} Products</span>
+                    <span className="text-sm font-semibold">{lowStock} Products</span>
                 </div>
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         <div className="w-3 h-3 bg-red-500 rounded-full" />
                         <span className="text-sm">Out of Stock</span>
                     </div>
-                    <span className="text-sm font-semibold">{inventoryStatus.outOfStock} Products</span>
+                    <span className="text-sm font-semibold">{outOfStock} Products</span>
                 </div>
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         <div className="w-3 h-3 bg-green-500 rounded-full" />
                         <span className="text-sm">In Stock</span>
                     </div>
-                    <span className="text-sm font-semibold">{inventoryStatus.inStock} Products</span>
+                    <span className="text-sm font-semibold">{inStock} Products</span>
                 </div>
             </div>
         </div>

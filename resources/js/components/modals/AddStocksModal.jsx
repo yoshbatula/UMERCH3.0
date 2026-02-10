@@ -8,11 +8,12 @@ export default function AddStock({ open, onClose, onSuccess }) {
     const [variantOptions, setVariantOptions] = useState([]);
     const [variation, setVariation] = useState("");
     const [quantity, setQuantity] = useState("");
+    const [quantityError, setQuantityError] = useState("");
     const [confirm, setConfirm] = useState(false);
 
     const variantTypesMap = {
         size: ["XS", "S", "M", "L", "XL"],
-        mug: ["11oz", "13oz", "15oz"],
+        mug: ["11ml", "13ml"],
         tumbler: ["12oz", "16oz", "20oz", "24oz"],
         notebook: ["30 pages", "50 pages", "100 pages"],
         pen: [],
@@ -87,6 +88,17 @@ export default function AddStock({ open, onClose, onSuccess }) {
         // Validate if variation is selected (only if the variant type has options)
         if (variantOptions.length > 0 && !variation) {
             alert(`Please select a variation.`);
+            return;
+        }
+
+        // Validate quantity is not zero or negative
+        if (!quantity || parseFloat(quantity) <= 0) {
+            alert("Quantity must be greater than zero.");
+            return;
+        }
+
+        if (quantityError) {
+            alert("Quantity must be greater than zero.");
             return;
         }
 
@@ -175,12 +187,19 @@ export default function AddStock({ open, onClose, onSuccess }) {
                                 placeholder="Enter Quantity"
                                 className="w-full mt-1 border rounded-lg px-3 py-2 text-sm"
                                 value={quantity}
-                                min="0"
+                                min="1"
                                 onChange={e => {
                                     const value = e.target.value;
                                     // Prevent negative values
                                     if (value === '' || parseFloat(value) >= 0) {
                                         setQuantity(value);
+                                        // Check for zero or negative and show error
+                                        const numValue = parseFloat(value);
+                                        if (value && numValue <= 0) {
+                                            setQuantityError("Quantity must be greater than zero.");
+                                        } else {
+                                            setQuantityError("");
+                                        }
                                     }
                                 }}
                                 onKeyDown={e => {
@@ -197,6 +216,9 @@ export default function AddStock({ open, onClose, onSuccess }) {
                                     }
                                 }}
                             />
+                            {quantityError && (
+                                <p className="text-red-600 text-xs mt-1">{quantityError}</p>
+                            )}
                         </div>
 
                         {/* Buttons */}

@@ -3,10 +3,37 @@ import { useForm } from "@inertiajs/react";
 
 export default function AdminEditProduct({ open, onClose, product, onSuccess }) {
     const [preview, setPreview] = useState(null);
+    const [priceError, setPriceError] = useState("");
+    const [selectedVariantType, setSelectedVariantType] = useState("");
+
+    const variantTypesMap = {
+        size: ["XS", "S", "M", "L", "XL"],
+        mug: ["11ml", "13ml"],
+        tumbler: ["12oz", "16oz", "20oz", "24oz"],
+        notebook: ["30 pages", "50 pages", "100 pages"],
+        pen: [],
+        umbrella: [],
+        keychain: [],
+        totebag: [],
+        pillow: [],
+    };
+
+    const variantTypes = [
+        { id: "size", label: "Size XS-XL", hasVariants: true },
+        { id: "mug", label: "Mug", hasVariants: true },
+        { id: "tumbler", label: "Tumbler", hasVariants: true },
+        { id: "notebook", label: "Notebook", hasVariants: true },
+        { id: "pen", label: "Pen", hasVariants: false },
+        { id: "umbrella", label: "Umbrella", hasVariants: false },
+        { id: "keychain", label: "Keychain", hasVariants: false },
+        { id: "totebag", label: "Tote bag", hasVariants: false },
+        { id: "pillow", label: "Pillow", hasVariants: false },
+    ];
+
     const { data, setData, patch, processing, errors, reset, clearErrors } = useForm({
         product_name: "",
         product_price: "",
-        variant: "",
+        variant_type: "",
         product_description: "",
         product_image: null,
     });
@@ -16,18 +43,47 @@ export default function AdminEditProduct({ open, onClose, product, onSuccess }) 
             setData({
                 product_name: product.product_name || "",
                 product_price: product.product_price || "",
-                variant: product.variant || "",
+                variant_type: product.variant_type || "",
                 product_description: product.product_description || "",
                 product_image: null,
             });
+            setSelectedVariantType(product.variant_type || "");
             setPreview(product.product_image || null);
         }
     }, [product]);
 
+    useEffect(() => {
+        if (!open) {
+            setPriceError("");
+            setSelectedVariantType("");
+        }
+    }, [open]);
+
     if (!open) return null;
+
+    const handleVariantTypeChange = (typeId) => {
+        if (selectedVariantType === typeId) {
+            setSelectedVariantType("");
+            setData("variant_type", "");
+        } else {
+            setSelectedVariantType(typeId);
+            setData("variant_type", typeId);
+        }
+    };
 
     const handleInput = (e) => {
         const { name, value } = e.target;
+        
+        // Check for zero or negative price and show error message
+        if (name === 'product_price') {
+            const numValue = parseFloat(value);
+            if (value && numValue <= 0) {
+                setPriceError("Price must be greater than zero. Please enter a valid price.");
+            } else {
+                setPriceError("");
+            }
+        }
+        
         setData(name, value);
         clearErrors(name);
     };
@@ -42,15 +98,27 @@ export default function AdminEditProduct({ open, onClose, product, onSuccess }) 
     const handleSave = (e) => {
         e.preventDefault();
 
-        // Validate price is not negative
-        if (data.product_price && parseFloat(data.product_price) < 0) {
-            alert("Price cannot be negative. Please enter a valid price.");
+        // Validate variation type is selected
+        if (!selectedVariantType) {
+            alert("Please select a variation type.");
+            return;
+        }
+
+        // Validate price is not zero or negative
+        if (priceError) {
+            alert("Price must be greater than zero. Please enter a valid price.");
+            return;
+        }
+
+        if (!data.product_price || parseFloat(data.product_price) <= 0) {
+            alert("Price must be greater than zero. Please enter a valid price.");
             return;
         }
 
         patch(`/admin/products/${product.product_id}`, {
             onSuccess: () => {
                 if (onSuccess) onSuccess();
+                setPriceError("");
                 reset();
                 onClose && onClose();
             },
@@ -119,26 +187,32 @@ export default function AdminEditProduct({ open, onClose, product, onSuccess }) 
                             onChange={handleInput}
                             className="mt-2 w-full border rounded-full px-4 py-2 text-sm outline-red-600"
                         />
+                        {priceError && (
+                            <p className="text-red-600 text-xs mt-1">{priceError}</p>
+                        )}
                     </div>
 
-                    {/* Variation */}
-                    <div>
-                        <label className="text-sm font-semibold">
-                            Variation <span className="text-red-600">*</span>
+                    {/* Variation Type */}
+                    <div className="col-span-2">
+                        <label className="text-sm font-semibold mb-2 block">
+                            Variation Type <span className="text-red-600">*</span>
                         </label>
-                        <select
-                            name="variant"
-                            value={data.variant}
-                            onChange={handleInput}
-                            className="mt-2 w-full border rounded-full px-4 py-2 text-sm outline-red-600"
-                        >
-                            <option value="">Select Variation</option>
-                            <option>XS</option>
-                            <option>S</option>
-                            <option>M</option>
-                            <option>L</option>
-                            <option>XL</option>
-                        </select>
+                        <div className="grid grid-cols-3 gap-3">
+                            {variantTypes.map((type) => (
+                                <label key={type.id} className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedVariantType === type.id}
+                                        onChange={() => handleVariantTypeChange(type.id)}
+                                        className="w-4 h-4 accent-red-800"
+                                    />
+                                    <span className="text-sm">{type.label}</span>
+                                </label>
+                            ))}
+                        </div>
+                        {!selectedVariantType && (
+                            <p className="text-red-600 text-xs mt-2">Please select a variant type</p>
+                        )}
                     </div>
                 </form>
 

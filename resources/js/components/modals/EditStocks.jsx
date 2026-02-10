@@ -4,6 +4,7 @@ import axios from "axios";
 
 export default function EditStocks({ open, onClose, stock, onSuccess }) {
     const [quantity, setQuantity] = useState(stock?.stock_qty || "");
+    const [quantityError, setQuantityError] = useState("");
     const [confirm, setConfirm] = useState(false);
     const [products, setProducts] = useState([]);
 
@@ -37,6 +38,17 @@ export default function EditStocks({ open, onClose, stock, onSuccess }) {
         // Validate if product is active
         if (productExists.status !== 'active') {
             alert(`Cannot edit stock for an archived product. Please restore the product first.`);
+            return;
+        }
+
+        // Validate quantity is not zero or negative
+        if (!quantity || parseFloat(quantity) <= 0) {
+            alert("Quantity must be greater than zero.");
+            return;
+        }
+
+        if (quantityError) {
+            alert("Quantity must be greater than zero.");
             return;
         }
         
@@ -102,12 +114,19 @@ return (
                                 type="number"
                                 className="w-full mt-1 border rounded-lg px-3 py-2 text-sm"
                                 value={quantity}
-                                min="0"
+                                min="1"
                                 onChange={e => {
                                     const value = e.target.value;
                                     // Prevent negative values
                                     if (value === '' || parseFloat(value) >= 0) {
                                         setQuantity(value);
+                                        // Check for zero or negative and show error
+                                        const numValue = parseFloat(value);
+                                        if (value && numValue <= 0) {
+                                            setQuantityError("Quantity must be greater than zero.");
+                                        } else {
+                                            setQuantityError("");
+                                        }
                                     }
                                 }}
                                 onKeyDown={e => {
@@ -124,6 +143,9 @@ return (
                                     }
                                 }}
                             />
+                            {quantityError && (
+                                <p className="text-red-600 text-xs mt-1">{quantityError}</p>
+                            )}
                         </div>
 
                         <div>

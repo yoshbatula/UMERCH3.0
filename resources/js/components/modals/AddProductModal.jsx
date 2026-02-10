@@ -10,7 +10,7 @@ export default function AddProductModal({ open, isOpen, onClose, onSuccess }) {
 
     const variantTypesMap = {
         size: ["XS", "S", "M", "L", "XL"],
-        mug: ["11oz", "13oz", "15oz"],
+        mug: ["11ml", "13ml"],
         tumbler: ["12oz", "16oz", "20oz", "24oz"],
         notebook: ["30 pages", "50 pages", "100 pages"],
         pen: [],
@@ -80,11 +80,11 @@ export default function AddProductModal({ open, isOpen, onClose, onSuccess }) {
     const handleInput = (e) => {
         const { name, value } = e.target;
         
-        // Check for negative price and show error message
+        // Check for zero or negative price and show error message
         if (name === 'product_price') {
             const numValue = parseFloat(value);
-            if (value && numValue < 0) {
-                setPriceError("Price cannot be negative. Please enter a valid price.");
+            if (value && numValue <= 0) {
+                setPriceError("Price must be greater than zero. Please enter a valid price.");
             } else {
                 setPriceError("");
             }
@@ -110,14 +110,14 @@ export default function AddProductModal({ open, isOpen, onClose, onSuccess }) {
             return;
         }
 
-        // Validate price is not negative
+        // Validate price is not zero or negative
         if (priceError) {
-            alert("Price cannot be negative. Please enter a valid price.");
+            alert("Price must be greater than zero. Please enter a valid price.");
             return;
         }
 
-        if (data.product_price && parseFloat(data.product_price) < 0) {
-            alert("Price cannot be negative. Please enter a valid price.");
+        if (!data.product_price || parseFloat(data.product_price) <= 0) {
+            alert("Price must be greater than zero. Please enter a valid price.");
             return;
         }
 

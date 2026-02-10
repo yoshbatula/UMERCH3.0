@@ -137,6 +137,16 @@ export default function Sidebar() {
               >
                 Stock Out
               </Link>
+
+              <Link
+                href="/admin/inventory/report"
+                className={`block px-14 py-2 text-sm transition-all duration-200 ${isActive("/admin/inventory/report")
+                  ? "bg-white text-red-700"
+                  : "text-white"
+                  }`}
+              >
+                Report
+              </Link>
             </div>
           )}
         </div>
