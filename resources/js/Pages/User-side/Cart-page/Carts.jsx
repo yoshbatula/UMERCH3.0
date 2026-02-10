@@ -10,6 +10,18 @@ import RemoveCartModal from '../../../components/modals/RemoveCartModal';
 import ReceiptForm from '../../../components/modals/ReceiptFormModal';
 import axios from 'axios';
 
+const variantTypesMap = {
+    size: ['XS', 'S', 'M', 'L', 'XL'],
+    mug: ['One size'],
+    tumbler: ['12oz', '16oz', '20oz', '24oz'],
+    notebook: ['30 pages', '50 pages', '100 pages'],
+    pen: ['Black', 'Blue', 'Red'],
+    umbrella: ['One size'],
+    keychain: ['One size'],
+    totebag: ['One size'],
+    pillow: ['One size'],
+};
+
 export default function Carts({ cartItems: initialCartItems = [] }) {
     
     const [cartItems, setCartItems] = useState(initialCartItems);
@@ -114,7 +126,13 @@ export default function Carts({ cartItems: initialCartItems = [] }) {
             
             // If no stock for this variant, show error toast
             if (!inventory || inventory.quantity === 0 || inventory.quantity < 1) {
-                showToast(`This size (${newVariant}) is out of stock`, 'error');
+                const variantType = cartItem.product?.variant_type || 'size';
+                const variantLabel = variantType === 'size' ? 'size' :
+                                     variantType === 'mug' ? 'mug size' :
+                                     variantType === 'tumbler' ? 'tumbler size' :
+                                     variantType === 'notebook' ? 'page option' :
+                                     variantType === 'pen' ? 'color' : 'variant';
+                showToast(`This ${variantLabel} (${newVariant}) is out of stock`, 'error');
                 return;
             }
 
@@ -190,16 +208,9 @@ export default function Carts({ cartItems: initialCartItems = [] }) {
                                     <div className='text-center py-8 text-[#575757]'>Your cart is empty</div>
                                 ) : (
                                     cartItems.map(item => {
-                                        const defaultVariants = ['XS', 'S', 'M', 'L', 'XL'];
-                                        let variants = defaultVariants;
-                                        
-                                        if (item.product?.variant) {
-                                            const parsed = item.product.variant.split(',').map(v => v.trim()).filter(Boolean);
-                                            // Only use parsed variants if more than 1, otherwise use defaults
-                                            if (parsed.length > 1) {
-                                                variants = parsed;
-                                            }
-                                        }
+                                        // Get variants based on product's variant_type
+                                        const variantType = item.product?.variant_type || 'size';
+                                        const variants = variantTypesMap[variantType] || variantTypesMap.size;
                                         
                                         return (
                                             <div key={item.cart_item_id} className='flex flex-row bg-white w-263 rounded-[10px] p-3 items-center gap-10'>
@@ -221,7 +232,18 @@ export default function Carts({ cartItems: initialCartItems = [] }) {
 
                                                 {/* Variant selector - Right side */}
                                                 <div className='flex flex-row gap-2 items-center transform translate-x-[-130px]'>
-                                                    <span className='text-[10px] text-[#575757] whitespace-nowrap'>Variance:</span>
+                                                    <span className='text-[10px] text-[#575757] whitespace-nowrap'>
+                                                        {variantType === 'size' ? 'Size:' : 
+                                                         variantType === 'mug' ? 'Mug Size:' :
+                                                         variantType === 'tumbler' ? 'Tumbler Size:' :
+                                                         variantType === 'notebook' ? 'Pages:' :
+                                                         variantType === 'pen' ? 'Color:' :
+                                                         variantType === 'umbrella' ? 'Type:' :
+                                                         variantType === 'keychain' ? 'Type:' :
+                                                         variantType === 'totebag' ? 'Type:' :
+                                                         variantType === 'pillow' ? 'Type:' :
+                                                         'Variant:'}
+                                                    </span>
                                                     <select
                                                         value={item.variant}
                                                         onChange={(e) => handleVariantChange(item.cart_item_id, e.target.value)}

@@ -25,12 +25,12 @@ class StockInController extends Controller
 
     public function index()
     {
-        // Return stock-in logs joined with product details
+        // Return stock-in logs joined with product details using leftJoin
         return \Illuminate\Support\Facades\DB::table('stock_ins')
-            ->join('_products', '_products.product_id', '=', 'stock_ins.product_id')
+            ->leftJoin('_products', '_products.product_id', '=', 'stock_ins.product_id')
             ->select(
                 'stock_ins.stock_in_id',
-                '_products.product_id',
+                'stock_ins.product_id',
                 '_products.product_name',
                 'stock_ins.variant',
                 'stock_ins.cost',
@@ -54,57 +54,7 @@ class StockInController extends Controller
             $product = Products::findOrFail($request->product_id);
             $variant = trim($request->variant);
 
-            // If product doesn't have a variant yet, create product variant records if needed
-            if (!$product->variant || empty($product->variant)) {
-                // Check if a product with this name and variant already exists
-                $variantProduct = Products::where('product_name', $product->product_name)
-                    ->where('variant', $variant)
-                    ->first();
-
-                if (!$variantProduct) {
-                    // Create the product variant
-                    $variantProduct = Products::create([
-                        'product_name' => $product->product_name,
-                        'product_price' => $product->product_price,
-                        'product_description' => $product->product_description,
-                        'product_image' => $product->product_image,
-                        'variant' => $variant,
-                        'variant_type' => $product->variant_type,
-                        'product_stock' => 0,
-                        'status' => 'active',
-                    ]);
-                    $product = $variantProduct;
-                } else {
-                    $product = $variantProduct;
-                }
-            } else if ($product->variant !== $variant) {
-                // Product has a different variant, check if the new variant exists
-                $variantProduct = Products::where('product_name', $product->product_name)
-                    ->where('variant', $variant)
-                    ->first();
-
-                if (!$variantProduct) {
-                    // Create the product variant
-                    $variantProduct = Products::create([
-                        'product_name' => $product->product_name,
-                        'product_price' => $product->product_price,
-                        'product_description' => $product->product_description,
-                        'product_image' => $product->product_image,
-                        'variant' => $variant,
-                        'variant_type' => $product->variant_type,
-                        'product_stock' => 0,
-                        'status' => 'active',
-                    ]);
-                    $product = $variantProduct;
-                } else {
-                    $product = $variantProduct;
-                }
-            }
-
-            // Increment overall product stock
-            $product->increment('product_stock', $request->stock_qty);
-
-            // Update or create inventory record
+            // Just add to inventory, don't create new product records
             $currentInv = Inventory::where('product_id', $product->product_id)
                 ->where('variant', trim($request->variant))
                 ->first();
@@ -118,7 +68,7 @@ class StockInController extends Controller
                 ]
             );
 
-            // Merge with existing stock-in entry for same product + variant
+            // Create stock-in log
             $existing = StockIn::where('product_id', $product->product_id)
                 ->where('variant', $variant)
                 ->lockForUpdate()
@@ -140,7 +90,6 @@ class StockInController extends Controller
                         'stock_in_date' => now()
                     ]);
                 } catch (\Illuminate\Database\QueryException $e) {
-                    // Handle race where another insert just created the same (product_id, variant)
                     $row = StockIn::where('product_id', $product->product_id)
                         ->where('variant', $variant)
                         ->lockForUpdate()
@@ -151,20 +100,18 @@ class StockInController extends Controller
                             'cost' => $request->cost,
                             'stock_in_date' => now(),
                         ]);
-                    } else {
-                        throw $e;
                     }
                 }
             }
 
-            // Log the stock in operation
+            // Log the stock-in activity
             InventoryLog::create([
                 'product_id' => $product->product_id,
                 'item_name' => $product->product_name . ' - ' . $variant,
                 'type' => 'Stock In',
                 'quantity' => $request->stock_qty,
-                'total' => $product->product_stock,
-                'admin_action' => 'Admin_1' // You can update this to use actual admin name/ID
+                'total' => $newQty,
+                'admin_action' => auth()->user()?->user_fullname ?? 'Admin'
             ]);
         });
 

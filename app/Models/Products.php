@@ -21,4 +21,14 @@ class Products extends Model
         'variant_type',
         'status',
     ];
+
+    public function inventory()
+    {
+        return $this->hasMany(Inventory::class, 'product_id', 'product_id');
+    }
+
+    public function getTotalStockAttribute()
+    {
+        return $this->inventory()->sum('quantity') ?? 0;
+    }
 }

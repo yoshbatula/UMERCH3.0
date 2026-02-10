@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import Navbar from '../../../components/layouts/LandingNav'
 import Knowledge from './Knowledge';
 import Advertisement from '../../../components/ui/Advertisement';
@@ -10,6 +10,7 @@ import FeatureSection from '../../../components/ui/FeatureSection';
 import Hero from '../../../components/ui/Hero';
 import Footer from '../../../components/layouts/Footer';
 export default function Landingpage() {
+    
     return (
         <>
             {/* Navigation component */}

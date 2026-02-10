@@ -8,36 +8,43 @@ import axios from 'axios';
 export default function ProductCardModal({ isOpen, onClose, product, onShowToast }) {
     const [quantity, setQuantity] = useState(1);
     const [showSizeChart, setShowSizeChart] = useState(false);
-    const [selectedSize, setSelectedSize] = useState(null);
+    const [selectedVariant, setSelectedVariant] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [sizeStocks, setSizeStocks] = useState({});
+    const [variantStocks, setVariantStocks] = useState({});
 
-    // Fetch stock for each size when modal opens
+    const variantTypesMap = {
+        size: ["XS", "S", "M", "L", "XL"],
+        mug: ["11oz", "13oz", "15oz"],
+        tumbler: ["12oz", "16oz", "20oz", "24oz"],
+        notebook: ["30 pages", "50 pages", "100 pages"],
+        pen: ["Pen"],
+        umbrella: ["Umbrella"],
+        keychain: ["Keychain"],
+        totebag: ["Tote bag"],
+        pillow: ["Pillow"],
+    };
+
+    // Fetch stock for each variant when modal opens
     useEffect(() => {
         if (isOpen && product?.product_id) {
-            fetchSizeStocks();
+            fetchVariantStocks();
         }
     }, [isOpen, product?.product_id]);
 
-    const fetchSizeStocks = async () => {
+    const fetchVariantStocks = async () => {
         try {
-            // Determine available sizes from product variant field
-            let availableSizes = ['XS', 'S', 'M', 'L', 'XL'];
-            if (product?.variant) {
-                const parsed = product.variant.split(',').map(v => v.trim()).filter(Boolean);
-                if (parsed.length > 0) {
-                    availableSizes = parsed;
-                }
-            }
+            // Get available variants based on variant_type
+            const variantType = product?.variant_type || 'size';
+            let availableVariants = variantTypesMap[variantType] || ["1"];
 
             // Fetch from inventory table for accurate per-variant stock
             const res = await axios.get('/api/inventory');
             const inventoryData = res.data || [];
 
-            // Initialize stocks with 0 for all available sizes
+            // Initialize stocks with 0 for all available variants
             let stocks = {};
-            availableSizes.forEach(size => {
-                stocks[size] = 0;
+            availableVariants.forEach(variant => {
+                stocks[variant] = 0;
             });
 
             // Override with actual stock values from database
@@ -46,24 +53,18 @@ export default function ProductCardModal({ isOpen, onClose, product, onShowToast
                     stocks[inv.variant] = inv.quantity;
                 }
             });
-            setSizeStocks(stocks);
+            setVariantStocks(stocks);
         } catch (error) {
             // Fallback: fetch from products table if inventory endpoint fails
             try {
                 const res = await axios.get('/api/products');
                 const allProducts = res.data || [];
-
-                let availableSizes = ['XS', 'S', 'M', 'L', 'XL'];
-                if (product?.variant) {
-                    const parsed = product.variant.split(',').map(v => v.trim()).filter(Boolean);
-                    if (parsed.length > 0) {
-                        availableSizes = parsed;
-                    }
-                }
+                const variantType = product?.variant_type || 'size';
+                let availableVariants = variantTypesMap[variantType] || ["1"];
 
                 let stocks = {};
-                availableSizes.forEach(size => {
-                    stocks[size] = 0;
+                availableVariants.forEach(variant => {
+                    stocks[variant] = 0;
                 });
 
                 allProducts.forEach(p => {
@@ -71,26 +72,19 @@ export default function ProductCardModal({ isOpen, onClose, product, onShowToast
                         stocks[p.variant] = p.product_stock;
                     }
                 });
-                setSizeStocks(stocks);
+                setVariantStocks(stocks);
             } catch (fallbackError) {
-                console.error('Error fetching size stocks:', fallbackError);
+                console.error('Error fetching variant stocks:', fallbackError);
             }
         }
     };
 
-    // Set first size when modal opens or product changes
+    // Set first variant when modal opens or product changes
     useEffect(() => {
         if (isOpen) {
-            let defaultSizes = ['XS', 'S', 'M', 'L', 'XL'];
-
-            if (product?.variant) {
-                const parsed = product.variant.split(',').map(v => v.trim()).filter(Boolean);
-                if (parsed.length > 1) {
-                    defaultSizes = parsed;
-                }
-            }
-
-            setSelectedSize(defaultSizes[0]);
+            const variantType = product?.variant_type || 'size';
+            const availableVariants = variantTypesMap[variantType] || ["1"];
+            setSelectedVariant(availableVariants[0]);
         }
     }, [isOpen, product?.product_id]);
 
@@ -100,8 +94,8 @@ export default function ProductCardModal({ isOpen, onClose, product, onShowToast
             return;
         }
 
-        if (sizeStocks[selectedSize] === 0 || sizeStocks[selectedSize] === undefined) {
-            onShowToast('This size is out of stock', 'error');
+        if (variantStocks[selectedVariant] === 0 || variantStocks[selectedVariant] === undefined) {
+            onShowToast('This option is out of stock', 'error');
             return;
         }
 
@@ -109,7 +103,7 @@ export default function ProductCardModal({ isOpen, onClose, product, onShowToast
         try {
             await axios.post('/add-to-cart', {
                 product_id: product.product_id,
-                variant: selectedSize,
+                variant: selectedVariant,
                 quantity: quantity,
                 price: product.product_price
             });
@@ -131,8 +125,8 @@ export default function ProductCardModal({ isOpen, onClose, product, onShowToast
             return;
         }
 
-        if (sizeStocks[selectedSize] === 0 || sizeStocks[selectedSize] === undefined) {
-            onShowToast('This size is out of stock', 'error');
+        if (variantStocks[selectedVariant] === 0 || variantStocks[selectedVariant] === undefined) {
+            onShowToast('This option is out of stock', 'error');
             return;
         }
 
@@ -141,7 +135,7 @@ export default function ProductCardModal({ isOpen, onClose, product, onShowToast
             // Add item to cart
             await axios.post('/add-to-cart', {
                 product_id: product.product_id,
-                variant: selectedSize,
+                variant: selectedVariant,
                 quantity: quantity,
                 price: product.product_price
             });
@@ -192,19 +186,9 @@ export default function ProductCardModal({ isOpen, onClose, product, onShowToast
         const price = Number(product?.product_price || 0);
         const stock = Number(product?.product_stock || 0);
 
-        let sizes = ['XS', 'S', 'M', 'L', 'XL'];
-        try {
-            const raw = product?.variant;
-            if (typeof raw === 'string' && raw.trim()) {
-                const parsed = raw.split(',').map(v => v.trim()).filter(Boolean);
-                // Only use parsed sizes if we got multiple sizes, otherwise use defaults
-                if (parsed.length > 1) {
-                    sizes = parsed;
-                }
-            }
-        } catch (e) {
-            console.warn('Error parsing sizes:', e);
-        }
+        const variantType = product?.variant_type || 'size';
+        const variants = variantTypesMap[variantType] || ["1"];
+        const variantLabel = variantType.charAt(0).toUpperCase() + variantType.slice(1);
 
         const formatPrice = (v) => `₱${Number(v || 0).toFixed(2)}`;
 
@@ -238,25 +222,27 @@ export default function ProductCardModal({ isOpen, onClose, product, onShowToast
                                     <h1 className='text-[#9C0306] font-semibold text-[24px]'>{formatPrice(price)}</h1>
                                 </div>
                                 <div className='mt-5 flex flex-row'>
-                                    <span className='text-[12px] py-3'>Size</span>
+                                    <span className='text-[12px] py-3'>{variantLabel}</span>
                                     <div className='flex flex-row flex-wrap gap-y-1 px-6 items-center'>
-                                        {sizes.map(size => (
+                                        {variants.map(variant => (
                                             <button
-                                                key={size}
-                                                onClick={() => setSelectedSize(size)}
-                                                className={`w-18 h-10 font-semibold hover:cursor-pointer transition-all ${selectedSize === size
+                                                key={variant}
+                                                onClick={() => setSelectedVariant(variant)}
+                                                className={`w-25 h-10 font-semibold hover:cursor-pointer transition-all ${selectedVariant === variant
                                                         ? 'bg-[#9C0306] text-white border-2 border-[#9C0306]'
                                                         : 'bg-white text-black border-2 border-[#DDDDDD] hover:border-[#9C0306]'
                                                     }`}
                                             >
-                                                {size}
+                                                {variant}
                                             </button>
                                         ))}
                                     </div>
                                 </div>
-                                <div className='mt-5'>
-                                    <button onClick={() => setShowSizeChart(true)} className='text-[#0058B2] hover:underline hover:cursor-pointer'>Size Chart &gt;</button>
-                                </div>
+                                {variantType === 'size' && (
+                                    <div className='mt-5'>
+                                        <button onClick={() => setShowSizeChart(true)} className='text-[#0058B2] hover:underline hover:cursor-pointer'>Size Chart &gt;</button>
+                                    </div>
+                                )}
                                 <div className='mt-5 flex flex-row gap-4 items-center'>
                                     <span className='text-[12px]'>Quantity</span>
                                     <div className='flex flex-row'>
@@ -276,13 +262,13 @@ export default function ProductCardModal({ isOpen, onClose, product, onShowToast
                                             +
                                         </button>
                                     </div>
-                                    <span className='text-[#7F7F7F] text-[10px] font-light'>{sizeStocks[selectedSize] !== undefined ? sizeStocks[selectedSize] : 0} pieces available</span>
+                                    <span className='text-[#7F7F7F] text-[10px] font-light'>{variantStocks[selectedVariant] !== undefined ? variantStocks[selectedVariant] : 0} pieces available</span>
                                 </div>
                                 <div className='mt-6 flex flex-row gap-3'>
                                     <div className='absolute flex flex-row gap-3'>
                                         <button
                                             onClick={handleAddToCart}
-                                            disabled={loading || sizeStocks[selectedSize] === 0}
+                                            disabled={loading || variantStocks[selectedVariant] === 0}
                                             className='bg-white border border-[#9C0306] w-40 h-10 rounded-[10px] flex justify-center items-center hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
                                         >
                                             <img src={AddToCart} alt="Add to Cart" className='mr-2' />
@@ -290,7 +276,7 @@ export default function ProductCardModal({ isOpen, onClose, product, onShowToast
                                         </button>
                                         <button
                                             onClick={handleBuyNow}
-                                            disabled={loading || sizeStocks[selectedSize] === 0}
+                                            disabled={loading || variantStocks[selectedVariant] === 0}
                                             className='bg-[#9C0306] w-40 h-10 rounded-[10px] flex justify-center items-center hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
                                         >
                                             <span className='text-white text-[16px] font-semibold'>{loading ? 'Processing...' : 'Buy Now'}</span>

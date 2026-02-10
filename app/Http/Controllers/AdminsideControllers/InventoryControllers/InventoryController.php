@@ -19,7 +19,24 @@ class InventoryController extends Controller
 
     public function userProducts()
     {
-        return Products::where('status', 'active')->get();
+        // Get unique products by name (first one of each group)
+        $products = Products::where('status', 'active')
+            ->with('inventory')
+            ->get()
+            ->unique('product_name')
+            ->map(function($product) {
+                // Sum all inventory quantities for this product across all variants
+                $totalStock = Products::where('product_name', $product->product_name)
+                    ->with('inventory')
+                    ->get()
+                    ->sum(function($p) {
+                        return $p->inventory->sum('quantity') ?? 0;
+                    });
+                $product->product_stock = $totalStock;
+                return $product;
+            })->values();
+        
+        return $products;
     }
 
     public function store(Request $request)
