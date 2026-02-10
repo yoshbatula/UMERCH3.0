@@ -53,4 +53,26 @@ class ActivityLog extends Model
             'description' => "User {$user->user_fullname} (ID: {$user->um_id}) logged out",
         ]);
     }
+
+    /**
+     * Log user deactivation activity
+     */
+    public static function logDeactivated($user)
+    {
+        return self::create([
+            'action' => 'Deactivated',
+            'description' => "User {$user->user_fullname} (ID: {$user->um_id}) was deactivated",
+        ]);
+    }
+
+    /**
+     * Log user activation activity
+     */
+    public static function logActivated($user)
+    {
+        return self::create([
+            'action' => 'Activated',
+            'description' => "User {$user->user_fullname} (ID: {$user->um_id}) was activated",
+        ]);
+    }
 }

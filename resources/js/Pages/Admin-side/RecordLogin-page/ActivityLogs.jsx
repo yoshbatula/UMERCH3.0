@@ -49,10 +49,6 @@ function ActivityLogs() {
                         title="Total Logins" value={allLogs.filter(log => log.action === "Login").length} className="bg-green-700"
                         icon={<img src={TotalLoginsIcon} alt="Total Logins" className="w-20 h-20" />}
                     />
-                    <StatCard
-                        title="Total Logouts" value={allLogs.filter(log => log.action === "Logout").length} className="bg-red-600"
-                        icon={<img src={TotalLogoutsIcon} alt="Total Logouts" className="w-20 h-20" />}
-                    />
                 </div>
 
                 {/* Activity Logs Section */}

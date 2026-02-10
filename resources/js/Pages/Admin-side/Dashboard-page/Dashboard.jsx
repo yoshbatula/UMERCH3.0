@@ -150,7 +150,7 @@ export default function Dashboard() {
                         bgColor="bg-[#EF2F2A]"
                     />
                     <StatCard
-                        title="Total Login User"
+                        title="Total Users"
                         value={stats.totalUsers || 0}
                         icon={TotalLoginUserIcon}
                         bgColor="bg-[#9C0306]"

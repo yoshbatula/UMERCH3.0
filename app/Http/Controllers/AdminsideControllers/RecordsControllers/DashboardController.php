@@ -48,8 +48,8 @@ class DashboardController extends Controller
                 return $order->orderItems->sum('subtotal');
             });
 
-        // Total Login Users - total registered users
-        $totalUsers = User::count();
+        // Total Login Users - total registered users (excluding admins)
+        $totalUsers = User::where('role', '!=', 'admin')->count();
 
         return response()->json([
             'todayEarnings' => $todayEarnings,

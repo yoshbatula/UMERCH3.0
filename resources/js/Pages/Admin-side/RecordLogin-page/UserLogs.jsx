@@ -47,7 +47,7 @@ function UserLogs() {
         {/* ✅ StatCard */}
         <div className="mt-7 flex gap-6">
           <StatCard
-            title="Total Login Users"
+            title="Total Users"
             value={users.filter(u => u.role !== 'Admin' && u.um_id !== 1 && u.email !== 'admin@umerch.com' && (u.status === 'active' || u.status === 'Active')).length}
             className="bg-green-700"
             icon={<img src={TotalLoginUsers} alt="Total Login Users" className="w-20 h-20" />}

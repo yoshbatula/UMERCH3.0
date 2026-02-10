@@ -28,6 +28,7 @@ class InventoryController extends Controller
             'product_name' => 'required',
             'product_price' => 'required|numeric|min:0',
             'variant' => 'required',
+            'variant_type' => 'required',
             'product_image' => 'nullable|image'
         ]);
 
@@ -48,6 +49,7 @@ class InventoryController extends Controller
                 'product_price' => $request->product_price,
                 'product_description' => $request->product_description,
                 'product_image' => $imagePath ? Storage::url($imagePath) : $existingProduct->product_image,
+                'variant_type' => $request->variant_type,
                 'status' => 'active',
             ]);
 
@@ -63,6 +65,7 @@ class InventoryController extends Controller
                 'product_name' => $request->product_name,
                 'product_price' => $request->product_price,
                 'variant' => $request->variant,
+                'variant_type' => $request->variant_type,
                 'product_description' => $request->product_description,
                 'product_stock' => 0,
                 'product_image' => $imagePath ? Storage::url($imagePath) : $sameNameProduct->product_image,
@@ -77,6 +80,7 @@ class InventoryController extends Controller
             'product_name' => $request->product_name,
             'product_price' => $request->product_price,
             'variant' => $request->variant,
+            'variant_type' => $request->variant_type,
             'product_description' => $request->product_description,
             'product_stock' => 0,
             'product_image' => $imagePath ? Storage::url($imagePath) : null,
@@ -108,6 +112,7 @@ class InventoryController extends Controller
             'product_name' => $request->product_name,
             'product_price' => $request->product_price,
             'variant' => $request->variant,
+            'variant_type' => $request->variant_type,
             'product_description' => $request->product_description,
         ];
 

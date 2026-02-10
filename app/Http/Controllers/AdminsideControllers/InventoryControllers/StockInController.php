@@ -54,6 +54,53 @@ class StockInController extends Controller
             $product = Products::findOrFail($request->product_id);
             $variant = trim($request->variant);
 
+            // If product doesn't have a variant yet, create product variant records if needed
+            if (!$product->variant || empty($product->variant)) {
+                // Check if a product with this name and variant already exists
+                $variantProduct = Products::where('product_name', $product->product_name)
+                    ->where('variant', $variant)
+                    ->first();
+
+                if (!$variantProduct) {
+                    // Create the product variant
+                    $variantProduct = Products::create([
+                        'product_name' => $product->product_name,
+                        'product_price' => $product->product_price,
+                        'product_description' => $product->product_description,
+                        'product_image' => $product->product_image,
+                        'variant' => $variant,
+                        'variant_type' => $product->variant_type,
+                        'product_stock' => 0,
+                        'status' => 'active',
+                    ]);
+                    $product = $variantProduct;
+                } else {
+                    $product = $variantProduct;
+                }
+            } else if ($product->variant !== $variant) {
+                // Product has a different variant, check if the new variant exists
+                $variantProduct = Products::where('product_name', $product->product_name)
+                    ->where('variant', $variant)
+                    ->first();
+
+                if (!$variantProduct) {
+                    // Create the product variant
+                    $variantProduct = Products::create([
+                        'product_name' => $product->product_name,
+                        'product_price' => $product->product_price,
+                        'product_description' => $product->product_description,
+                        'product_image' => $product->product_image,
+                        'variant' => $variant,
+                        'variant_type' => $product->variant_type,
+                        'product_stock' => 0,
+                        'status' => 'active',
+                    ]);
+                    $product = $variantProduct;
+                } else {
+                    $product = $variantProduct;
+                }
+            }
+
             // Increment overall product stock
             $product->increment('product_stock', $request->stock_qty);
 

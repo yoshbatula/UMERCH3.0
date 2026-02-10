@@ -34,6 +34,15 @@ export const useUserLogs = () => {
         fetchUsers();
     }, []);
 
+    // Auto-refresh users every 5 seconds
+    useEffect(() => {
+        const interval = setInterval(() => {
+            fetchUsers();
+        }, 5000);
+
+        return () => clearInterval(interval);
+    }, []);
+
     const showToast = (message) => {
         setToast(message);
         setShowingToast(true);
@@ -93,18 +102,23 @@ export const useUserLogs = () => {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
             },
         })
-            .then((res) => res.json())
-            .then((data) => {
-                if (data.message) {
-                    showToast('User reactivated successfully!');
-                    fetchUsers();
-                } else if (data.error) {
-                    showToast(data.error);
+            .then((res) => {
+                if (!res.ok) {
+                    return res.json().then(data => {
+                        throw new Error(data.error || 'Failed to reactivate user');
+                    }).catch(() => {
+                        throw new Error('Failed to reactivate user');
+                    });
                 }
+                return res.json();
+            })
+            .then((data) => {
+                showToast('User reactivated successfully!');
+                fetchUsers();
             })
             .catch((error) => {
                 console.error('Error reactivating user:', error);
-                showToast('Failed to reactivate user. Please try again.');
+                showToast(error.message || 'Failed to reactivate user. Please try again.');
             });
     };
 
@@ -118,18 +132,23 @@ export const useUserLogs = () => {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
             },
         })
-            .then((res) => res.json())
-            .then((data) => {
-                if (data.message) {
-                    showToast('User deactivated successfully!');
-                    fetchUsers();
-                } else if (data.error) {
-                    showToast(data.error);
+            .then((res) => {
+                if (!res.ok) {
+                    return res.json().then(data => {
+                        throw new Error(data.error || 'Failed to deactivate user');
+                    }).catch(() => {
+                        throw new Error('Failed to deactivate user');
+                    });
                 }
+                return res.json();
+            })
+            .then((data) => {
+                showToast('User deactivated successfully!');
+                fetchUsers();
             })
             .catch((error) => {
                 console.error('Error deactivating user:', error);
-                showToast('Failed to deactivate user. Please try again.');
+                showToast(error.message || 'Failed to deactivate user. Please try again.');
             });
     };
 

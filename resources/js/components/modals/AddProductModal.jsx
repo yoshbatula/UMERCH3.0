@@ -6,26 +6,41 @@ export default function AddProductModal({ open, isOpen, onClose, onSuccess }) {
     const [preview, setPreview] = useState(null);
     const [selectedVariantType, setSelectedVariantType] = useState("");
     const [existingProducts, setExistingProducts] = useState([]);
+    const [priceError, setPriceError] = useState("");
+
+    const variantTypesMap = {
+        size: ["XS", "S", "M", "L", "XL"],
+        mug: ["11oz", "13oz", "15oz"],
+        tumbler: ["12oz", "16oz", "20oz", "24oz"],
+        notebook: ["30 pages", "50 pages", "100 pages"],
+        pen: [],
+        umbrella: [],
+        keychain: [],
+        totebag: [],
+        pillow: [],
+    };
+
+    const variantTypes = [
+        { id: "size", label: "Size XS-XL", hasVariants: true },
+        { id: "mug", label: "Mug", hasVariants: true },
+        { id: "tumbler", label: "Tumbler", hasVariants: true },
+        { id: "notebook", label: "Notebook", hasVariants: true },
+        { id: "pen", label: "Pen", hasVariants: false },
+        { id: "umbrella", label: "Umbrella", hasVariants: false },
+        { id: "keychain", label: "Keychain", hasVariants: false },
+        { id: "totebag", label: "Tote bag", hasVariants: false },
+        { id: "pillow", label: "Pillow", hasVariants: false },
+    ];
 
     const { data, setData, post, processing, errors, reset, clearErrors } = useForm({
         product_name: "",
         product_price: "",
-        variant: "",
         product_description: "",
         product_image: null,
+        variant_type: "",
     });
 
-    const variantTypes = [
-        { id: "size", label: "Size XS-XL", options: ["XS", "S", "M", "L", "XL"] },
-        { id: "mug", label: "Mug", options: ["11oz", "15oz",] },
-        { id: "tumbler", label: "Tumbler", options: ["350ml", "500ml", "750ml"] },
-        { id: "notebook", label: "Notebook", options: ["50 pages", "80 pages", "100 pages"] },
-        { id: "pen", label: "Pen", options: ["Pen"] },
-        { id: "umbrella", label: "Umbrella", options: ["Umbrella"] },
-        { id: "keychain", label: "Keychain", options: ["Keychain"] },
-        { id: "totebag", label: "Tote bag", options: ["Tote bag"] },
-        { id: "pillow", label: "Pillow", options: ["Pillow"] },
-    ];
+
 
     const visible = typeof isOpen !== "undefined" ? isOpen : open;
 
@@ -33,6 +48,7 @@ export default function AddProductModal({ open, isOpen, onClose, onSuccess }) {
         if (!visible) {
             setPreview(null);
             setSelectedVariantType("");
+            setPriceError("");
         }
     }, [visible]);
 
@@ -50,17 +66,30 @@ export default function AddProductModal({ open, isOpen, onClose, onSuccess }) {
     const handleVariantTypeChange = (typeId) => {
         if (selectedVariantType === typeId) {
             setSelectedVariantType("");
-            setData("variant", "");
+            setData("variant_type", "");
         } else {
             setSelectedVariantType(typeId);
-            setData("variant", "");
+            setData("variant_type", typeId);
         }
     };
+
+
 
     if (!visible) return null;
 
     const handleInput = (e) => {
         const { name, value } = e.target;
+        
+        // Check for negative price and show error message
+        if (name === 'product_price') {
+            const numValue = parseFloat(value);
+            if (value && numValue < 0) {
+                setPriceError("Price cannot be negative. Please enter a valid price.");
+            } else {
+                setPriceError("");
+            }
+        }
+        
         setData(name, value);
         clearErrors(name);
     };
@@ -75,31 +104,60 @@ export default function AddProductModal({ open, isOpen, onClose, onSuccess }) {
     const handleSubmit = (e) => {
         e.preventDefault();
 
+        // Validate variant type is selected
+        if (!selectedVariantType) {
+            alert("Please select a variant type.");
+            return;
+        }
+
         // Validate price is not negative
+        if (priceError) {
+            alert("Price cannot be negative. Please enter a valid price.");
+            return;
+        }
+
         if (data.product_price && parseFloat(data.product_price) < 0) {
             alert("Price cannot be negative. Please enter a valid price.");
             return;
         }
 
-        // Check if product with same name and variant already exists
+        // Check if product with same name already exists
         const isDuplicate = existingProducts.some(
             (product) => 
-                product.product_name === data.product_name && 
-                product.variant === data.variant
+                product.product_name === data.product_name
         );
 
         if (isDuplicate) {
-            alert(`Product "${data.product_name}" with variation "${data.variant}" already exists!`);
+            alert(`Product "${data.product_name}" already exists!`);
             return;
         }
 
-        post("/admin/products", {
-            onSuccess: () => {
-                if (onSuccess) onSuccess();
-                reset();
-                setPreview(null);
-                onClose && onClose();
-            },
+        // Create FormData for file upload
+        const formData = new FormData();
+        formData.append('product_name', data.product_name);
+        formData.append('product_price', data.product_price);
+        formData.append('product_description', data.product_description);
+        formData.append('variant_type', selectedVariantType);
+        formData.append('variant', selectedVariantType); // Use variant_type as the variant
+        if (data.product_image) {
+            formData.append('product_image', data.product_image);
+        }
+
+        axios.post("/admin/products", formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            }
+        }).then(() => {
+            if (onSuccess) onSuccess();
+            reset();
+            setPreview(null);
+            setSelectedVariantType("");
+            setPriceError("");
+            onClose && onClose();
+        }).catch((error) => {
+            console.error('Error adding product:', error.response?.data || error.message);
+            alert('Failed to add product. Please try again.');
         });
     };
 
@@ -165,7 +223,7 @@ export default function AddProductModal({ open, isOpen, onClose, onSuccess }) {
                         <label className="text-sm font-semibold mb-2 block">Add Price:</label>
                         <input
                             type="number"
-                            min="1"
+                            min="0"
                             step="0.01"
                             placeholder="Enter Price"
                             name="product_price"
@@ -176,16 +234,19 @@ export default function AddProductModal({ open, isOpen, onClose, onSuccess }) {
                         {errors.product_price && (
                             <p className="text-red-600 text-xs mt-1">{errors.product_price}</p>
                         )}
+                        {priceError && (
+                            <p className="text-red-600 text-xs mt-1">{priceError}</p>
+                        )}
                     </div>
 
-                    {/* Variant Types */}
+                    {/* Variant Type */}
                     <div className="col-span-2">
                         <label className="text-sm font-semibold mb-2 block">
                             Variant Type <span className="text-red-600">*</span>
                         </label>
                         <div className="grid grid-cols-3 gap-3">
                             {variantTypes.map((type) => (
-                                <label key={type.id} className={`flex items-center gap-2 cursor-pointer ${selectedVariantType && selectedVariantType !== type.id ? 'hidden' : ''}`}>
+                                <label key={type.id} className="flex items-center gap-2 cursor-pointer">
                                     <input
                                         type="checkbox"
                                         checked={selectedVariantType === type.id}
@@ -196,34 +257,10 @@ export default function AddProductModal({ open, isOpen, onClose, onSuccess }) {
                                 </label>
                             ))}
                         </div>
+                        {!selectedVariantType && (
+                            <p className="text-red-600 text-xs mt-2">Please select a variant type</p>
+                        )}
                     </div>
-
-                    {/* Variation Options */}
-                    {selectedVariantType && (
-                        <div className="col-span-2">
-                            <label className="text-sm font-semibold mb-2 block">
-                                Variation <span className="text-red-600">*</span>
-                            </label>
-                            <select
-                                name="variant"
-                                value={data.variant}
-                                onChange={handleInput}
-                                className="w-full border rounded-full px-4 py-2 outline-red-600"
-                            >
-                                <option value="">Select Variation</option>
-                                {variantTypes
-                                    .find((t) => t.id === selectedVariantType)
-                                    ?.options.map((opt) => (
-                                        <option key={opt} value={opt}>
-                                            {opt}
-                                        </option>
-                                    ))}
-                            </select>
-                            {errors.variant && (
-                                <p className="text-red-600 text-xs mt-1">{errors.variant}</p>
-                            )}
-                        </div>
-                    )}
 
                     {/* Footer */}
                     <div className="col-span-2 flex justify-end gap-4">
