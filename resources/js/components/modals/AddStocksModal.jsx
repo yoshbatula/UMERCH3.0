@@ -106,19 +106,34 @@ export default function AddStock({ open, onClose, onSuccess }) {
         const finalVariant = variantOptions.length === 0 ? selected.variant_type : variation;
         
         const derivedCost = selected ? Number(selected.product_price) : 0;
-        router.post("/admin/stock-in/store", {
+        
+        // Log the submission data for debugging
+        const submitData = {
             product_id: selected?.product_id,
             variant: finalVariant,
             stock_qty: Number(quantity),
             cost: derivedCost,
-        }, {
+        };
+        console.log('Stock In Submit Data:', submitData);
+        
+        if (!submitData.cost || isNaN(submitData.cost)) {
+            alert("Invalid product price. Please select a valid product.");
+            return;
+        }
+        
+        router.post("/admin/stock-in/store", submitData, {
             onSuccess: () => {
+                console.log('Stock In Success');
                 if (onSuccess) onSuccess();
                 onClose();
                 setConfirm(false);
                 setProductId("");
                 setVariation("");
                 setQuantity("");
+            },
+            onError: (errors) => {
+                console.error('Stock In Error:', errors);
+                alert('Error adding stock: ' + JSON.stringify(errors));
             },
             preserveScroll: true,
             replace: true,

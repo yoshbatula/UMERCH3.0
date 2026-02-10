@@ -111,7 +111,7 @@ class InventoryController extends Controller
             'type' => 'Add Product',
             'quantity' => 0,
             'total' => 0,
-            'admin_action' => 'Admin_1' // Update with actual admin
+            'admin_action' => auth()->user()?->user_fullname ?? 'Admin'
         ]);
 
         return redirect()->back()->with('success', 'Product added successfully!');
@@ -147,7 +147,7 @@ class InventoryController extends Controller
             'type' => 'Edit Product',
             'quantity' => 0,
             'total' => $product->product_stock,
-            'admin_action' => 'Admin_1' // Update with actual admin
+            'admin_action' => auth()->user()?->user_fullname ?? 'Admin'
         ]);
 
         
@@ -165,7 +165,7 @@ class InventoryController extends Controller
             'type' => 'Delete Product',
             'quantity' => 0,
             'total' => $product->product_stock,
-            'admin_action' => 'Admin_1' // Update with actual admin
+            'admin_action' => auth()->user()?->user_fullname ?? 'Admin'
         ]);
 
         $product->delete();
@@ -186,7 +186,7 @@ class InventoryController extends Controller
             'type' => 'Archived',
             'quantity' => 0,
             'total' => $product->product_stock,
-            'admin_action' => 'Admin_1' // Update with actual admin
+            'admin_action' => auth()->user()?->user_fullname ?? 'Admin'
         ]);
         
         // Log to activity log
@@ -211,7 +211,7 @@ class InventoryController extends Controller
             'type' => 'Restored',
             'quantity' => 0,
             'total' => $product->product_stock,
-            'admin_action' => 'Admin_1' // Update with actual admin
+            'admin_action' => auth()->user()?->user_fullname ?? 'Admin'
         ]);
         
         // Log to activity log

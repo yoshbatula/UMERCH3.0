@@ -23,10 +23,16 @@ export const useInventoryLogs = () => {
                     per_page: perPage,
                 },
             });
-            setLogs(response.data.data);
-            setTotalPages(response.data.last_page);
+            
+            // Handle the response data - axios wraps the JSON in response.data
+            const logData = response.data;
+            setLogs(logData.data || []);
+            setTotalPages(logData.last_page || 1);
         } catch (error) {
             console.error("Error fetching inventory logs:", error);
+            console.error("Error response:", error.response?.data);
+            setLogs([]);
+            setTotalPages(1);
         } finally {
             setLoading(false);
         }
@@ -40,9 +46,11 @@ export const useInventoryLogs = () => {
                     per_page: 10000, // Get all logs
                 },
             });
-            setAllLogs(response.data.data);
+            setAllLogs(response.data.data || []);
         } catch (error) {
             console.error("Error fetching all logs:", error);
+            console.error("Error response:", error.response?.data);
+            setAllLogs([]);
         }
     };
 

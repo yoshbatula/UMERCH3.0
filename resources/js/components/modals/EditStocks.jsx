@@ -6,16 +6,9 @@ export default function EditStocks({ open, onClose, stock, onSuccess }) {
     const [quantity, setQuantity] = useState(stock?.stock_qty || "");
     const [quantityError, setQuantityError] = useState("");
     const [confirm, setConfirm] = useState(false);
-    const [products, setProducts] = useState([]);
 
     useEffect(() => {
         if (open && stock) {
-            // Fetch products to validate
-            axios.get("/admin/products").then(res => {
-                const activeProducts = res.data.filter(p => p.status === 'active');
-                setProducts(activeProducts);
-            });
-            
             setQuantity(stock.stock_qty);
         }
     }, [open, stock]);
@@ -24,22 +17,6 @@ export default function EditStocks({ open, onClose, stock, onSuccess }) {
 
     const handleUpdate = (e) => {
         e.preventDefault();
-        
-        // Validate if the product with this variant exists in active products
-        const productExists = products.find(
-            p => p.product_name === stock.product_name && p.variant === stock.variant
-        );
-        
-        if (!productExists) {
-            alert(`The product variant is not available. Please check the product table.`);
-            return;
-        }
-        
-        // Validate if product is active
-        if (productExists.status !== 'active') {
-            alert(`Cannot edit stock for an archived product. Please restore the product first.`);
-            return;
-        }
 
         // Validate quantity is not zero or negative
         if (!quantity || parseFloat(quantity) <= 0) {

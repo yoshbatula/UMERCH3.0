@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Orders;
 use App\Models\OrderItems;
 use App\Models\Products;
+use App\Models\Inventory;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -130,13 +131,26 @@ class DashboardController extends Controller
 
     public function getInventoryStatus()
     {
-        $lowStock = Products::where('product_stock', '>', 0)
-            ->where('product_stock', '<=', 5)
-            ->count();
-        
-        $outOfStock = Products::where('product_stock', 0)->count();
-        
-        $inStock = Products::where('product_stock', '>', 5)->count();
+        // Get inventory grouped by product_id and variant to count each variant separately
+        $inventorySummary = Inventory::selectRaw('product_id, variant, SUM(quantity) as total_quantity')
+            ->groupBy('product_id', 'variant')
+            ->get();
+
+        $lowStock = 0;
+        $outOfStock = 0;
+        $inStock = 0;
+
+        foreach ($inventorySummary as $item) {
+            $quantity = $item->total_quantity ?? 0;
+            
+            if ($quantity == 0) {
+                $outOfStock++;
+            } elseif ($quantity > 0 && $quantity <= 20) {
+                $lowStock++;
+            } else {
+                $inStock++;
+            }
+        }
 
         $total = $lowStock + $outOfStock + $inStock;
 
@@ -172,30 +186,30 @@ class DashboardController extends Controller
 
     public function getTopProducts(Request $request)
     {
-        $period = $request->get('period', 'weekly'); // weekly or monthly
+        $period = $request->get('period', 'weekly');
         $today = Carbon::today();
 
         if ($period === 'weekly') {
-            $startDate = $today->copy()->subWeek();
+            $startDate = $today->copy()->subDays(7);
         } else {
-            $startDate = $today->copy()->subMonth();
+            $startDate = $today->copy()->subDays(30);
         }
 
         // Get top products based on quantity sold
-        $topProducts = OrderItems::whereBetween('created_at', [$startDate, $today])
-            ->with('product')
+        $topProducts = OrderItems::whereBetween('created_at', [$startDate, $today->endOfDay()])
             ->selectRaw('product_id, SUM(quantity) as total_qty, SUM(subtotal) as total_sales')
             ->groupBy('product_id')
             ->orderByDesc('total_qty')
             ->take(4)
             ->get()
             ->map(function ($item, $index) {
+                $product = Products::find($item->product_id);
                 return [
                     'rank' => $index + 1,
-                    'name' => $item->product ? $item->product->product_name : 'Unknown',
-                    'category' => $item->product ? $item->product->variant : 'N/A',
-                    'quantity' => $item->total_qty,
-                    'sales' => $item->total_sales,
+                    'name' => $product ? $product->product_name : 'Unknown',
+                    'category' => $product ? $product->variant : 'N/A',
+                    'quantity' => (int)$item->total_qty,
+                    'sales' => (float)$item->total_sales,
                 ];
             });
 

@@ -18,22 +18,43 @@ class InventoryLogsController extends Controller
     // API endpoint to fetch inventory logs
     public function getLogs(Request $request)
     {
-        $query = InventoryLog::with('product')
-            ->orderBy('created_at', 'desc');
+        try {
+            $query = InventoryLog::query()
+                ->orderBy('created_at', 'desc');
 
-        // Apply filters if provided
-        if ($request->has('type') && $request->type !== 'all') {
-            $query->where('type', $request->type);
+            // Apply filters if provided
+            if ($request->has('type') && $request->type !== 'all') {
+                $query->where('type', $request->type);
+            }
+
+            if ($request->has('search') && $request->search) {
+                $query->where('item_name', 'like', '%' . $request->search . '%');
+            }
+
+            // Pagination
+            $perPage = $request->get('per_page', 10);
+            $logs = $query->paginate($perPage);
+
+            // Format the response to match frontend expectations
+            return response()->json([
+                'data' => $logs->items(),
+                'current_page' => $logs->currentPage(),
+                'last_page' => $logs->lastPage(),
+                'per_page' => $logs->perPage(),
+                'total' => $logs->total(),
+                'from' => $logs->firstItem(),
+                'to' => $logs->lastItem(),
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('InventoryLogsController Error: ' . $e->getMessage());
+            return response()->json([
+                'data' => [],
+                'current_page' => 1,
+                'last_page' => 1,
+                'per_page' => 10,
+                'total' => 0,
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        if ($request->has('search') && $request->search) {
-            $query->where('item_name', 'like', '%' . $request->search . '%');
-        }
-
-        // Pagination
-        $perPage = $request->get('per_page', 10);
-        $logs = $query->paginate($perPage);
-
-        return response()->json($logs);
     }
 }

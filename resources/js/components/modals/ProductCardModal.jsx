@@ -14,14 +14,14 @@ export default function ProductCardModal({ isOpen, onClose, product, onShowToast
 
     const variantTypesMap = {
         size: ["XS", "S", "M", "L", "XL"],
-        mug: ["11oz", "13oz", "15oz"],
+        mug: ["11ml", "13ml"],
         tumbler: ["12oz", "16oz", "20oz", "24oz"],
         notebook: ["30 pages", "50 pages", "100 pages"],
-        pen: ["Pen"],
-        umbrella: ["Umbrella"],
-        keychain: ["Keychain"],
-        totebag: ["Tote bag"],
-        pillow: ["Pillow"],
+        pen: ["pen"],
+        umbrella: ["umbrella"],
+        keychain: ["keychain"],
+        totebag: ["tote bag"],
+        pillow: ["pillow"],
     };
 
     // Fetch stock for each variant when modal opens

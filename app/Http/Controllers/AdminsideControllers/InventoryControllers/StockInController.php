@@ -43,79 +43,101 @@ class StockInController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'product_id' => 'required|exists:_products,product_id',
-            'variant' => 'required|string',
-            'stock_qty' => 'required|integer|min:1',
-            'cost' => 'required|numeric'
-        ]);
+        try {
+            $validated = $request->validate([
+                'product_id' => 'required|exists:_products,product_id',
+                'variant' => 'required|string',
+                'stock_qty' => 'required|integer|min:1',
+                'cost' => 'required|numeric'
+            ]);
 
-        DB::transaction(function () use ($request) {
-            $product = Products::findOrFail($request->product_id);
-            $variant = trim($request->variant);
+            DB::transaction(function () use ($request) {
+                $product = Products::findOrFail($request->product_id);
+                $variant = trim($request->variant);
 
-            // Just add to inventory, don't create new product records
-            $currentInv = Inventory::where('product_id', $product->product_id)
-                ->where('variant', trim($request->variant))
-                ->first();
-            $newQty = ($currentInv?->quantity ?? 0) + $request->stock_qty;
-            Inventory::updateOrCreate(
-                ['product_id' => $product->product_id, 'variant' => trim($request->variant)],
-                [
-                    'quantity' => $newQty,
-                    'status' => $this->getStatus($newQty),
-                    'cost' => $request->cost
-                ]
-            );
+                // Just add to inventory, don't create new product records
+                $currentInv = Inventory::where('product_id', $product->product_id)
+                    ->where('variant', trim($request->variant))
+                    ->first();
+                $newQty = ($currentInv?->quantity ?? 0) + $request->stock_qty;
+                Inventory::updateOrCreate(
+                    ['product_id' => $product->product_id, 'variant' => trim($request->variant)],
+                    [
+                        'quantity' => $newQty,
+                        'status' => $this->getStatus($newQty),
+                        'cost' => $request->cost
+                    ]
+                );
 
-            // Create stock-in log
-            $existing = StockIn::where('product_id', $product->product_id)
-                ->where('variant', $variant)
-                ->lockForUpdate()
-                ->first();
+                // Create stock-in log
+                $existing = StockIn::where('product_id', $product->product_id)
+                    ->where('variant', $variant)
+                    ->lockForUpdate()
+                    ->first();
 
-            if ($existing) {
-                $existing->update([
-                    'stock_qty' => $existing->stock_qty + $request->stock_qty,
-                    'cost' => $request->cost,
-                    'stock_in_date' => now(),
-                ]);
-            } else {
-                try {
-                    StockIn::create([
-                        'product_id' => $product->product_id,
-                        'variant' => $variant,
-                        'stock_qty' => $request->stock_qty,
+                if ($existing) {
+                    $existing->update([
+                        'stock_qty' => $existing->stock_qty + $request->stock_qty,
                         'cost' => $request->cost,
-                        'stock_in_date' => now()
+                        'stock_in_date' => now(),
                     ]);
-                } catch (\Illuminate\Database\QueryException $e) {
-                    $row = StockIn::where('product_id', $product->product_id)
-                        ->where('variant', $variant)
-                        ->lockForUpdate()
-                        ->first();
-                    if ($row) {
-                        $row->update([
-                            'stock_qty' => $row->stock_qty + $request->stock_qty,
+                } else {
+                    try {
+                        StockIn::create([
+                            'product_id' => $product->product_id,
+                            'variant' => $variant,
+                            'stock_qty' => $request->stock_qty,
                             'cost' => $request->cost,
-                            'stock_in_date' => now(),
+                            'stock_in_date' => now()
                         ]);
+                    } catch (\Illuminate\Database\QueryException $e) {
+                        $row = StockIn::where('product_id', $product->product_id)
+                            ->where('variant', $variant)
+                            ->lockForUpdate()
+                            ->first();
+                        if ($row) {
+                            $row->update([
+                                'stock_qty' => $row->stock_qty + $request->stock_qty,
+                                'cost' => $request->cost,
+                                'stock_in_date' => now(),
+                            ]);
+                        }
                     }
                 }
-            }
 
-            // Log the stock-in activity
-            InventoryLog::create([
-                'product_id' => $product->product_id,
-                'item_name' => $product->product_name . ' - ' . $variant,
-                'type' => 'Stock In',
-                'quantity' => $request->stock_qty,
-                'total' => $newQty,
-                'admin_action' => auth()->user()?->user_fullname ?? 'Admin'
+                // Log the stock-in activity
+                InventoryLog::create([
+                    'product_id' => $product->product_id,
+                    'item_name' => $product->product_name . ' - ' . $variant,
+                    'type' => 'Stock In',
+                    'quantity' => $request->stock_qty,
+                    'total' => $newQty,
+                    'admin_action' => auth()->user()?->user_fullname ?? 'Admin'
+                ]);
+
+                \Log::info('Stock In Created', [
+                    'product_id' => $product->product_id,
+                    'item_name' => $product->product_name . ' - ' . $variant,
+                    'quantity' => $request->stock_qty,
+                    'total' => $newQty,
+                    'admin' => auth()->user()?->user_fullname ?? 'Admin'
+                ]);
+            });
+
+            return redirect()->back()->with('success', 'Stock added successfully!');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('Stock In Validation Error', [
+                'errors' => $e->errors(),
+                'request_data' => $request->all()
             ]);
-        });
-
-        return redirect()->back()->with('success', 'Stock added successfully!');
+            return redirect()->back()->withErrors($e->errors());
+        } catch (\Throwable $e) {
+            \Log::error('Stock In Error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return redirect()->back()->withErrors(['error' => $e->getMessage()]);
+        }
     }
 
     public function update(Request $request, $id)
@@ -125,92 +147,148 @@ class StockInController extends Controller
             'stock_qty' => 'required|integer|min:0',
         ]);
 
-        return \Illuminate\Support\Facades\DB::transaction(function () use ($request, $id) {
-            $log = StockIn::lockForUpdate()->findOrFail($id);
-            $product = Products::findOrFail($log->product_id);
+        try {
+            return \Illuminate\Support\Facades\DB::transaction(function () use ($request, $id) {
+                $log = StockIn::lockForUpdate()->findOrFail($id);
+                $product = Products::findOrFail($log->product_id);
 
-            $newVariant = trim($request->variant);
-            $newQty = (int) $request->stock_qty;
-            $delta = $newQty - (int) $log->stock_qty;
+                $newVariant = trim($request->variant);
+                $newQty = (int) $request->stock_qty;
+                $delta = $newQty - (int) $log->stock_qty;
 
-            // Adjust product stock by delta
-            if ($delta !== 0) {
-                $product->increment('product_stock', $delta);
-            }
+                // Adjust product stock by delta
+                if ($delta !== 0) {
+                    $product->increment('product_stock', $delta);
+                }
 
-            // Update or create inventory record
-            $currentInv = Inventory::where('product_id', $log->product_id)
-                ->where('variant', $newVariant)
-                ->first();
-            $invNewQty = ($currentInv?->quantity ?? 0) + $delta;
-            Inventory::updateOrCreate(
-                ['product_id' => $log->product_id, 'variant' => $newVariant],
-                [
-                    'quantity' => max(0, $invNewQty),
-                    'status' => $this->getStatus(max(0, $invNewQty)),
-                    'cost' => $log->cost
-                ]
-            );
-
-            // If variant changes and there is an existing row for the new variant, merge
-            if ($newVariant !== $log->variant) {
-                $existing = StockIn::where('product_id', $log->product_id)
+                // Update or create inventory record
+                $currentInv = Inventory::where('product_id', $log->product_id)
                     ->where('variant', $newVariant)
-                    ->lockForUpdate()
                     ->first();
+                $invNewQty = ($currentInv?->quantity ?? 0) + $delta;
+                Inventory::updateOrCreate(
+                    ['product_id' => $log->product_id, 'variant' => $newVariant],
+                    [
+                        'quantity' => max(0, $invNewQty),
+                        'status' => $this->getStatus(max(0, $invNewQty)),
+                        'cost' => $log->cost
+                    ]
+                );
 
-                if ($existing) {
-                    $existing->update([
-                        'stock_qty' => (int) $existing->stock_qty + $newQty,
-                        'stock_in_date' => now(),
-                    ]);
-                    $log->delete();
+                // If variant changes and there is an existing row for the new variant, merge
+                if ($newVariant !== $log->variant) {
+                    $existing = StockIn::where('product_id', $log->product_id)
+                        ->where('variant', $newVariant)
+                        ->lockForUpdate()
+                        ->first();
+
+                    if ($existing) {
+                        $existing->update([
+                            'stock_qty' => (int) $existing->stock_qty + $newQty,
+                            'stock_in_date' => now(),
+                        ]);
+                        $log->delete();
+                    } else {
+                        $log->update([
+                            'variant' => $newVariant,
+                            'stock_qty' => $newQty,
+                            'stock_in_date' => now(),
+                        ]);
+                    }
                 } else {
                     $log->update([
-                        'variant' => $newVariant,
                         'stock_qty' => $newQty,
                         'stock_in_date' => now(),
                     ]);
                 }
-            } else {
-                $log->update([
-                    'stock_qty' => $newQty,
-                    'stock_in_date' => now(),
-                ]);
-            }
 
-            return redirect()->back()->with('success', 'Stock updated successfully!');
-        });
+                // Log the stock edit activity
+                InventoryLog::create([
+                    'product_id' => $product->product_id,
+                    'item_name' => $product->product_name . ' - ' . $newVariant,
+                    'type' => 'Edit Product',
+                    'quantity' => $delta,
+                    'total' => max(0, $invNewQty),
+                    'admin_action' => auth()->user()?->user_fullname ?? 'Admin'
+                ]);
+
+                \Log::info('Stock In Updated', [
+                    'product_id' => $product->product_id,
+                    'item_name' => $product->product_name . ' - ' . $newVariant,
+                    'delta' => $delta,
+                    'new_quantity' => max(0, $invNewQty),
+                    'admin' => auth()->user()?->user_fullname ?? 'Admin'
+                ]);
+
+                return redirect()->back()->with('success', 'Stock updated successfully!');
+            });
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('Stock In Validation Error', [
+                'errors' => $e->errors()
+            ]);
+            return redirect()->back()->withErrors($e->errors());
+        } catch (\Throwable $e) {
+            \Log::error('Stock In Update Error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return redirect()->back()->withErrors(['error' => $e->getMessage()]);
+        }
     }
 
     public function destroy($id)
     {
-        return \Illuminate\Support\Facades\DB::transaction(function () use ($id) {
-            $log = StockIn::lockForUpdate()->findOrFail($id);
-            $product = Products::findOrFail($log->product_id);
+        try {
+            return \Illuminate\Support\Facades\DB::transaction(function () use ($id) {
+                $log = StockIn::lockForUpdate()->findOrFail($id);
+                $product = Products::findOrFail($log->product_id);
 
-            // Decrease product stock by the logged quantity (not below zero)
-            $decrement = (int) $log->stock_qty;
-            if ($decrement > 0) {
-                $newStock = max(0, (int) $product->product_stock - $decrement);
-                $product->update(['product_stock' => $newStock]);
-            }
+                // Decrease product stock by the logged quantity (not below zero)
+                $decrement = (int) $log->stock_qty;
+                if ($decrement > 0) {
+                    $newStock = max(0, (int) $product->product_stock - $decrement);
+                    $product->update(['product_stock' => $newStock]);
+                }
 
-            // Update inventory record
-            $inventory = Inventory::where('product_id', $log->product_id)
-                ->where('variant', $log->variant)
-                ->first();
-            if ($inventory) {
-                $newInvQty = max(0, $inventory->quantity - $decrement);
-                $inventory->update([
-                    'quantity' => $newInvQty,
-                    'status' => $this->getStatus($newInvQty)
+                // Update inventory record
+                $inventory = Inventory::where('product_id', $log->product_id)
+                    ->where('variant', $log->variant)
+                    ->first();
+                if ($inventory) {
+                    $newInvQty = max(0, $inventory->quantity - $decrement);
+                    $inventory->update([
+                        'quantity' => $newInvQty,
+                        'status' => $this->getStatus($newInvQty)
+                    ]);
+                }
+
+                // Create inventory log for the deletion
+                InventoryLog::create([
+                    'product_id' => $product->product_id,
+                    'item_name' => $product->product_name . ' - ' . $log->variant,
+                    'type' => 'Stock Out',
+                    'quantity' => -$decrement,
+                    'total' => max(0, ($inventory?->quantity ?? 0) - $decrement),
+                    'admin_action' => auth()->user()?->user_fullname ?? 'Admin'
                 ]);
-            }
 
-            $log->delete();
+                $log->delete();
 
-            return redirect()->back()->with('success', 'Stock deleted successfully!');
-        });
+                \Log::info('Stock In Deleted', [
+                    'product_id' => $product->product_id,
+                    'item_name' => $product->product_name . ' - ' . $log->variant,
+                    'quantity_deleted' => -$decrement,
+                    'admin' => auth()->user()?->user_fullname ?? 'Admin'
+                ]);
+
+                return redirect()->back()->with('success', 'Stock deleted successfully!');
+            });
+        } catch (\Throwable $e) {
+            \Log::error('Stock In Delete Error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return redirect()->back()->withErrors(['error' => $e->getMessage()]);
+        }
     }
 }
