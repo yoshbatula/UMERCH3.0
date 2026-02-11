@@ -20,6 +20,8 @@ const StatCard = ({ title, value, className = "bg-green-700", icon }) => (
     </div>
 );
 
+// I hope our system is going to function
+
 function InventoryLogs() {
     const { logs, allLogs, loading, query, setQuery, typeFilter, setTypeFilter, currentPage, setCurrentPage,
         totalPages, formatDate, getTypeBadgeColor, } = useInventoryLogs();
