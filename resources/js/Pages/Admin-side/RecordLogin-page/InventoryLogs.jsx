@@ -20,7 +20,7 @@ const StatCard = ({ title, value, className = "bg-green-700", icon }) => (
     </div>
 );
 
-// I hope our system is going to function well, and I hope that we can finish this project on time. I am really excited to see how it turns out and I am looking forward to working with everyone on this project. Let's do our best and make this project a success!
+
 
 function InventoryLogs() {
     const { logs, allLogs, loading, query, setQuery, typeFilter, setTypeFilter, currentPage, setCurrentPage,
