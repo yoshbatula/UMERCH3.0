@@ -30,6 +30,7 @@ export default function Login() {
 
     return (
         <>
+        {/* LOGIN COMPONENTS */}
             <div>
                 {/* Navigation components */}
                 <Navbar onSignInClick={handleSignInClick}/>
