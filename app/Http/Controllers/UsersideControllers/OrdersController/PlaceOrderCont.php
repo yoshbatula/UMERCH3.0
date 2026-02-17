@@ -185,14 +185,28 @@ class PlaceOrderCont extends Controller
             $fileName = 'receipt_' . $orderId . '_' . time() . '.' . $file->getClientOriginalExtension();
             $filePath = $file->storeAs('receipts', $fileName, 'public');
 
-            // Update order with receipt_form path
-            $order->update([
+            // Update order with receipt_form path and status
+            // If order was Cancelled, change it to Pending (To-Pay)
+            $updateData = [
                 'receipt_form' => $filePath
-            ]);
+            ];
+            
+            if (strtolower($order->status) === 'cancelled') {
+                $updateData['status'] = 'Pending';
+            }
+            
+            $order->update($updateData);
+            
+            // Refresh the model to ensure receipt_form is updated
+            $order->refresh();
+            
+            Log::info("Order {$orderId} updated with receipt_form: " . $order->receipt_form);
 
             return response()->json([
                 'message' => 'Receipt uploaded successfully',
-                'file_path' => $filePath
+                'file_path' => $filePath,
+                'new_status' => $order->status,
+                'receipt_form' => $order->receipt_form ?? $filePath
             ], 200);
         } catch (\Exception $e) {
             return response()->json([

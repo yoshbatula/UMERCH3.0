@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from "react";
 import { usePage, router } from '@inertiajs/react';
 
-export default function Authentication({ email }) {
+export default function Authentication({ email, flash = {} }) {
     const inputLength = 6;
     const [values, setValues] = useState(Array(inputLength).fill(""));
     const inputsRef = useRef([]);
@@ -10,12 +10,29 @@ export default function Authentication({ email }) {
     const [isResending, setIsResending] = useState(false);
     const [expiredError, setExpiredError] = useState(false);
     const [otpError, setOtpError] = useState('');
+    const [successMessage, setSuccessMessage] = useState('');
     const page = usePage();
     const { errors } = page.props;
     
     // Debug log to see what's in props
     console.log('Page props:', page.props);
     console.log('Errors object:', errors);
+    console.log('Flash object:', flash);
+
+    // Handle flash message when OTP is resent
+    useEffect(() => {
+        if (flash?.status) {
+            setSuccessMessage(flash.status);
+            setCooldown(60);
+            setOtpError(''); // Clear any previous errors
+            setExpiredError(false);
+            setValues(Array(inputLength).fill("")); // Clear the input fields
+            const timer = setTimeout(() => {
+                setSuccessMessage('');
+            }, 5000);
+            return () => clearTimeout(timer);
+        }
+    }, [flash?.status]);
 
     useEffect(() => {
         if (cooldown > 0) {
@@ -108,17 +125,28 @@ export default function Authentication({ email }) {
         setOtpError('');
         
         router.post('/verify-otp', { otp }, {
+            preserveScroll: true,
+            onError: () => {
+                setIsVerifying(false);
+            },
             onFinish: () => setIsVerifying(false),
         });
     };
 
-    const handleResend = () => {
+    const handleResend = (e) => {
+        e?.preventDefault();
         if (cooldown === 0) {
             setIsResending(true);
             router.post('/resend-otp', {}, {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setCooldown(60);
+                },
+                onError: () => {
+                    setIsResending(false);
+                },
                 onFinish: () => setIsResending(false),
             });
-            setCooldown(60);
         }
     };
 
@@ -163,6 +191,11 @@ export default function Authentication({ email }) {
                                 Please request a new verification code.
                             </p>
                         )}
+                    </div>
+                )}
+                {successMessage && (
+                    <div className="mt-4 text-green-600 text-center">
+                        <p>{successMessage}</p>
                     </div>
                 )}
                 <div className="mt-7 flex justify-center items-center">

@@ -19,6 +19,7 @@ class StockOutController extends Controller
                     'stock_outs.stock_out_id as id',
                     'stock_outs.date_time',
                     '_products.product_name',
+                    '_products.variant',
                     'stock_outs.quantity',
                     'stock_outs.modified_by'
                 )

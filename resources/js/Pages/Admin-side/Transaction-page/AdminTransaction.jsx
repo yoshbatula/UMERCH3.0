@@ -115,7 +115,11 @@ export default function AdminTransaction() {
                         paginatedOrders.map((order) => (
                             <div
                                 key={order.order_id}
-                                className="bg-white rounded-lg border border-gray-200 p-4 flex items-center justify-between hover:shadow-md transition"
+                                onClick={() => {
+                                    setSelectedOrder(order);
+                                    setIsModalOpen(true);
+                                }}
+                                className="bg-white rounded-lg border border-gray-200 p-4 flex items-center justify-between hover:shadow-md transition cursor-pointer hover:bg-gray-50"
                             >
                                 {/* Left - Info */}
                                 <div className="flex items-start flex-1">
@@ -141,21 +145,12 @@ export default function AdminTransaction() {
                                     </span>
                                 </div>
 
-                                {/* Right - Total + Action */}
+                                {/* Right - Total */}
                                 <div className="flex items-center gap-6 justify-end">
                                     <div className="text-right">
                                         <p className="text-xs text-red-600 font-semibold">To Pay</p>
                                         <p className="text-lg font-bold text-red-700">₱{Number(order.order_total || 0).toFixed(2)}</p>
                                     </div>
-                                    <button
-                                        onClick={() => {
-                                            setSelectedOrder(order);
-                                            setIsModalOpen(true);
-                                        }}
-                                        className="text-blue-600 hover:text-blue-800 font-semibold"
-                                    >
-                                        ℹ️
-                                    </button>
                                 </div>
                             </div>
                         ))

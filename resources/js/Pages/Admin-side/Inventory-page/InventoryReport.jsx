@@ -204,6 +204,9 @@ export default function InventoryReport() {
                                                 Product Name
                                             </th>
                                             <th className="px-6 py-4 text-left text-sm font-bold">
+                                                Status
+                                            </th>
+                                            <th className="px-6 py-4 text-left text-sm font-bold">
                                                 Variant
                                             </th>
                                             <th className="px-6 py-4 text-right text-sm font-bold">
@@ -240,6 +243,15 @@ export default function InventoryReport() {
                                                 </td>
                                                 <td className="px-6 py-4 text-sm font-semibold text-gray-900">
                                                     {row.product_name}
+                                                </td>
+                                                <td className="px-6 py-4 text-sm">
+                                                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                                                        row.status === 'active' 
+                                                            ? 'bg-green-100 text-green-800' 
+                                                            : 'bg-gray-100 text-gray-800'
+                                                    }`}>
+                                                        {row.status === 'active' ? 'Active' : 'Archived'}
+                                                    </span>
                                                 </td>
                                                 <td className="px-6 py-4 text-sm text-gray-600">
                                                     {row.variant_type}

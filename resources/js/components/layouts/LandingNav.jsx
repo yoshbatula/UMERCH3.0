@@ -1,5 +1,5 @@
-import React from 'react';
-import { Link, usePage } from '@inertiajs/react';
+import React, { useState } from 'react';
+import { Link, usePage, useForm } from '@inertiajs/react';
 import Logo from '@images/UMERCH-LOGO.svg';
 import CartIcon from '@images/CartIcon.svg';
 import NotificationIcon from '@images/NotificationIcon.svg';
@@ -10,6 +10,8 @@ export default function LandingNav() {
     const url = page.url;
     const auth = page.props.auth;
     const userName = auth?.user?.name || 'User';
+    const { post } = useForm();
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     
     const isActive = (href) => {
         if (!url) return false;
@@ -18,6 +20,11 @@ export default function LandingNav() {
         // Check if url starts with the href
         if (url.startsWith(href) && href !== '/') return true;
         return false;
+    };
+
+    const handleLogout = () => {
+        post('/logout');
+        setIsDropdownOpen(false);
     };
 
     return (
@@ -44,12 +51,24 @@ export default function LandingNav() {
                 <div className='flex flex-row gap-x-7 items-center font-bold ml-auto text-white font-montserrat'>
                     <Link href="/Cart" prefetch><img src={CartIcon} alt="Cart Icon"/></Link>
                     <Link href="#"><img src={NotificationIcon} alt="Notification Icon"/></Link>
-                    <div className='flex flex-row gap-1 items-center'>
+                    <div className='flex flex-row gap-1 items-center relative'>
                         <Link href="#"><img src={UserAvatar} alt="User Avatar"/></Link>
-                        <span className='text-[16px] font-bold'>Hi, {userName}</span>
-                        <select name="user-options" id="user-options">
-                            <option value=""></option>
-                        </select>
+                        <button 
+                            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                            className='bg-[#9C0306] text-white hover:text-[#FFB600] cursor-pointer'
+                        >
+                            {userName}
+                        </button>
+                        {isDropdownOpen && (
+                            <div className='absolute top-full mt-1 bg-[#9C0306] border border-[#FFB600] rounded w-32 right-0'>
+                                <button 
+                                    onClick={handleLogout}
+                                    className='w-full text-left px-4 py-2 text-white hover:bg-[#8B0204] hover:text-[#FFB600] transition'
+                                >
+                                    Logout
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

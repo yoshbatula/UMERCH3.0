@@ -68,7 +68,7 @@ const ProductActionModal = ({ product, onEdit, onArchive, onRestore, onDelete })
                                 }}
                                 className="w-full px-4 py-2 text-center text-sm font-medium text-white bg-gray-500 hover:bg-gray-600 rounded-full transition-colors"
                             >
-                                Deactivate
+                                Archive
                             </button>
                         ) : (
                             <button

@@ -25,6 +25,9 @@ Route::get('/api/products', [InventoryController::class, 'userProducts'])->name(
 // Protected routes for authenticated users
 Route::middleware(['auth'])->group(function () {
     
+    // Logout route
+    Route::post('/logout', [AuthCont::class, 'logout'])->name('logout');
+    
     // This routes for authentications
     Route::get('/authentication', [AuthCont::class, 'showAuthenticationPage'])->name('authentication');
     Route::post('/resend-otp', [AuthCont::class, 'resendOtp'])->name('resend.otp');

@@ -22,8 +22,8 @@ class InventoryReportController extends Controller
             $filterType = $request->query('filterType', 'day'); // day, week, month
             $filterDate = $request->query('filterDate', now()->toDateString()); // YYYY-MM-DD
 
-            // Get all active products
-            $products = Products::where('status', 'active')->get();
+            // Get all products (both active and archived)
+            $products = Products::get();
 
             if ($products->isEmpty()) {
                 return response()->json([
@@ -93,6 +93,7 @@ class InventoryReportController extends Controller
                     'product_id' => $product->product_id,
                     'product_name' => $product->product_name,
                     'variant_type' => $product->variant_type,
+                    'status' => $product->status,
                     'unit_price' => (float)$product->product_price,
                     'sold_qty' => $soldQty,
                     'sold_value' => round($soldValue, 2),

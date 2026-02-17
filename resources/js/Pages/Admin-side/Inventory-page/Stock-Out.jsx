@@ -88,10 +88,11 @@ export default function StockOut() {
                 {/* Table */}
                 <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
                     <div className="grid grid-cols-12 px-8 py-4 text-sm font-bold text-red-700 border-b gap-4">
-                        <div className="col-span-3">Date / Time</div>
-                        <div className="col-span-4">Product</div>
-                        <div className="col-span-3">Quantity</div>
-                        <div className="col-span-2">Modifier</div>
+                        <div className="col-span-2">Date / Time</div>
+                        <div className="col-span-3">Product</div>
+                        <div className="col-span-2">Variant</div>
+                        <div className="col-span-2">Quantity</div>
+                        <div className="col-span-3">Modifier</div>
                     </div>
 
                     <div className="min-h-[420px]">
@@ -105,10 +106,11 @@ export default function StockOut() {
                                     key={log.id}
                                     className="grid grid-cols-12 px-8 py-4 border-b text-sm gap-4"
                                 >
-                                    <div className="col-span-3">{log.date_time}</div>
-                                    <div className="col-span-4">{log.product_name}</div>
-                                    <div className="col-span-3">{log.quantity}</div>
-                                    <div className="col-span-2">{log.modified_by}</div>
+                                    <div className="col-span-2">{log.date_time}</div>
+                                    <div className="col-span-3">{log.product_name}</div>
+                                    <div className="col-span-2">{log.variant || '-'}</div>
+                                    <div className="col-span-2">{log.quantity}</div>
+                                    <div className="col-span-3">{log.modified_by}</div>
                                 </div>
                             ))
                         )}

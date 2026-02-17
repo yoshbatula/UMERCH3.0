@@ -9,6 +9,12 @@ import axios from 'axios';
 export default function Cancelled() {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [toast, setToast] = useState(null);
+
+    const showToast = (message, type = 'success') => {
+        setToast({ message, type });
+        setTimeout(() => setToast(null), 3000);
+    };
 
     useEffect(() => {
         fetchOrders();
@@ -29,6 +35,49 @@ export default function Cancelled() {
             setOrders([]);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleFileUpload = (orderId) => {
+        const fileInput = document.getElementById(`file-input-${orderId}`);
+        fileInput?.click();
+    };
+
+    const handleFileChange = async (event, orderId) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            console.log(`✅ File selected for order ${orderId}:`, file.name);
+            
+            try {
+                // Create FormData to send file to backend
+                const formData = new FormData();
+                formData.append('receipt_form', file);
+                
+                console.log(`⏳ Uploading file for order ${orderId}...`);
+                
+                // Send to backend to save in database
+                const response = await axios.post(`/api/orders/${orderId}/upload-receipt`, formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    }
+                });
+                
+                console.log(`✅ File uploaded successfully:`, response.data);
+                console.log(`📁 Receipt form path:`, response.data?.file_path);
+                
+                // Show success toast
+                showToast('✅ File uploaded successfully! Moving to To-Pay...', 'success');
+                
+                // Wait 2 seconds before refreshing so user can see the toast
+                setTimeout(async () => {
+                    setLoading(true);
+                    await fetchOrders();
+                }, 2000);
+            } catch (error) {
+                console.error(`❌ Error uploading file for order ${orderId}:`, error);
+                const errorMsg = error.response?.data?.message || error.message || 'Error uploading file. Please try again.';
+                showToast(errorMsg, 'error');
+            }
         }
     };
 
@@ -123,15 +172,35 @@ export default function Cancelled() {
                                 <h1 className="text-[#9C0306] text-[20px] font-medium">₱{Number(order.order_total || 0).toFixed(2)}</h1>
                             </div>
                             <div className='p-4 flex flex-row ml-auto items-center'>
-                                <button className='w-30 bg-white border border-[#9C0306] text-[#9C0306] text-[14px] py-2 rounded-[10px] hover:cursor-pointer'>
+                                <button 
+                                    onClick={() => handleFileUpload(order.order_id)}
+                                    className='w-30 bg-white border border-[#9C0306] text-[#9C0306] text-[14px] py-2 rounded-[10px] hover:cursor-pointer hover:bg-[#9C0306] hover:text-white transition duration-300'>
                                     Reupload File
                                 </button>
+                                <input 
+                                    id={`file-input-${order.order_id}`}
+                                    type="file" 
+                                    accept="image/*,.pdf"
+                                    onChange={(e) => handleFileChange(e, order.order_id)}
+                                    style={{ display: 'none' }}
+                                />
                             </div>
                         </div>
                     ))}
                 </div>
             </div>
             <Footer/>
+            
+            {/* Toast Notification */}
+            {toast && (
+                <div
+                    className={`fixed bottom-6 right-6 px-6 py-4 rounded-lg shadow-xl text-white z-[999] font-semibold ${
+                        toast.type === 'success' ? 'bg-green-500' : 'bg-red-500'
+                    }`}
+                >
+                    {toast.message}
+                </div>
+            )}
         </>
     );
 }
