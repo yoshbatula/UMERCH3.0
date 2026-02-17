@@ -29,6 +29,36 @@ class AddCartCont extends Controller {
         $userId = Auth::id();
         $productId = $request->product_id;
         $variant = trim($request->variant);
+        $quantityRequested = $request->quantity;
+
+        // Check stock availability
+        $inventoryItem = Inventory::where('product_id', $productId)
+            ->where('variant', $variant)
+            ->first();
+
+        $availableStock = $inventoryItem ? $inventoryItem->quantity : 0;
+
+        // Fallback to product_stock if inventory doesn't have the variant
+        if ($availableStock === 0) {
+            $product = Products::where('product_id', $productId)->first();
+            $availableStock = $product ? $product->product_stock : 0;
+        }
+
+        // Validate stock is available
+        if ($availableStock <= 0) {
+            return response()->json([
+                'message' => 'This product variant is out of stock',
+                'available_stock' => 0
+            ], 400);
+        }
+
+        if ($quantityRequested > $availableStock) {
+            return response()->json([
+                'message' => 'Insufficient stock available',
+                'requested' => $quantityRequested,
+                'available_stock' => $availableStock
+            ], 400);
+        }
 
         $cart = Carts::firstOrCreate(['user_id' => $userId]);
 
@@ -38,9 +68,21 @@ class AddCartCont extends Controller {
             ->first();
 
         if ($existingItem) {
+            $newQuantity = $existingItem->quantity + $quantityRequested;
+            
+            // Check if total quantity exceeds available stock
+            if ($newQuantity > $availableStock) {
+                return response()->json([
+                    'message' => 'Total quantity exceeds available stock',
+                    'current_in_cart' => $existingItem->quantity,
+                    'requested_additional' => $quantityRequested,
+                    'total_requested' => $newQuantity,
+                    'available_stock' => $availableStock
+                ], 400);
+            }
             
             $existingItem->update([
-                'quantity' => $existingItem->quantity + $request->quantity
+                'quantity' => $newQuantity
             ]);
             return response()->json(['message' => 'Item quantity updated in cart'], 200);
         }
@@ -49,7 +91,7 @@ class AddCartCont extends Controller {
             'cart_id' => $cart->cart_id,
             'product_id' => $productId,
             'variant' => $variant,
-            'quantity' => $request->quantity,
+            'quantity' => $quantityRequested,
             'price' => $request->price
         ]);
 

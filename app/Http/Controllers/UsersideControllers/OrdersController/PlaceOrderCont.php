@@ -20,7 +20,6 @@ use Illuminate\Support\Facades\DB;
 
 class PlaceOrderCont extends Controller
 {
-    // 
     public function placeOrder(Request $request)
     {
         $validated = $request->validate([
@@ -38,6 +37,30 @@ class PlaceOrderCont extends Controller
                 return response()->json([
                     'message' => 'No items to order'
                 ], 400);
+            }
+
+            // Validate stock availability for all items before creating order
+            foreach ($validated['cart_items'] as $cartItem) {
+                $inventoryItem = Inventory::where('product_id', $cartItem['product_id'])
+                    ->where('variant', $cartItem['variant'] ?? '')
+                    ->first();
+
+                $availableStock = $inventoryItem ? $inventoryItem->quantity : 0;
+
+                // Fallback to product_stock if inventory doesn't have exact variant
+                if ($availableStock <= 0) {
+                    $product = Products::where('product_id', $cartItem['product_id'])->first();
+                    $availableStock = $product ? $product->product_stock : 0;
+                }
+
+                if ($availableStock < intval($cartItem['quantity'])) {
+                    return response()->json([
+                        'message' => 'Insufficient stock for product',
+                        'product_id' => $cartItem['product_id'],
+                        'requested' => intval($cartItem['quantity']),
+                        'available' => $availableStock
+                    ], 400);
+                }
             }
 
             // Create order
@@ -297,6 +320,26 @@ class PlaceOrderCont extends Controller
             $lowerCurrentStatus = strtolower($order->status);
             
             if ($lowerStatus === 'completed' && $lowerCurrentStatus !== 'completed') {
+                // First, validate that sufficient stock is available for all items
+                $orderItems = OrderItems::where('order_id', $order->order_id)->get();
+                
+                foreach ($orderItems as $item) {
+                    $product = Products::where('product_id', $item->product_id)->first();
+                    
+                    if (!$product || $product->product_stock < $item->quantity) {
+                        if (!$product) {
+                            return response()->json([
+                                'message' => 'Product not found',
+                                'error' => 'Product ID ' . $item->product_id . ' does not exist'
+                            ], 400);
+                        }
+                        return response()->json([
+                            'message' => 'Insufficient stock',
+                            'error' => 'Not enough stock for product. Current stock: ' . $product->product_stock . ', Required: ' . $item->quantity
+                        ], 400);
+                    }
+                }
+                
                 DB::transaction(function () use ($order, $modifiedByUser) {
                     // Get all order items
                     $orderItems = OrderItems::where('order_id', $order->order_id)->get();
