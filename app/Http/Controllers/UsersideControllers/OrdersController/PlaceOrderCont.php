@@ -320,22 +320,16 @@ class PlaceOrderCont extends Controller
             $lowerCurrentStatus = strtolower($order->status);
             
             if ($lowerStatus === 'completed' && $lowerCurrentStatus !== 'completed') {
-                // First, validate that sufficient stock is available for all items
+                // Validate that products exist
                 $orderItems = OrderItems::where('order_id', $order->order_id)->get();
                 
                 foreach ($orderItems as $item) {
                     $product = Products::where('product_id', $item->product_id)->first();
                     
-                    if (!$product || $product->product_stock < $item->quantity) {
-                        if (!$product) {
-                            return response()->json([
-                                'message' => 'Product not found',
-                                'error' => 'Product ID ' . $item->product_id . ' does not exist'
-                            ], 400);
-                        }
+                    if (!$product) {
                         return response()->json([
-                            'message' => 'Insufficient stock',
-                            'error' => 'Not enough stock for product. Current stock: ' . $product->product_stock . ', Required: ' . $item->quantity
+                            'message' => 'Product not found',
+                            'error' => 'Product ID ' . $item->product_id . ' does not exist'
                         ], 400);
                     }
                 }

@@ -25,13 +25,23 @@ export default function Shop() {
         setTimeout(() => setToast(null), 6000);
     };
 
-    // Group products by name and show only one per group
+    // Group products by name and calculate total stock across variants
     const groupProductsByName = (productList) => {
         const grouped = {};
         productList.forEach((product) => {
             if (!grouped[product.product_name]) {
-                grouped[product.product_name] = product;
+                grouped[product.product_name] = {
+                    ...product,
+                    product_stock: 0,
+                    variants: []
+                };
             }
+            // Add stock from all variants
+            grouped[product.product_name].product_stock += (product.product_stock || 0);
+            grouped[product.product_name].variants.push({
+                variant: product.variant,
+                stock: product.product_stock
+            });
         });
         return Object.values(grouped);
     };
