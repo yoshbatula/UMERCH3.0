@@ -9,6 +9,9 @@ use App\Models\StockIn;
 use App\Models\Inventory;
 use App\Models\InventoryLog;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
+use App\Models\User;
 
 class StockInController extends Controller
 {
@@ -104,6 +107,7 @@ class StockInController extends Controller
                         }
                     }
                 }
+                
 
                 // Log the stock-in activity
                 InventoryLog::create([
@@ -112,27 +116,27 @@ class StockInController extends Controller
                     'type' => 'Stock In',
                     'quantity' => $request->stock_qty,
                     'total' => $newQty,
-                    'admin_action' => auth()->user()?->user_fullname ?? 'Admin'
+                    'admin_action' => Auth::user()?->user_fullname ?? 'Admin'
                 ]);
 
-                \Log::info('Stock In Created', [
+                Log::info('Stock In Created', [
                     'product_id' => $product->product_id,
                     'item_name' => $product->product_name . ' - ' . $variant,
                     'quantity' => $request->stock_qty,
                     'total' => $newQty,
-                    'admin' => auth()->user()?->user_fullname ?? 'Admin'
+                    'admin' => Auth::user()?->user_fullname ?? 'Admin'
                 ]);
             });
 
             return redirect()->back()->with('success', 'Stock added successfully!');
         } catch (\Illuminate\Validation\ValidationException $e) {
-            \Log::error('Stock In Validation Error', [
+            Log::error('Stock In Validation Error', [
                 'errors' => $e->errors(),
                 'request_data' => $request->all()
             ]);
             return redirect()->back()->withErrors($e->errors());
         } catch (\Throwable $e) {
-            \Log::error('Stock In Error', [
+            Log::error('Stock In Error', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
@@ -209,26 +213,26 @@ class StockInController extends Controller
                     'type' => 'Edit Product',
                     'quantity' => $delta,
                     'total' => max(0, $invNewQty),
-                    'admin_action' => auth()->user()?->user_fullname ?? 'Admin'
+                    'admin_action' => Auth::user()?->user_fullname ?? 'Admin'
                 ]);
 
-                \Log::info('Stock In Updated', [
+                Log::info('Stock In Updated', [
                     'product_id' => $product->product_id,
                     'item_name' => $product->product_name . ' - ' . $newVariant,
                     'delta' => $delta,
                     'new_quantity' => max(0, $invNewQty),
-                    'admin' => auth()->user()?->user_fullname ?? 'Admin'
+                    'admin' => Auth::user()?->user_fullname ?? 'Admin'
                 ]);
 
                 return redirect()->back()->with('success', 'Stock updated successfully!');
             });
         } catch (\Illuminate\Validation\ValidationException $e) {
-            \Log::error('Stock In Validation Error', [
+            Log::error('Stock In Validation Error', [
                 'errors' => $e->errors()
             ]);
             return redirect()->back()->withErrors($e->errors());
         } catch (\Throwable $e) {
-            \Log::error('Stock In Update Error', [
+            Log::error('Stock In Update Error', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
@@ -269,22 +273,22 @@ class StockInController extends Controller
                     'type' => 'Stock Out',
                     'quantity' => -$decrement,
                     'total' => max(0, ($inventory?->quantity ?? 0) - $decrement),
-                    'admin_action' => auth()->user()?->user_fullname ?? 'Admin'
+                    'admin_action' => Auth::user()?->user_fullname ?? 'Admin'
                 ]);
 
                 $log->delete();
 
-                \Log::info('Stock In Deleted', [
+                Log::info('Stock In Deleted', [
                     'product_id' => $product->product_id,
                     'item_name' => $product->product_name . ' - ' . $log->variant,
                     'quantity_deleted' => -$decrement,
-                    'admin' => auth()->user()?->user_fullname ?? 'Admin'
+                    'admin' => Auth::user()?->user_fullname ?? 'Admin'
                 ]);
 
                 return redirect()->back()->with('success', 'Stock deleted successfully!');
             });
         } catch (\Throwable $e) {
-            \Log::error('Stock In Delete Error', [
+            Log::error('Stock In Delete Error', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
