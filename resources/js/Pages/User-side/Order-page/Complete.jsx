@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { router } from '@inertiajs/react';
 import BackgroundModel from '@images/BackgroundModel.png';
 import OrdersNav from '../../../components/layouts/OrdersNav';
 import Tshirt from '@images/tshirt.jpg';
@@ -9,6 +10,13 @@ import axios from 'axios';
 export default function Completed() {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [buyingAgain, setBuyingAgain] = useState(null);
+    const [toast, setToast] = useState(null);
+
+    const showToast = (message, type = 'success') => {
+        setToast({ message, type });
+        setTimeout(() => setToast(null), 6000);
+    };
 
     useEffect(() => {
         fetchOrders();
@@ -36,6 +44,69 @@ export default function Completed() {
         if (!dateString) return 'N/A';
         const date = new Date(dateString);
         return date.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, '/');
+    };
+
+    const handleBuyAgain = async (order) => {
+        try {
+            setBuyingAgain(order.order_id);
+            console.log(`✅ Adding items from order ${order.order_id} to cart...`);
+
+            let successCount = 0;
+            let outOfStockItems = [];
+
+            // Add each item from the order to the cart
+            for (const item of order.order_items) {
+                try {
+                    // Check inventory availability first
+                    const inventoryResponse = await axios.get('/api/check-inventory', {
+                        params: {
+                            product_id: item.product?.product_id,
+                            variant: item.variant,
+                            quantity: item.quantity
+                        }
+                    });
+
+                    // If inventory check passes, add to cart
+                    await axios.post('/add-to-cart', {
+                        product_id: item.product?.product_id,
+                        variant: item.variant,
+                        quantity: item.quantity,
+                        price: item.price
+                    });
+                    successCount++;
+                } catch (error) {
+                    const errorMsg = error.response?.data?.message || error.message;
+                    
+                    if (errorMsg.includes('stock') || error.response?.status === 400) {
+                        outOfStockItems.push(`${item.product?.product_name} (${item.variant}) - Out of Stock`);
+                    } else {
+                        outOfStockItems.push(`${item.product?.product_name} (${item.variant})`);
+                    }
+                    console.warn('⚠️ Item unavailable:', errorMsg);
+                }
+            }
+
+            if (successCount === 0) {
+                showToast('All items are out of stock. Please check back later.', 'error');
+            } else if (outOfStockItems.length === 0) {
+                showToast('All items added to cart! Redirecting...', 'success');
+                // Redirect to cart after 1 second
+                setTimeout(() => {
+                    router.visit('/Cart');
+                }, 1000);
+            } else {
+                showToast(`${successCount} items added to cart. ${outOfStockItems.length} items out of stock.`, 'warning');
+                // Redirect to cart anyway
+                setTimeout(() => {
+                    router.visit('/Cart');
+                }, 2000);
+            }
+        } catch (error) {
+            console.error('❌ Error in Buy Again:', error);
+            showToast('Error processing request. Please try again.', 'error');
+        } finally {
+            setBuyingAgain(null);
+        }
     };
 
     if (loading) {
@@ -126,15 +197,33 @@ export default function Completed() {
                                 <h1 className="text-[#9C0306] text-[20px] font-medium">₱{Number(order.order_total || 0).toFixed(2)}</h1>
                             </div>
                             <div className="flex flex-row ml-auto items-center gap-5 p-4">
-                                <div className="bg-[#F6F6F6] border border-[#9C0306] text-[#9C0306] w-30 h-9 flex items-center justify-center rounded-[20px] hover:cursor-pointer">
-                                    <button className="text-[12px] font-medium hover:cursor-pointer">Buy Again</button>
-                                </div>
+                                <button
+                                    onClick={() => handleBuyAgain(order)}
+                                    disabled={buyingAgain === order.order_id}
+                                    className={`bg-[#F6F6F6] border border-[#9C0306] text-[#9C0306] w-30 h-9 flex items-center justify-center rounded-[20px] text-[12px] font-medium transition-all ${
+                                        buyingAgain === order.order_id 
+                                            ? 'opacity-50 cursor-not-allowed' 
+                                            : 'hover:cursor-pointer hover:bg-[#9C0306] hover:text-white'
+                                    }`}
+                                >
+                                    {buyingAgain === order.order_id ? 'Processing...' : 'Buy Again'}
+                                </button>
                             </div>
                         </div>
                     ))}
                 </div>
             </div>
             <Footer/>
+
+            {/* Toast Notification */}
+            {toast && (
+                <div
+                    className={`fixed bottom-6 right-6 px-6 py-3 rounded-lg shadow-lg text-white z-[70] animate-pulse ${toast.type === 'success' ? 'bg-green-500' : toast.type === 'warning' ? 'bg-yellow-500' : 'bg-red-500'
+                        }`}
+                >
+                    {toast.message}
+                </div>
+            )}
         </>
     );
 }
