@@ -80,23 +80,30 @@ export const useAddProducts = () => {
 
     // ✅ ARCHIVE PRODUCT
     const handleArchive = async (id) => {
-        // Optimistic update: update UI immediately
-        setProducts(prevProducts =>
-            prevProducts.map(product =>
-                product.product_id === id
-                    ? { ...product, status: 'archived' }
-                    : product
-            )
-        );
-        showToast("Product archived successfully!");
-
         try {
             const response = await axios.patch(`${API}/${id}/archive`);
+            // Optimistic update: update UI immediately only if successful
+            setProducts(prevProducts =>
+                prevProducts.map(product =>
+                    product.product_id === id
+                        ? { ...product, status: 'archived' }
+                        : product
+                )
+            );
             console.log('Archive response:', response);
+            showToast("Product archived successfully!");
             // Fetch to sync with server (in background)
             await fetchProducts();
         } catch (error) {
             console.error("Archive failed", error);
+            
+            // Check if error is due to pending orders
+            if (error.response?.data?.error === 'pending_orders_exist') {
+                showToast("Cannot archive this product. There are pending orders containing this item.");
+            } else {
+                showToast(error.response?.data?.message || "Failed to archive product");
+            }
+            
             // Revert on error
             await fetchProducts();
         }

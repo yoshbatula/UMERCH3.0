@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use App\Models\Products;
 use App\Models\InventoryLog;
 use App\Models\ActivityLog;
+use App\Models\Orders;
+use App\Models\OrderItems;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 
@@ -176,6 +178,20 @@ class InventoryController extends Controller
     public function archive($id)
     {
         $product = Products::findOrFail($id);
+        
+        // Check if there are any pending orders for this product
+        $pendingOrders = OrderItems::where('product_id', $id)
+            ->whereHas('order', function($query) {
+                $query->where('status', 'Pending');
+            })
+            ->exists();
+        
+        if ($pendingOrders) {
+            return response()->json([
+                'message' => 'Cannot archive this product. There are pending orders containing this item.',
+                'error' => 'pending_orders_exist'
+            ], 400);
+        }
         
         $product->update(['status' => 'archived']);
         
