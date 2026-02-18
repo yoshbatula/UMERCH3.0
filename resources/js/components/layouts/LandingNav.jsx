@@ -4,6 +4,7 @@ import Logo from '@images/UMERCH-LOGO.svg';
 import CartIcon from '@images/CartIcon.svg';
 import NotificationIcon from '@images/NotificationIcon.svg';
 import UserAvatar from '@images/AccountIcon.svg'
+import LogoutModal from '@/components/modals/LogoutModal';
 
 export default function LandingNav() {
     const page = usePage();
@@ -12,6 +13,7 @@ export default function LandingNav() {
     const userName = auth?.user?.name || 'User';
     const { post } = useForm();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
     
     const isActive = (href) => {
         if (!url) return false;
@@ -23,7 +25,7 @@ export default function LandingNav() {
     };
 
     const handleLogout = () => {
-        post('/logout');
+        setIsLogoutModalOpen(true);
         setIsDropdownOpen(false);
     };
 
@@ -55,16 +57,31 @@ export default function LandingNav() {
                         <Link href="#"><img src={UserAvatar} alt="User Avatar"/></Link>
                         <button 
                             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                            className='bg-[#9C0306] text-white hover:text-[#FFB600] cursor-pointer'
+                            className='bg-[#9C0306] text-white hover:text-[#FFB600] cursor-pointer font-semibold'
                         >
                             {userName}
                         </button>
                         {isDropdownOpen && (
-                            <div className='absolute top-full mt-1 bg-[#9C0306] border border-[#FFB600] rounded w-32 right-0'>
+                            <div className='absolute top-full mt-2 bg-white border border-[#E0E0E0] rounded-lg w-48 right-0 shadow-lg z-40'>
+                                {/* User Profile Section */}
+                                <div className='px-4 py-3 flex flex-row gap-3 items-center border-b border-[#E0E0E0]'>
+                                    <img src={UserAvatar} alt="User Avatar" className='w-10 h-10'/>
+                                    <div className='flex flex-col'>
+                                        <p className='text-[#333] font-semibold text-sm'>{userName}</p>
+                                        <p className='text-[#9C0306] text-xs'>User</p>
+                                    </div>
+                                </div>
+                                
+                                {/* Logout Button */}
                                 <button 
                                     onClick={handleLogout}
-                                    className='w-full text-left px-4 py-2 text-white hover:bg-[#8B0204] hover:text-[#FFB600] transition'
+                                    className='w-full text-left px-4 py-3 text-[#9C0306] hover:bg-[#F5F5F5] transition flex flex-row gap-2 items-center font-semibold text-sm'
                                 >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                        <polyline points="16 17 21 12 16 7"></polyline>
+                                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                                    </svg>
                                     Logout
                                 </button>
                             </div>
@@ -72,6 +89,10 @@ export default function LandingNav() {
                     </div>
                 </div>
             </div>
+            <LogoutModal 
+                open={isLogoutModalOpen} 
+                onClose={() => setIsLogoutModalOpen(false)} 
+            />
         </>
     );
 }
