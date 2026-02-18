@@ -70,7 +70,12 @@ export const useAddProducts = () => {
         if (!confirm("Are you sure you want to delete this product?")) return;
 
         try {
-            await axios.delete(`${API}/${id}`);
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            await axios.delete(`${API}/${id}`, {
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                }
+            });
             fetchProducts();
             showToast("Product deleted successfully!");
         } catch (error) {
@@ -81,7 +86,12 @@ export const useAddProducts = () => {
     // ✅ ARCHIVE PRODUCT
     const handleArchive = async (id) => {
         try {
-            const response = await axios.patch(`${API}/${id}/archive`);
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            const response = await axios.patch(`${API}/${id}/archive`, {}, {
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                }
+            });
             // Optimistic update: update UI immediately only if successful
             setProducts(prevProducts =>
                 prevProducts.map(product =>
@@ -122,7 +132,12 @@ export const useAddProducts = () => {
         showToast("Product restored successfully!");
 
         try {
-            const response = await axios.patch(`${API}/${id}/restore`);
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            const response = await axios.patch(`${API}/${id}/restore`, {}, {
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                }
+            });
             console.log('Restore response:', response);
             // Fetch to sync with server (in background)
             await fetchProducts();

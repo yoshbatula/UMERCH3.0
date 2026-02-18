@@ -101,6 +101,20 @@ export default function AddProductModal({ open, isOpen, onClose, onSuccess }) {
         clearErrors("product_image");
     };
 
+    const getCsrfToken = () => {
+        const meta = document.querySelector('meta[name="csrf-token"]');
+        if (!meta) {
+            console.error('CSRF token meta tag not found');
+            return null;
+        }
+        const token = meta.getAttribute('content');
+        if (!token) {
+            console.error('CSRF token content is empty');
+            return null;
+        }
+        return token;
+    };
+
     const handleSubmit = (e) => {
         e.preventDefault();
 
@@ -132,6 +146,12 @@ export default function AddProductModal({ open, isOpen, onClose, onSuccess }) {
             return;
         }
 
+        const csrfToken = getCsrfToken();
+        if (!csrfToken) {
+            alert('Security error: CSRF token not found. Please refresh the page.');
+            return;
+        }
+
         // Create FormData for file upload
         const formData = new FormData();
         formData.append('product_name', data.product_name);
@@ -139,16 +159,17 @@ export default function AddProductModal({ open, isOpen, onClose, onSuccess }) {
         formData.append('product_description', data.product_description);
         formData.append('variant_type', selectedVariantType);
         formData.append('variant', selectedVariantType); // Use variant_type as the variant
+        formData.append('_token', csrfToken);  // Add CSRF token to FormData
         if (data.product_image) {
             formData.append('product_image', data.product_image);
         }
 
         axios.post("/admin/products", formData, {
             headers: {
-                'Content-Type': 'multipart/form-data',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
             }
-        }).then(() => {
+        }).then((response) => {
             if (onSuccess) onSuccess();
             reset();
             setPreview(null);
@@ -157,7 +178,9 @@ export default function AddProductModal({ open, isOpen, onClose, onSuccess }) {
             onClose && onClose();
         }).catch((error) => {
             console.error('Error adding product:', error.response?.data || error.message);
-            alert('Failed to add product. Please try again.');
+            console.error('Error status:', error.response?.status);
+            const errorMessage = error.response?.data?.message || 'Failed to add product. Please try again.';
+            alert(errorMessage);
         });
     };
 

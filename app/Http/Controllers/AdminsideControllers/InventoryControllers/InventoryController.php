@@ -72,7 +72,10 @@ class InventoryController extends Controller
                 'status' => 'active',
             ]);
 
-            return redirect()->back()->with('success', 'Product updated successfully!');
+            return response()->json([
+                'message' => 'Product updated successfully!',
+                'success' => true
+            ]);
         }
 
         // Check if product with same name exists (but different variant)
@@ -91,7 +94,11 @@ class InventoryController extends Controller
                 'status' => 'active',
             ]);
 
-            return redirect()->back()->with('success', 'New variant added to existing product!');
+            return response()->json([
+                'message' => 'New variant added to existing product!',
+                'success' => true,
+                'product' => $product
+            ]);
         }
 
         // Create completely new product
@@ -116,7 +123,11 @@ class InventoryController extends Controller
             'admin_action' => auth()->user()?->user_fullname ?? 'Admin'
         ]);
 
-        return redirect()->back()->with('success', 'Product added successfully!');
+        return response()->json([
+            'message' => 'Product added successfully!',
+            'success' => true,
+            'product' => $product
+        ]);
     }
 
     public function update(Request $request, $id)
@@ -152,8 +163,11 @@ class InventoryController extends Controller
             'admin_action' => auth()->user()?->user_fullname ?? 'Admin'
         ]);
 
-        
-        return redirect()->back()->with('success', 'Product updated successfully!');
+        return response()->json([
+            'message' => 'Product updated successfully!',
+            'success' => true,
+            'product' => $product
+        ]);
     }
 
     public function destroy($id)
@@ -172,7 +186,10 @@ class InventoryController extends Controller
 
         $product->delete();
         
-        return redirect()->back()->with('success', 'Product deleted successfully!');
+        return response()->json([
+            'message' => 'Product deleted successfully!',
+            'success' => true
+        ]);
     }
 
     public function archive($id)
@@ -205,12 +222,6 @@ class InventoryController extends Controller
             'admin_action' => auth()->user()?->user_fullname ?? 'Admin'
         ]);
         
-        // Log to activity log
-        $user = Auth::user();
-        if ($user) {
-            ActivityLog::logProductArchive($user, $product->product_name, $product->variant);
-        }
-        
         return response()->json(['message' => 'Product archived successfully!']);
     }
 
@@ -229,12 +240,6 @@ class InventoryController extends Controller
             'total' => $product->product_stock,
             'admin_action' => auth()->user()?->user_fullname ?? 'Admin'
         ]);
-        
-        // Log to activity log
-        $user = Auth::user();
-        if ($user) {
-            ActivityLog::logProductRestore($user, $product->product_name, $product->variant);
-        }
         
         return response()->json(['message' => 'Product restored successfully!']);
     }
