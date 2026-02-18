@@ -126,7 +126,7 @@ export default function AddProducts() {
                                         </div>
                                     );
                                 }
-
+// done fixing the product
                                 return filteredProducts.map(
                                     ([productName, variants]) => (
                                         <div key={productName}>
