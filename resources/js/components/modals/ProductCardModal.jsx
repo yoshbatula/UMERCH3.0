@@ -20,7 +20,7 @@ export default function ProductCardModal({ isOpen, onClose, product, onShowToast
         pen: ["pen"],
         umbrella: ["umbrella"],
         keychain: ["keychain"],
-        totebag: ["tote bag"],
+        totebag: ["totebag"],
         pillow: ["pillow"],
     };
 
