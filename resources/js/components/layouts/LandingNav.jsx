@@ -5,7 +5,7 @@ import CartIcon from '@images/CartIcon.svg';
 import NotificationIcon from '@images/NotificationIcon.svg';
 import UserAvatar from '@images/AccountIcon.svg'
 import LogoutModal from '@/components/modals/LogoutModal';
-
+import RedUserAvatar from '@images/red-account-logo.svg';
 export default function LandingNav() {
     const page = usePage();
     const url = page.url;
@@ -65,11 +65,10 @@ export default function LandingNav() {
                         {isDropdownOpen && (
                             <div className='absolute top-full mt-2 bg-white border border-[#E0E0E0] rounded-lg w-48 right-0 shadow-lg z-40'>
                                 {/* User Profile Section */}
-                                <div className='px-4 py-3 flex flex-row gap-3 items-center border-b border-[#E0E0E0]'>
-                                    <img src={UserAvatar} alt="User Avatar" className='w-10 h-10'/>
+                                <div className='px-4 py-3 flex flex-row gap-1 items-center border-b border-[#E0E0E0]'>
+                                    <img src={RedUserAvatar} alt="User Avatar" className='w-7 h-7'/>
                                     <div className='flex flex-col'>
-                                        <p className='text-[#333] font-semibold text-sm'>{userName}</p>
-                                        <p className='text-[#9C0306] text-xs'>User</p>
+                                        <p className='text-[16px] text-[#9C0306] font-bold'>{userName}</p>
                                     </div>
                                 </div>
                                 

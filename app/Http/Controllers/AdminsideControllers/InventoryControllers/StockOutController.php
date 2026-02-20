@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 class StockOutController extends Controller
 {
+    // Stock out logs
     public function logs()
     {
         try {
