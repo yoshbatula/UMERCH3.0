@@ -29,7 +29,7 @@ export default function LandingNav() {
         setIsDropdownOpen(false);
     };
 
-    // done adding the logout
+   
     return (
         <>
             <div className="bg-[#9C0306] flex flex-row items-center p-6 h-20 sticky top-0 z-50">
