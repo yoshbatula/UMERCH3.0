@@ -53,7 +53,6 @@ export default function LandingNav() {
                 </div>
                 <div className='flex flex-row gap-x-7 items-center font-bold ml-auto text-white font-montserrat'>
                     <Link href="/Cart" prefetch><img src={CartIcon} alt="Cart Icon"/></Link>
-                    <Link href="#"><img src={NotificationIcon} alt="Notification Icon"/></Link>
                     <div className='flex flex-row gap-1 items-center relative'>
                         <Link href="#"><img src={UserAvatar} alt="User Avatar"/></Link>
                         <button 

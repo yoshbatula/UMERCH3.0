@@ -30,21 +30,21 @@ export default function Footer({ onSignInClick  }) {
                 <div className="flex flex-col">
                     <h1 className="text-[20px]">Contact Us</h1>
                     <div className="mt-1 flex flex-row text-[#727272] gap-2">
-                        <img src={Location} alt="Location-Icon"/>
+                        <img src={Location} alt="Location-Icon" className="w-5"/>
                         <div className="flex flex-col text-start">
                             <p>Bolton St, Poblacion District,</p>
                             <p>Davao City, 8000 Davao del Sur</p>
                         </div>
                     </div>
                     <div className="mt-1 flex flex-row text-[#727272] gap-2">
-                        <img src={Email} alt="Email-Icon"/>
+                        <img src={Email} alt="Email-Icon" className="w-5"/>
                         <div className="flex flex-col text-start">
                             <p>demo@example.com</p>
                             <p>info@example.com</p>
                         </div>
                     </div>
                     <div className="mt-1 flex flex-row text-[#727272] gap-2">
-                        <img src={Phone} alt="Phone-Icon"/>
+                        <img src={Phone} alt="Phone-Icon" className="w-5"/>
                         <div className="flex flex-col text-start">
                             <p>01234567890</p>
                             <p>01234567890</p>

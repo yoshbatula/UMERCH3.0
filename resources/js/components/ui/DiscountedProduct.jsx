@@ -53,37 +53,8 @@ export default function DiscountedProduct() {
         draggingRef.current = false;
     };
     return (
-        <div className='mt-5 flex flex-row justify-center items-center gap-10'>
-            <div className='relative flex flex-col items-center'>
-                <img
-                    src={Images[current]}
-                    alt="Discounted Product"
-                    className='w-100 h-100 rounded-2xl'
-                    onTouchStart={handleTouchStart}
-                    onTouchEnd={handleTouchEnd}
-                    onMouseDown={handleMouseDown}
-                    onMouseUp={handleMouseUp}
-                    draggable={false}
-                    style={{ userSelect: 'none', cursor: 'grab' }}
-                />
-                <div className='absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2'>
-                    {Images.map((_, idx) => (
-                        <button
-                            key={idx}
-                            onClick={() => setCurrent(idx)}
-                            className={`h-1 w-8 transition-all duration-300 ${current === idx ? 'bg-[#9C0306]' : 'bg-gray-300'} rounded-full border-none focus:outline-none`}
-                            aria-label={`Go to image ${idx + 1}`}
-                        />
-                    ))}
-                </div>
-            </div>
-            <div className='flex flex-col text-black gap-2 text-start'>
-                <h1 className='font-bold text-[36px]'>Discounted Products</h1>
-                <p className='text-[16px]'>Get the best deals on our top-quality products!</p>
-                <p className='text-[16px]'>Enjoy exclusive discounts and save big on your favorite items.</p>
-                <p className='text-[16px]'> Don't miss out on these limited-time offers - shop now!</p>
-                <Link href="#" className='bg-[#9C0306] text-black text-white text-[16px] px-6 py-3 hover:cursor-pointer hover:bg-[#FFB600] transition-colors duration-300 w-40 text-center mt-4'>SHOP NOW</Link>
-            </div>
+        <div>
+            
         </div>
     );
 }
