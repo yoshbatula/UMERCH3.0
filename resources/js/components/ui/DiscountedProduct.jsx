@@ -58,9 +58,9 @@ export default function DiscountedProduct() {
             <img src={UMESTE} alt="UMESTE"  className='w-auto h-150'/>
             <div className='absolute items-center justify-center'>
                 <div className='relative transform translate-y-[250px]'>
-                    <div className='flex flex-row justify-center items-center'>
-                        <div className='bg-[#C3C3C3] border border-[#C3C3C3] w-10 h-3 rounded-2xl hover:bg-[#9C0306] hover: transition-colors duration-200'></div>
-                        <div>yosh</div>
+                    <div className='flex flex-row justify-center items-center gap-3'>
+                        <div className='bg-[#C3C3C3] border border-[#C3C3C3] w-15 h-3 rounded-2xl hover:bg-[#9C0306] hover: transition-colors duration-200'></div>
+                        <div className='bg-[#C3C3C3] border border-[#C3C3C3] w-15 h-3 rounded-2xl hover:bg-[#9C0306] hover: transition-colors duration-200'></div>
                     </div>
                 </div>
             </div>
