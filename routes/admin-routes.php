@@ -62,14 +62,23 @@ Route::middleware('auth')->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::get('admin/inventory/add', function () {
+        if (Auth::user()->role !== 'Admin') {
+            abort(403, 'Only admins can add products');
+        }
         return inertia('Admin-side/Inventory-page/AddProducts');
     })->name('AddProducts');
 
     Route::get('/admin/inventory/stock-in', function () {
+        if (Auth::user()->role !== 'Admin') {
+            abort(403, 'Only admins can access stock-in');
+        }
         return inertia('Admin-side/Inventory-page/Stock-In');
     })->name('StockIn');
 
     Route::get('/admin/inventory/stock-out', function () {
+        if (Auth::user()->role !== 'Admin') {
+            abort(403, 'Only admins can access stock-out');
+        }
         return inertia('Admin-side/Inventory-page/Stock-Out');
     })->name('StockOut');
 

@@ -9,6 +9,7 @@ use App\Models\StockOut;
 use App\Models\InventoryLog;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 class StockOutController extends Controller
 {
     // Stock out logs
@@ -41,6 +42,9 @@ class StockOutController extends Controller
 
     public function store(Request $request)
     {
+        if (Auth::user()->role !== 'Admin') {
+            abort(403, 'Only admins can create stock-out records');
+        }
         $request->validate([
             'product_id' => 'required|exists:_products,id',
             'quantity' => 'required|integer|min:1',
@@ -70,7 +74,7 @@ class StockOutController extends Controller
                 'type' => 'Stock Out',
                 'quantity' => -$request->quantity, // Negative for stock out
                 'total' => $product->product_stock,
-                'admin_action' => $request->modified_by
+                'admin_action' => 'Admin'
             ]);
         });
 

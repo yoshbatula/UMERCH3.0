@@ -46,6 +46,9 @@ class StockInController extends Controller
 
     public function store(Request $request)
     {
+        if (Auth::user()->role !== 'Admin') {
+            abort(403, 'Only admins can create stock-in records');
+        }
         try {
             $validated = $request->validate([
                 'product_id' => 'required|exists:_products,product_id',
@@ -116,7 +119,7 @@ class StockInController extends Controller
                     'type' => 'Stock In',
                     'quantity' => $request->stock_qty,
                     'total' => $newQty,
-                    'admin_action' => Auth::user()?->user_fullname ?? 'Admin'
+                    'admin_action' => 'Admin'
                 ]);
 
                 Log::info('Stock In Created', [
@@ -124,7 +127,7 @@ class StockInController extends Controller
                     'item_name' => $product->product_name . ' - ' . $variant,
                     'quantity' => $request->stock_qty,
                     'total' => $newQty,
-                    'admin' => Auth::user()?->user_fullname ?? 'Admin'
+                    'admin_action' => 'Admin'
                 ]);
             });
 
@@ -146,6 +149,9 @@ class StockInController extends Controller
 
     public function update(Request $request, $id)
     {
+        if (Auth::user()->role !== 'Admin') {
+            abort(403, 'Only admins can update stock-in records');
+        }
         $request->validate([
             'variant' => 'required|string',
             'stock_qty' => 'required|integer|min:0',
@@ -213,7 +219,7 @@ class StockInController extends Controller
                     'type' => 'Edit Product',
                     'quantity' => $delta,
                     'total' => max(0, $invNewQty),
-                    'admin_action' => Auth::user()?->user_fullname ?? 'Admin'
+                    'admin_action' => 'Admin'
                 ]);
 
                 Log::info('Stock In Updated', [
@@ -242,6 +248,9 @@ class StockInController extends Controller
 
     public function destroy($id)
     {
+        if (Auth::user()->role !== 'Admin') {
+            abort(403, 'Only admins can delete stock-in records');
+        }
         try {
             return \Illuminate\Support\Facades\DB::transaction(function () use ($id) {
                 $log = StockIn::lockForUpdate()->findOrFail($id);
@@ -273,7 +282,7 @@ class StockInController extends Controller
                     'type' => 'Stock Out',
                     'quantity' => -$decrement,
                     'total' => max(0, ($inventory?->quantity ?? 0) - $decrement),
-                    'admin_action' => Auth::user()?->user_fullname ?? 'Admin'
+                    'admin_action' => 'Admin'
                 ]);
 
                 $log->delete();

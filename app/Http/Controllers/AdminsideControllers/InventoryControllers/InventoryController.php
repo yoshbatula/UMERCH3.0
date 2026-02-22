@@ -43,6 +43,9 @@ class InventoryController extends Controller
 
     public function store(Request $request)
     {
+        if (Auth::user()->role !== 'Admin') {
+            abort(403, 'Only admins can create products');
+        }
         $request->validate([
             'product_name' => 'required',
             'product_price' => 'required|numeric|min:0',
@@ -120,7 +123,7 @@ class InventoryController extends Controller
             'type' => 'Add Product',
             'quantity' => 0,
             'total' => 0,
-            'admin_action' => auth()->user()?->user_fullname ?? 'Admin'
+            'admin_action' => 'Admin'
         ]);
 
         return response()->json([
@@ -132,6 +135,9 @@ class InventoryController extends Controller
 
     public function update(Request $request, $id)
     {
+        if (Auth::user()->role !== 'Admin') {
+            abort(403, 'Only admins can update products');
+        }
         $request->validate([
             'product_price' => 'required|numeric|min:0',
         ]);
@@ -160,7 +166,7 @@ class InventoryController extends Controller
             'type' => 'Edit Product',
             'quantity' => 0,
             'total' => $product->product_stock,
-            'admin_action' => auth()->user()?->user_fullname ?? 'Admin'
+            'admin_action' => 'Admin'
         ]);
 
         return response()->json([
@@ -172,6 +178,9 @@ class InventoryController extends Controller
 
     public function destroy($id)
     {
+        if (Auth::user()->role !== 'Admin') {
+            abort(403, 'Only admins can delete products');
+        }
         $product = Products::findOrFail($id);
         
         // Log the delete product operation
@@ -181,7 +190,7 @@ class InventoryController extends Controller
             'type' => 'Delete Product',
             'quantity' => 0,
             'total' => $product->product_stock,
-            'admin_action' => auth()->user()?->user_fullname ?? 'Admin'
+            'admin_action' => 'Admin'
         ]);
 
         $product->delete();
@@ -194,6 +203,9 @@ class InventoryController extends Controller
 
     public function archive($id)
     {
+        if (Auth::user()->role !== 'Admin') {
+            abort(403, 'Only admins can archive products');
+        }
         $product = Products::findOrFail($id);
         
         // Check if there are any pending orders for this product
@@ -219,7 +231,7 @@ class InventoryController extends Controller
             'type' => 'Archived',
             'quantity' => 0,
             'total' => $product->product_stock,
-            'admin_action' => auth()->user()?->user_fullname ?? 'Admin'
+            'admin_action' => 'Admin'
         ]);
         
         return response()->json(['message' => 'Product archived successfully!']);
@@ -227,6 +239,9 @@ class InventoryController extends Controller
 
     public function restore($id)
     {
+        if (Auth::user()->role !== 'Admin') {
+            abort(403, 'Only admins can restore products');
+        }
         $product = Products::findOrFail($id);
         
         $product->update(['status' => 'active']);
@@ -238,7 +253,7 @@ class InventoryController extends Controller
             'type' => 'Restored',
             'quantity' => 0,
             'total' => $product->product_stock,
-            'admin_action' => auth()->user()?->user_fullname ?? 'Admin'
+            'admin_action' => 'Admin'
         ]);
         
         return response()->json(['message' => 'Product restored successfully!']);
