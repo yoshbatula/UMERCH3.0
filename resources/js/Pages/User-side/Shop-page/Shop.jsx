@@ -17,7 +17,7 @@ export default function Shop() {
     const [toast, setToast] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [sortBy, setSortBy] = useState('default');
-    const [itemsPerPage, setItemsPerPage] = useState(9);
+    const [itemsPerPage, setItemsPerPage] = useState(8);
     const [currentPage, setCurrentPage] = useState(1);
 
     const showToast = (message, type = 'success') => {
@@ -134,9 +134,10 @@ export default function Shop() {
                         <div className='flex flex-row gap-1 items-center'>
                             <p>View</p>
                             <select className='border border-[#727272] rounded px-2 py-1' value={itemsPerPage} onChange={handleItemsPerPageChange}>
-                                <option value="9">9</option>
-                                <option value="15">15</option>
-                                <option value="25">25</option>
+                                <option value="8">8</option>
+                                <option value="12">12</option>
+                                <option value="16">16</option>
+                                <option value="20">20</option>
                             </select>
                         </div>
                         <div className='flex flex-row gap-1 items-center'>

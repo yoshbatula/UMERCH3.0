@@ -43,7 +43,7 @@ class InventoryController extends Controller
 
     public function store(Request $request)
     {
-        if (Auth::user()->role !== 'Admin') {
+        if (!Auth::check() || Auth::user()->role !== 'Admin') {
             abort(403, 'Only admins can create products');
         }
         $request->validate([
@@ -135,7 +135,7 @@ class InventoryController extends Controller
 
     public function update(Request $request, $id)
     {
-        if (Auth::user()->role !== 'Admin') {
+        if (!Auth::check() || Auth::user()->role !== 'Admin') {
             abort(403, 'Only admins can update products');
         }
         $request->validate([
@@ -178,7 +178,7 @@ class InventoryController extends Controller
 
     public function destroy($id)
     {
-        if (Auth::user()->role !== 'Admin') {
+        if (!Auth::check() || Auth::user()->role !== 'Admin') {
             abort(403, 'Only admins can delete products');
         }
         $product = Products::findOrFail($id);
@@ -203,7 +203,7 @@ class InventoryController extends Controller
 
     public function archive($id)
     {
-        if (Auth::user()->role !== 'Admin') {
+        if (!Auth::check() || Auth::user()->role !== 'Admin') {
             abort(403, 'Only admins can archive products');
         }
         $product = Products::findOrFail($id);
@@ -239,7 +239,7 @@ class InventoryController extends Controller
 
     public function restore($id)
     {
-        if (Auth::user()->role !== 'Admin') {
+        if (!Auth::check() || Auth::user()->role !== 'Admin') {
             abort(403, 'Only admins can restore products');
         }
         $product = Products::findOrFail($id);

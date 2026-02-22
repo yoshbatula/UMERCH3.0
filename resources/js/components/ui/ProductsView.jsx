@@ -9,12 +9,18 @@ import ProductCardModal from '../modals/ProductCardModal';
 import AccessoriesCardModal from '../modals/ProductAccessoriesModal';
 import axios from 'axios';
 import Placeholder from '@images/product-placeholder.svg';
-export default function ProductsView() {
-    // For storefront, clicking a product should prompt login
 
+export default function ProductsView() {
     const [ProductModalOpen, setProductModalOpen] = useState(false);
     const [AccessoriesModalOpen, setAccessoriesModalOpen] = useState(false);
     const [products, setProducts] = useState([]);
+    const [filteredProducts, setFilteredProducts] = useState([]);
+    
+    // Filter and Sort State
+    const [itemsPerPage, setItemsPerPage] = useState(8);
+    const [sortBy, setSortBy] = useState('default');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
 
     const openProductModal = () => {
         setProductModalOpen(true);
@@ -48,6 +54,7 @@ export default function ProductsView() {
         return '/' + s;
     };
 
+    // Fetch products
     useEffect(() => {
         axios.get('/api/products')
             .then(res => {
@@ -56,6 +63,70 @@ export default function ProductsView() {
             })
             .catch(() => setProducts([]));
     }, []);
+
+    // Apply sorting and filtering
+    useEffect(() => {
+        // First, apply search filter
+        let filtered = products.filter(p =>
+            p.product_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (p.product_description && p.product_description.toLowerCase().includes(searchQuery.toLowerCase()))
+        );
+
+        // Then apply sorting
+        let sorted = [...filtered];
+
+        switch (sortBy) {
+            case 'name-asc':
+                sorted.sort((a, b) => a.product_name.localeCompare(b.product_name));
+                break;
+            case 'name-desc':
+                sorted.sort((a, b) => b.product_name.localeCompare(a.product_name));
+                break;
+            case 'price-low':
+                sorted.sort((a, b) => parseFloat(a.product_price) - parseFloat(b.product_price));
+                break;
+            case 'price-high':
+                sorted.sort((a, b) => parseFloat(b.product_price) - parseFloat(a.product_price));
+                break;
+            case 'newest':
+                sorted.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                break;
+            case 'default':
+            default:
+                // Keep original order
+                break;
+        }
+
+        setFilteredProducts(sorted);
+        setCurrentPage(1); // Reset to first page when sorting/filtering changes
+    }, [products, sortBy, searchQuery]);
+
+    // Calculate pagination
+    const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedProducts = filteredProducts.slice(startIndex, endIndex);
+    const displayStart = filteredProducts.length === 0 ? 0 : startIndex + 1;
+    const displayEnd = Math.min(endIndex, filteredProducts.length);
+
+    const handleItemsPerPageChange = (e) => {
+        setItemsPerPage(parseInt(e.target.value));
+        setCurrentPage(1); // Reset to first page
+    };
+
+    const handleSortChange = (e) => {
+        setSortBy(e.target.value);
+    };
+
+    const handleSearchChange = (e) => {
+        setSearchQuery(e.target.value);
+    };
+
+    const goToPage = (page) => {
+        if (page >= 1 && page <= totalPages) {
+            setCurrentPage(page);
+        }
+    };
 
     return (
         <>
@@ -74,45 +145,116 @@ export default function ProductsView() {
                     <div className='flex flex-row gap-5'>
                         <div className='flex flex-row gap-1 items-center'>
                             <p>View</p>
-                            <select className='border border-[#727272] rounded px-2 py-1'>
-                                <option value="grid">25</option>
+                            <select 
+                                value={itemsPerPage}
+                                onChange={handleItemsPerPageChange}
+                                className='border border-[#727272] rounded px-2 py-1 cursor-pointer'
+                            >
+                                <option value="8">8</option>
+                                <option value="12">12</option>
+                                <option value="16">16</option>
+                                <option value="20">20</option>
                             </select>
                         </div>
                         <div className='flex flex-row gap-1 items-center'>
                             <p>Sort by</p>
-                            <select className='border border-[#727272] rounded px-2 py-1'>
+                            <select 
+                                value={sortBy}
+                                onChange={handleSortChange}
+                                className='border border-[#727272] rounded px-2 py-1 cursor-pointer'
+                            >
                                 <option value="default">Default</option>
+                                <option value="name-asc">Name (A-Z)</option>
+                                <option value="name-desc">Name (Z-A)</option>
+                                <option value="price-low">Price: Low to High</option>
+                                <option value="price-high">Price: High to Low</option>
+                                <option value="newest">Newest</option>
                             </select>
+                        </div>
+                        <div className='flex flex-row items-center gap-2 border border-[#727272] rounded px-2 py-1'>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                                <path
+                                    d="M21 21l-4.35-4.35"
+                                    stroke="#727272"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                />
+                                <path
+                                    d="M11 19a8 8 0 100-16 8 8 0 000 16z"
+                                    stroke="#727272"
+                                    strokeWidth="2"
+                                />
+                            </svg>
+                            <input 
+                                type="text" 
+                                placeholder="Search products..." 
+                                value={searchQuery}
+                                onChange={handleSearchChange}
+                                className="border-none outline-none bg-transparent w-full text-sm text-gray-700 placeholder:text-gray-400" 
+                            />
                         </div>
                     </div>
                     <div className='flex flex-row gap-1 items-center'>
-                        <p>Showing 1-20 of 120 results </p>
+                        <p>Showing {displayStart}-{displayEnd} of {filteredProducts.length} results</p>
                     </div>
                 </div>
 
                 {/* Shop cards */}
                 <div className='flex flex-row flex-wrap justify-center gap-6 px-10 pb-10'>
-                    {products.map(p => (
-                        <ShopCards
-                            key={p.product_id}
-                            onClick={handleProductClick}
-                            image={normalizeImageUrl(p.product_image)}
-                            name={p.product_name}
-                            description={p.product_description}
-                            price={p.product_price}
-                            stock={p.product_stock}
-                        />
-                    ))}
+                    {paginatedProducts.length > 0 ? (
+                        paginatedProducts.map(p => (
+                            <ShopCards
+                                key={p.product_id}
+                                onClick={handleProductClick}
+                                image={normalizeImageUrl(p.product_image)}
+                                name={p.product_name}
+                                description={p.product_description}
+                                price={p.product_price}
+                                stock={p.product_stock}
+                            />
+                        ))
+                    ) : (
+                        <div className='w-full text-center py-10'>
+                            <p className='text-gray-500 text-lg'>No products found</p>
+                        </div>
+                    )}
                 </div>
 
                 {/* Pagination */}
-                <div className='flex flex-row justify-center items-center gap-4 pb-10'>
-                    <button className='px-3 py-1 hover:cursor-pointer'><img src={LeftArrow} alt="Left Arrow" /></button>
-                    <button className='px-3 py-1 border border-gray-400 rounded bg-[#9C0306] text-white hover:cursor-pointer'>1</button>
-                    <button className='px-3 py-1 border border-[#9C0306] text-[#9C0306] hover:cursor-pointer'>2</button>
-                    <button className='px-3 py-1 border border-[#9C0306] text-[#9C0306] hover:cursor-pointer'>3</button>
-                    <button className='px-3 py-1 hover:cursor-pointer'><img src={RightArrow} alt="Right Arrow" /></button>
-                </div>
+                {totalPages > 1 && (
+                    <div className='flex flex-row justify-center items-center gap-4 pb-10'>
+                        <button 
+                            onClick={() => goToPage(currentPage - 1)}
+                            disabled={currentPage === 1}
+                            className='px-3 py-1 hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
+                        >
+                            <img src={LeftArrow} alt="Left Arrow" />
+                        </button>
+                        
+                        {/* Page Numbers */}
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                            <button
+                                key={page}
+                                onClick={() => goToPage(page)}
+                                className={`px-3 py-1 border rounded hover:cursor-pointer ${
+                                    currentPage === page
+                                        ? 'bg-[#9C0306] text-white border-[#9C0306]'
+                                        : 'border-[#9C0306] text-[#9C0306]'
+                                }`}
+                            >
+                                {page}
+                            </button>
+                        ))}
+                        
+                        <button 
+                            onClick={() => goToPage(currentPage + 1)}
+                            disabled={currentPage === totalPages}
+                            className='px-3 py-1 hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
+                        >
+                            <img src={RightArrow} alt="Right Arrow" />
+                        </button>
+                    </div>
+                )}
 
                 {/* Footer */}
                 <Footer />

@@ -46,7 +46,7 @@ class StockInController extends Controller
 
     public function store(Request $request)
     {
-        if (Auth::user()->role !== 'Admin') {
+        if (!Auth::check() || Auth::user()->role !== 'Admin') {
             abort(403, 'Only admins can create stock-in records');
         }
         try {
@@ -149,7 +149,7 @@ class StockInController extends Controller
 
     public function update(Request $request, $id)
     {
-        if (Auth::user()->role !== 'Admin') {
+        if (!Auth::check() || Auth::user()->role !== 'Admin') {
             abort(403, 'Only admins can update stock-in records');
         }
         $request->validate([
@@ -248,7 +248,7 @@ class StockInController extends Controller
 
     public function destroy($id)
     {
-        if (Auth::user()->role !== 'Admin') {
+        if (!Auth::check() || Auth::user()->role !== 'Admin') {
             abort(403, 'Only admins can delete stock-in records');
         }
         try {

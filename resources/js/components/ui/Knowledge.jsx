@@ -4,15 +4,16 @@ import BackgroundImage from '@images/um5.jpg';
 import LoginLogo from '@images/UMERCH-LOGIN-LOGO.svg';
 import EmailIcon from '@images/email-icon.svg';
 import PasswordIcon from '@images/password-icon.svg';
-import {useForm} from '@inertiajs/react';
+import axios from 'axios';
 
 export default function Knowledge({ showLogin, onCloseLogin }) {
-    const { data, setData, post, processing, errors, reset } = useForm({
+    const [data, setData] = useState({
         login: '', 
         password: '', 
         remember: false, 
     });
-
+    const [errors, setErrors] = useState({});
+    const [processing, setProcessing] = useState(false);
     const [showError, setShowError] = useState(false);
 
     useEffect(() => {
@@ -23,29 +24,42 @@ export default function Knowledge({ showLogin, onCloseLogin }) {
         }
     }, [errors]);
 
-    
     const handleChange = (e) => {
-        setData('remember', e.target.checked);
+        setData(prev => ({
+            ...prev,
+            remember: e.target.checked
+        }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
+        setProcessing(true);
+        setErrors({});
         
-        post('/login', {
-            onSuccess: () => {
-               
-                if (onCloseLogin) {
-                    onCloseLogin();
-                }
-                
-            },
-            onError: (errors) => {
-                console.log('Login errors:', errors);
-            },
-            onFinish: () => {
-               
+        try {
+            const response = await axios.post('/login', {
+                login: data.login,
+                password: data.password,
+                remember: data.remember,
+            });
+            
+            // Redirect to authentication page on success
+            window.location.href = response.data.redirect || '/authentication';
+        } catch (error) {
+            if (error.response?.status === 419) {
+                setErrors({ general: 'Session expired. Please refresh and try again.' });
+            } else if (error.response?.data?.errors) {
+                setErrors(error.response.data.errors);
+            } else if (error.response?.data?.message) {
+                setErrors({ general: error.response.data.message });
+            } else {
+                setErrors({ general: 'Login failed. Please try again.' });
             }
-        });
+            setShowError(true);
+            setTimeout(() => setShowError(false), 3000);
+        } finally {
+            setProcessing(false);
+        }
     };
 
     return (
@@ -97,7 +111,7 @@ export default function Knowledge({ showLogin, onCloseLogin }) {
                                                 name="login"
                                                 placeholder="UM Email or UM ID"
                                                 value={data.login}
-                                                onChange={e => setData('login', e.target.value)}
+                                                onChange={e => setData(prev => ({ ...prev, login: e.target.value }))}
                                                 required
                                                 className='bg-white/30 border rounded-[15px] h-10 w-full pl-10 pr-4 text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-white/50' 
                                             />
@@ -114,7 +128,7 @@ export default function Knowledge({ showLogin, onCloseLogin }) {
                                                 name="password"
                                                 placeholder='Password'
                                                 value={data.password}
-                                                onChange={e => setData('password', e.target.value)}
+                                                onChange={e => setData(prev => ({ ...prev, password: e.target.value }))}
                                                 required
                                                 className='bg-white/30 border rounded-[15px] h-10 w-full pl-10 pr-4 text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-white/50' 
                                             />

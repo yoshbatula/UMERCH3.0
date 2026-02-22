@@ -42,7 +42,7 @@ class StockOutController extends Controller
 
     public function store(Request $request)
     {
-        if (Auth::user()->role !== 'Admin') {
+        if (!Auth::check() || Auth::user()->role !== 'Admin') {
             abort(403, 'Only admins can create stock-out records');
         }
         $request->validate([

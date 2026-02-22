@@ -57,7 +57,10 @@ class LoginCont extends Controller
             // Log the login activity
             ActivityLog::logLogin($adminUser);
             
-            // Redirect to admin dashboard
+            // Return JSON for axios or redirect for form submissions
+            if ($request->expectsJson()) {
+                return response()->json(['redirect' => '/admin']);
+            }
             return redirect('/admin');
         }
 
@@ -70,9 +73,11 @@ class LoginCont extends Controller
         if ($user) {
             // Check if user account is inactive
             if (isset($user->status) && $user->status === 'inactive') {
-                return back()->withErrors([
-                    'login' => 'Your account has been deactivated. Please contact an administrator.',
-                ]);
+                $message = 'Your account has been deactivated. Please contact an administrator.';
+                if ($request->expectsJson()) {
+                    return response()->json(['message' => $message, 'errors' => ['login' => $message]], 422);
+                }
+                return back()->withErrors(['login' => $message]);
             }
 
             $dbPassword = $user->user_password;
@@ -98,13 +103,19 @@ class LoginCont extends Controller
                             ->subject('Your OTP Code');
                 });
 
+                // Return JSON for axios or redirect for form submissions
+                if ($request->expectsJson()) {
+                    return response()->json(['redirect' => '/authentication']);
+                }
                 return redirect()->route('authentication');
             }
         }
 
-        return back()->withErrors([
-            'login' => 'The provided credentials do not match our records.',
-        ]);
+        $message = 'The provided credentials do not match our records.';
+        if ($request->expectsJson()) {
+            return response()->json(['message' => $message, 'errors' => ['login' => $message]], 422);
+        }
+        return back()->withErrors(['login' => $message]);
     }
 
     /**

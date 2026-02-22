@@ -24,6 +24,20 @@ use App\Http\Controllers\UsersideControllers\LoginControllers\LoginCont;
 |--------------------------------------------------------------------------
 */
 Route::middleware('auth')->group(function () {
+    // Debug endpoint to verify session and auth
+    Route::get('/admin/debug', function () {
+        return response()->json([
+            'authenticated' => Auth::check(),
+            'user' => Auth::user() ? [
+                'id' => Auth::user()->id,
+                'email' => Auth::user()->email,
+                'role' => Auth::user()->role,
+            ] : null,
+            'session_id' => session()->getId(),
+            'csrf_token' => csrf_token(),
+        ]);
+    });
+
     Route::get('/admin', function () {
         return inertia('Admin-side/Dashboard-page/Dashboard');
     })->name('Dashboard');
@@ -62,21 +76,21 @@ Route::middleware('auth')->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::get('admin/inventory/add', function () {
-        if (Auth::user()->role !== 'Admin') {
+        if (!Auth::check() || Auth::user()->role !== 'Admin') {
             abort(403, 'Only admins can add products');
         }
         return inertia('Admin-side/Inventory-page/AddProducts');
     })->name('AddProducts');
 
     Route::get('/admin/inventory/stock-in', function () {
-        if (Auth::user()->role !== 'Admin') {
+        if (!Auth::check() || Auth::user()->role !== 'Admin') {
             abort(403, 'Only admins can access stock-in');
         }
         return inertia('Admin-side/Inventory-page/Stock-In');
     })->name('StockIn');
 
     Route::get('/admin/inventory/stock-out', function () {
-        if (Auth::user()->role !== 'Admin') {
+        if (!Auth::check() || Auth::user()->role !== 'Admin') {
             abort(403, 'Only admins can access stock-out');
         }
         return inertia('Admin-side/Inventory-page/Stock-Out');
