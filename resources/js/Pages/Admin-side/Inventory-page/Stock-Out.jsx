@@ -58,13 +58,13 @@ export default function StockOut() {
                     />
                     <StatCard
                         title="Low Stocks"
-                        value={stocks.filter(s => s.product_stock > 0 && s.product_stock <= 20).length}
+                        value={stocks.filter(s => s.stock_qty > 0 && s.stock_qty <= 20).length}
                         bg="bg-[#F7962A]"
                         icon={LowStocks}
                     />
                     <StatCard
                         title="Out of Stocks"
-                        value={stocks.filter(s => s.product_stock === 0).length}
+                        value={stocks.filter(s => s.stock_qty === 0).length}
                         bg="bg-[#EF2F2A]"
                         icon={OutOfStocks}
                     />

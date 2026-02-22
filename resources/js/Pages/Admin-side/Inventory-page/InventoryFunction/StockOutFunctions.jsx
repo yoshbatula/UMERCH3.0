@@ -5,7 +5,7 @@ export const useStockOut = () => {
     const [logs, setLogs] = useState([]);
     const [stocks, setStocks] = useState([]);
 
-    const STOCK_API = "/admin/products";       // for StatCards
+    const STOCK_API = "/admin/stock-in";       // for StatCards (same as Stock-In)
     const LOG_API = "/admin/stock-out/logs";   // for table
 
     const fetchStocks = async () => {
