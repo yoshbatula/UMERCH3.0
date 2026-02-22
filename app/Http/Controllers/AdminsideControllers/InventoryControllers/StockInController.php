@@ -75,42 +75,15 @@ class StockInController extends Controller
                     ]
                 );
 
-                // Create stock-in log
-                $existing = StockIn::where('product_id', $product->product_id)
-                    ->where('variant', $variant)
-                    ->lockForUpdate()
-                    ->first();
-
-                if ($existing) {
-                    $existing->update([
-                        'stock_qty' => $existing->stock_qty + $request->stock_qty,
+                // Update or create stock-in log (don't add, just replace)
+                StockIn::updateOrCreate(
+                    ['product_id' => $product->product_id, 'variant' => $variant],
+                    [
+                        'stock_qty' => $newQty,
                         'cost' => $request->cost,
-                        'stock_in_date' => now(),
-                    ]);
-                } else {
-                    try {
-                        StockIn::create([
-                            'product_id' => $product->product_id,
-                            'variant' => $variant,
-                            'stock_qty' => $request->stock_qty,
-                            'cost' => $request->cost,
-                            'stock_in_date' => now()
-                        ]);
-                    } catch (\Illuminate\Database\QueryException $e) {
-                        $row = StockIn::where('product_id', $product->product_id)
-                            ->where('variant', $variant)
-                            ->lockForUpdate()
-                            ->first();
-                        if ($row) {
-                            $row->update([
-                                'stock_qty' => $row->stock_qty + $request->stock_qty,
-                                'cost' => $request->cost,
-                                'stock_in_date' => now(),
-                            ]);
-                        }
-                    }
-                }
-                
+                        'stock_in_date' => now()
+                    ]
+                );
 
                 // Log the stock-in activity
                 InventoryLog::create([

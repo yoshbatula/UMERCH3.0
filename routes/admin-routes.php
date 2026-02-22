@@ -102,10 +102,10 @@ Route::middleware(['auth', 'is_admin'])->group(function () {
         Route::get('/products', [InventoryController::class, 'index']);
         Route::post('/products', [InventoryController::class, 'store']);
         Route::post('/products/store', [InventoryController::class, 'store']);
-        Route::patch('/products/{id}', [InventoryController::class, 'update']);
-        Route::delete('/products/{id}', [InventoryController::class, 'destroy']);
-        Route::patch('/products/{id}/archive', [InventoryController::class, 'archive']);
-        Route::patch('/products/{id}/restore', [InventoryController::class, 'restore']);
+        Route::patch('/products/{product_id}', [InventoryController::class, 'update']);
+        Route::delete('/products/{product_id}', [InventoryController::class, 'destroy']);
+        Route::patch('/products/{product_id}/archive', [InventoryController::class, 'archive']);
+        Route::patch('/products/{product_id}/restore', [InventoryController::class, 'restore']);
 
         // STOCK IN
         Route::get('/stock-in', [StockInController::class, 'index']);

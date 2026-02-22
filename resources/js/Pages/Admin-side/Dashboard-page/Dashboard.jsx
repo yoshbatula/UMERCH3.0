@@ -139,6 +139,7 @@ export default function Dashboard() {
                     <StatCard
                         title="Today Products"
                         value={stats.todayProducts || 0}
+                        subtitle="Active Inventory Items"
                         icon={TodayProductsIcon}
                         bgColor="bg-[#F7962A]"
                     />

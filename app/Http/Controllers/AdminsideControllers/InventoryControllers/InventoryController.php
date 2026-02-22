@@ -133,16 +133,16 @@ class InventoryController extends Controller
         ]);
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, $product_id)
     {
         if (!Auth::check() || Auth::user()->role !== 'Admin') {
-            abort(403, 'Only admins can update products');
+            abort(403, 'Only admins can edit products');
         }
         $request->validate([
             'product_price' => 'required|numeric|min:0',
         ]);
         
-        $product = Products::findOrFail($id);
+        $product = Products::findOrFail($product_id);
 
         $data = [
             'product_name' => $request->product_name,
@@ -176,12 +176,12 @@ class InventoryController extends Controller
         ]);
     }
 
-    public function destroy($id)
+    public function destroy($product_id)
     {
         if (!Auth::check() || Auth::user()->role !== 'Admin') {
             abort(403, 'Only admins can delete products');
         }
-        $product = Products::findOrFail($id);
+        $product = Products::findOrFail($product_id);
         
         // Log the delete product operation
         InventoryLog::create([
@@ -201,15 +201,15 @@ class InventoryController extends Controller
         ]);
     }
 
-    public function archive($id)
+    public function archive($product_id)
     {
         if (!Auth::check() || Auth::user()->role !== 'Admin') {
             abort(403, 'Only admins can archive products');
         }
-        $product = Products::findOrFail($id);
+        $product = Products::findOrFail($product_id);
         
         // Check if there are any pending orders for this product
-        $pendingOrders = OrderItems::where('product_id', $id)
+        $pendingOrders = OrderItems::where('product_id', $product_id)
             ->whereHas('order', function($query) {
                 $query->where('status', 'Pending');
             })
@@ -237,12 +237,12 @@ class InventoryController extends Controller
         return response()->json(['message' => 'Product archived successfully!']);
     }
 
-    public function restore($id)
+    public function restore($product_id)
     {
         if (!Auth::check() || Auth::user()->role !== 'Admin') {
             abort(403, 'Only admins can restore products');
         }
-        $product = Products::findOrFail($id);
+        $product = Products::findOrFail($product_id);
         
         $product->update(['status' => 'active']);
         

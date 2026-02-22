@@ -10,6 +10,7 @@ export default function AddStock({ open, onClose, onSuccess }) {
     const [quantity, setQuantity] = useState("");
     const [quantityError, setQuantityError] = useState("");
     const [confirm, setConfirm] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const variantTypesMap = {
         size: ["XS", "S", "M", "L", "XL"],
@@ -76,6 +77,11 @@ export default function AddStock({ open, onClose, onSuccess }) {
     const handleSubmit = (e) => {
         e.preventDefault();
         
+        // Prevent double submission
+        if (isSubmitting) {
+            return;
+        }
+        
         // Find the selected product by name
         const selected = products.find(p => p.product_name === productId && p.status === 'active');
         
@@ -121,9 +127,12 @@ export default function AddStock({ open, onClose, onSuccess }) {
             return;
         }
         
+        setIsSubmitting(true);
+        
         router.post("/admin/stock-in/store", submitData, {
             onSuccess: () => {
                 console.log('Stock In Success');
+                setIsSubmitting(false);
                 if (onSuccess) onSuccess();
                 onClose();
                 setConfirm(false);
@@ -133,6 +142,7 @@ export default function AddStock({ open, onClose, onSuccess }) {
             },
             onError: (errors) => {
                 console.error('Stock In Error:', errors);
+                setIsSubmitting(false);
                 alert('Error adding stock: ' + JSON.stringify(errors));
             },
             preserveScroll: true,
@@ -271,13 +281,16 @@ export default function AddStock({ open, onClose, onSuccess }) {
                                 <button
                                     type="button"
                                     onClick={handleSubmit}
-                                    className="bg-red-800 text-white px-6 py-2 rounded-full text-sm hover:cursor-pointer"
+                                    disabled={isSubmitting}
+                                    className="bg-red-800 text-white px-6 py-2 rounded-full text-sm hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    Yes
+                                    {isSubmitting ? 'Adding...' : 'Yes'}
                                 </button>
                                 <button
+                                    type="button"
                                     onClick={() => setConfirm(false)}
-                                    className="border border-red-600 text-red-600 px-6 py-2 rounded-full text-sm hover:cursor-pointer"
+                                    disabled={isSubmitting}
+                                    className="border border-red-600 text-red-600 px-6 py-2 rounded-full text-sm hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     No
                                 </button>
