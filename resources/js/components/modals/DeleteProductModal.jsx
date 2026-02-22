@@ -1,19 +1,28 @@
 import React from 'react';
-import { router } from '@inertiajs/react';
 
 export default function DeleteProductModal({ open, onClose, product, onDeleted }) {
     if (!open || !product) return null;
 
-    const handleDelete = (e) => {
+    const handleDelete = async (e) => {
         e.preventDefault();
-        router.delete(`/admin/products/${product.product_id}`, {
-            onSuccess: () => {
+        try {
+            const response = await fetch(`/admin/products/${product.product_id}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json',
+                },
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
                 if (onDeleted) onDeleted();
                 onClose();
-            },
-            preserveScroll: true,
-            replace: true,
-        });
+            }
+        } catch (error) {
+            console.error('Delete error:', error);
+        }
     };
 
     return (
