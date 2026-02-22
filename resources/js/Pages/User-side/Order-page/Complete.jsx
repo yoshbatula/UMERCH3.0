@@ -3,6 +3,8 @@ import { router } from '@inertiajs/react';
 import BackgroundModel from '@images/BackgroundModel.png';
 import OrdersNav from '../../../components/layouts/OrdersNav';
 import Tshirt from '@images/tshirt.jpg';
+import LeftArrow from '@images/LeftArrow.svg';
+import RightArrow from '@images/RightArrow.svg';
 import Navbar from '../../../components/layouts/LandingNav';
 import Footer from '../../../components/layouts/Footer';
 import axios from 'axios';
@@ -12,6 +14,8 @@ export default function Completed() {
     const [loading, setLoading] = useState(true);
     const [buyingAgain, setBuyingAgain] = useState(null);
     const [toast, setToast] = useState(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 6;
 
     const showToast = (message, type = 'success') => {
         setToast({ message, type });
@@ -109,6 +113,18 @@ export default function Completed() {
         }
     };
 
+    // Pagination
+    const totalItems = orders.length;
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const paginatedOrders = orders.slice(startIndex, startIndex + itemsPerPage);
+
+    const goToPage = (page) => {
+        if (page >= 1 && page <= totalPages) {
+            setCurrentPage(page);
+        }
+    };
+
     if (loading) {
         return (
             <>
@@ -162,7 +178,7 @@ export default function Completed() {
                     <OrdersNav/>
                 </div>
                 <div className="flex flex-col items-center justify-center p-4 py-10 gap-5">
-                    {orders.map((order) => (
+                    {paginatedOrders.map((order) => (
                         <div key={order.order_id} className="flex flex-col bg-white w-300 h-auto rounded-[10px]">
                             <div className='flex flex-row p-4'>
                                 <h1 className='text-[#575757] text-[13px]'>Order ID: {order.order_id}</h1>
@@ -211,8 +227,35 @@ export default function Completed() {
                             </div>
                         </div>
                     ))}
-                </div>
-            </div>
+                </div>                {/* Pagination */}
+                <div className='flex flex-row justify-center items-center gap-4 py-10'>
+                    <button
+                        onClick={() => goToPage(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className='px-3 py-1 hover:cursor-pointer disabled:opacity-50'
+                    >
+                        <img src={LeftArrow} alt="Left Arrow" />
+                    </button>
+                    {Array.from({ length: Math.min(totalPages, 10) }, (_, i) => i + 1).map(page => (
+                        <button
+                            key={page}
+                            onClick={() => goToPage(page)}
+                            className={`px-3 py-1 border rounded hover:cursor-pointer ${page === currentPage
+                                    ? 'bg-[#9C0306] text-white border-gray-400'
+                                    : 'border-[#9C0306] text-[#9C0306]'
+                                }`}
+                        >
+                            {page}
+                        </button>
+                    ))}
+                    <button
+                        onClick={() => goToPage(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        className='px-3 py-1 hover:cursor-pointer disabled:opacity-50'
+                    >
+                        <img src={RightArrow} alt="Right Arrow" />
+                    </button>
+                </div>            </div>
             <Footer/>
 
             {/* Toast Notification */}
