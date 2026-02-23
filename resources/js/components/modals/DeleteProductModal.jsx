@@ -37,17 +37,21 @@ export default function DeleteProductModal({ open, onClose, product, onDeleted, 
         }
     };
 
+    const handleClose = () => {
+        onClose();
+    };
+
     return (
         <div
             className='fixed inset-0 z-50 flex justify-center items-center backdrop-blur-xs bg-black/5'
-            onClick={onClose}
+            onClick={handleClose}
         >
             <div
                 className="bg-[#F6F6F6] shadow-lg relative w-120 rounded-xl"
                 onClick={e => e.stopPropagation()}
             >
-                <div className='flex flex-col p-10 items-center justify-center'>
-                    <h1>Are you sure you want to remove this product?</h1>
+                <div className='flex flex-col items-center justify-center'>
+                    <h1 className='text-center font-semibold text-lg mb-2'>Are you sure you want to remove this product?</h1>
                     <div className='py-2 flex flex-col items-center'>
                     </div>
                     <div className='flex flex-row gap-3 mt-5'>
@@ -73,4 +77,3 @@ export default function DeleteProductModal({ open, onClose, product, onDeleted, 
         </div>
     );
 }
-                      
