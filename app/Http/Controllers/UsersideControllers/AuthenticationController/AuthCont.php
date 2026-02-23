@@ -22,7 +22,7 @@ class AuthCont extends Controller {
         $attempts = session('otp_attempts', 0);
 
         // Check if OTP exists and hasn't expired
-        if (!$sessionOtp || now()->greaterThan($expires)) {
+        if (!$sessionOtp || !$expires || now()->greaterThan($expires)) {
             session()->forget(['otp', 'otp_expires', 'otp_attempts']);
             return back()->withErrors(['otp' => 'The OTP has expired. Please request a new one.']);
         }

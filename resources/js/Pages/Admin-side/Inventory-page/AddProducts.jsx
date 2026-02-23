@@ -298,6 +298,7 @@ export default function AddProducts() {
                 onClose={() => setOpenDelete(false)}
                 product={selectedProduct}
                 onDeleted={() => { fetchProducts(); showToast("Product deleted successfully!"); }}
+                onShowToast={showToast}
             />
         </div>
         {showingToast && (

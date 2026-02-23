@@ -1,10 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 
-export default function DeleteProductModal({ open, onClose, product, onDeleted }) {
+export default function DeleteProductModal({ open, onClose, product, onDeleted, onShowToast }) {
+    const [isLoading, setIsLoading] = useState(false);
+
     if (!open || !product) return null;
 
     const handleDelete = async (e) => {
         e.preventDefault();
+        setIsLoading(true);
+
         try {
             const response = await fetch(`/admin/products/${product.product_id}`, {
                 method: 'DELETE',
@@ -18,10 +22,18 @@ export default function DeleteProductModal({ open, onClose, product, onDeleted }
 
             if (data.success) {
                 if (onDeleted) onDeleted();
+                setIsLoading(false);
+                onClose();
+            } else {
+                if (onShowToast) onShowToast(data.message || 'Failed to delete product', 'error');
+                setIsLoading(false);
                 onClose();
             }
         } catch (error) {
             console.error('Delete error:', error);
+            if (onShowToast) onShowToast('An error occurred while deleting the product', 'error');
+            setIsLoading(false);
+            onClose();
         }
     };
 
@@ -31,7 +43,7 @@ export default function DeleteProductModal({ open, onClose, product, onDeleted }
             onClick={onClose}
         >
             <div
-                className="bg-[#F6F6F6] shadow-lg relative w-120 h-40"
+                className="bg-[#F6F6F6] shadow-lg relative w-120 rounded-xl"
                 onClick={e => e.stopPropagation()}
             >
                 <div className='flex flex-col p-10 items-center justify-center'>
@@ -39,10 +51,20 @@ export default function DeleteProductModal({ open, onClose, product, onDeleted }
                     <div className='py-2 flex flex-col items-center'>
                     </div>
                     <div className='flex flex-row gap-3 mt-5'>
-                        <button type='button' className='flex justify-center items-center bg-[#9C0306] text-white text-[16px] font-semibold w-30 h-10 rounded-[5px] hover:cursor-pointer' onClick={handleDelete}>
-                            Yes
+                        <button
+                            type='button'
+                            disabled={isLoading}
+                            className='flex justify-center items-center bg-[#9C0306] text-white text-[16px] font-semibold w-30 h-10 rounded-[5px] hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
+                            onClick={handleDelete}
+                        >
+                            {isLoading ? 'Deleting...' : 'Yes'}
                         </button>
-                        <button type='button' className='flex justify-center items-center bg-white text-[#9C0306] text-[16px] font-semibold border border-[#9C0306] w-30 h-10 rounded-[5px] hover:cursor-pointer' onClick={onClose}>
+                        <button
+                            type='button'
+                            disabled={isLoading}
+                            className='flex justify-center items-center bg-white text-[#9C0306] text-[16px] font-semibold border border-[#9C0306] w-30 h-10 rounded-[5px] hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
+                            onClick={onClose}
+                        >
                             No
                         </button>
                     </div>
