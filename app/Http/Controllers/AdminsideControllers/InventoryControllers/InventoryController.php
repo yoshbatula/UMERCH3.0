@@ -183,6 +183,21 @@ class InventoryController extends Controller
         }
         $product = Products::findOrFail($product_id);
         
+        // Check if there are any pending or processing orders for this product
+        $pendingOrders = OrderItems::where('product_id', $product_id)
+            ->whereHas('order', function($query) {
+                $query->whereIn('status', ['Pending', 'Processing', 'Ready-for-pickup', 'Out-of-delivery']);
+            })
+            ->exists();
+        
+        if ($pendingOrders) {
+            return response()->json([
+                'message' => 'Cannot delete this product. There are pending or processing orders containing this item.',
+                'error' => 'pending_orders_exist',
+                'success' => false
+            ], 400);
+        }
+        
         // Log the delete product operation
         InventoryLog::create([
             'product_id' => $product->product_id,
