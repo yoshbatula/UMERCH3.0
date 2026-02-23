@@ -10,6 +10,8 @@ export const useStockIn = () => {
     const [toast, setToast] = useState("");
     const [showingToast, setShowingToast] = useState(false);
     const [receiptFormOpen, setReceiptFormOpen] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
 
     const API = "/admin/stock-in";
 
@@ -42,14 +44,26 @@ export const useStockIn = () => {
     };
 
     // Filter stocks based on search query
-    const filteredStocks = stocks.filter(stock => 
+    const filteredStocks = stocks.filter(stock =>
         stock.product_name.toLowerCase().includes(searchQuery.toLowerCase())
     );
+
+    // ✅ PAGINATION LOGIC
+    const totalPages = Math.ceil(filteredStocks.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedStocks = filteredStocks.slice(startIndex, endIndex);
+
+    // Reset to page 1 when search changes
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchQuery]);
 
     return {
         // State
         stocks,
         filteredStocks,
+        paginatedStocks,
         searchQuery,
         setSearchQuery,
         openAdd,
@@ -61,6 +75,10 @@ export const useStockIn = () => {
         toast,
         showingToast,
         receiptFormOpen,
+        currentPage,
+        setCurrentPage,
+        totalPages,
+        itemsPerPage,
 
         // Functions
         openReceiptForm,

@@ -1,6 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 export default function RecentTransaction({ recentTransactions }) {
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
+
+    // Calculate pagination
+    const totalPages = Math.ceil(recentTransactions.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedTransactions = recentTransactions.slice(startIndex, endIndex);
+
     return (
         <div className="flex-1 bg-white rounded-xl p-6 shadow-sm border border-gray-200">
             <div className="flex items-center justify-between mb-4">
@@ -18,8 +27,8 @@ export default function RecentTransaction({ recentTransactions }) {
 
             {/* Table Body */}
             <div className="divide-y divide-gray-100">
-                {recentTransactions.length > 0 ? (
-                    recentTransactions.map((transaction, index) => (
+                {paginatedTransactions.length > 0 ? (
+                    paginatedTransactions.map((transaction, index) => (
                         <div key={index} className="grid grid-cols-4 py-3 items-center text-sm">
                             <div className="flex items-center gap-2">
                                 <div className="w-8 h-8 bg-gray-200 rounded-full" />
@@ -47,6 +56,41 @@ export default function RecentTransaction({ recentTransactions }) {
                     </div>
                 )}
             </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+                <>
+                    <div className="border-t border-gray-200 mt-4" />
+                    <div className="py-4 flex items-center justify-center gap-7 text-sm font-semibold">
+                        <button
+                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                            disabled={currentPage === 1}
+                            className="text-black hover:text-[#9C0306] disabled:opacity-80 disabled:cursor-not-allowed"
+                        >
+                            Prev
+                        </button>
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                            <button
+                                key={page}
+                                onClick={() => setCurrentPage(page)}
+                                className={`${page === currentPage
+                                    ? 'text-[#9C0306]'
+                                    : 'text-gray-900 hover:text-[#9C0306]'
+                                    }`}
+                            >
+                                {page}
+                            </button>
+                        ))}
+                        <button
+                            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                            disabled={currentPage === totalPages}
+                            className="text-black hover:text-[#9C0306] disabled:opacity-80 disabled:cursor-not-allowed"
+                        >
+                            Next
+                        </button>
+                    </div>
+                </>
+            )}
         </div>
     );
 }

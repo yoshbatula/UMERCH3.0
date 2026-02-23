@@ -168,11 +168,11 @@ function UserLogs() {
               return (
                 <>
                   <div className="border-t border-gray-200" />
-                  <div className="py-7 flex items-center justify-center gap-10 text-sm font-semibold">
+                  <div className="py-4 flex items-center justify-center gap-7 text-sm font-semibold">
                     <button
                       onClick={() => goToPage(currentPage - 1, totalPages)}
                       disabled={currentPage === 1}
-                      className='text-gray-900 hover:text-[#9C0306] disabled:opacity-50 disabled:cursor-not-allowed'
+                      className='text-black hover:text-[#9C0306] disabled:opacity-80 disabled:cursor-not-allowed'
                     >
                       Prev
                     </button>
@@ -191,7 +191,7 @@ function UserLogs() {
                     <button
                       onClick={() => goToPage(currentPage + 1, totalPages)}
                       disabled={currentPage === totalPages}
-                      className='text-gray-900 hover:text-[#9C0306] disabled:opacity-50 disabled:cursor-not-allowed'
+                      className='text-black hover:text-[#9C0306] disabled:opacity-80 disabled:cursor-not-allowed'
                     >
                       Next
                     </button>

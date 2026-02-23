@@ -12,6 +12,8 @@ export const useAddProducts = () => {
     const [showingToast, setShowingToast] = useState(false);
     const [expandedProducts, setExpandedProducts] = useState({});
     const [searchQuery, setSearchQuery] = useState("");
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
 
     const API = "/admin/products";
 
@@ -106,14 +108,14 @@ export const useAddProducts = () => {
             await fetchProducts();
         } catch (error) {
             console.error("Archive failed", error);
-            
+
             // Check if error is due to pending orders
             if (error.response?.data?.error === 'pending_orders_exist') {
                 showToast("Cannot archive this product. There are pending orders containing this item.");
             } else {
                 showToast(error.response?.data?.message || "Failed to archive product");
             }
-            
+
             // Revert on error
             await fetchProducts();
         }
@@ -148,6 +150,32 @@ export const useAddProducts = () => {
         }
     };
 
+    // ✅ PAGINATION LOGIC
+    const getFilteredAndGroupedProducts = () => {
+        const groupedProducts = groupProductsByName(products);
+        const filteredProducts = Object.entries(groupedProducts).filter(
+            ([productName]) => {
+                if (!productName) return false;
+                return productName.toLowerCase().includes(searchQuery.toLowerCase());
+            }
+        );
+        return filteredProducts;
+    };
+
+    const getPaginatedProducts = () => {
+        const filteredProducts = getFilteredAndGroupedProducts();
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        return filteredProducts.slice(startIndex, endIndex);
+    };
+
+    const totalPages = Math.ceil(getFilteredAndGroupedProducts().length / itemsPerPage);
+
+    // Reset to page 1 when search changes
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchQuery]);
+
     return {
         // State
         products,
@@ -164,6 +192,10 @@ export const useAddProducts = () => {
         expandedProducts,
         searchQuery,
         setSearchQuery,
+        currentPage,
+        setCurrentPage,
+        totalPages,
+        itemsPerPage,
 
         // Functions
         normalizeImageUrl,
@@ -174,5 +206,7 @@ export const useAddProducts = () => {
         handleDelete,
         handleArchive,
         handleRestore,
+        getPaginatedProducts,
+        getFilteredAndGroupedProducts,
     };
 };

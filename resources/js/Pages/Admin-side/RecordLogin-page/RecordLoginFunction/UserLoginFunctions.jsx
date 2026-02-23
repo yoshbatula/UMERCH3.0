@@ -13,7 +13,7 @@ export const useUserLogs = () => {
     const [userToDelete, setUserToDelete] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [actionModalOpen, setActionModalOpen] = useState(null);
-    const itemsPerPage = 5;
+    const itemsPerPage = 10;
 
     const fetchUsers = () => {
         fetch("/api/admin/users")

@@ -7,14 +7,16 @@ export default function InventoryReport() {
     const [filterType, setFilterType] = useState("day");
     const [filterDate, setFilterDate] = useState(new Date().toISOString().split('T')[0]);
     const [reportData, setReportData] = useState([]);
-    const [totals, setTotals] = useState({ 
-        sold_qty: 0, 
+    const [totals, setTotals] = useState({
+        sold_qty: 0,
         purchased_qty: 0,
         sold_value: 0,
         purchased_value: 0
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
 
     // Fetch report data
     const fetchReport = async () => {
@@ -48,7 +50,14 @@ export default function InventoryReport() {
     // Fetch report when filters change
     useEffect(() => {
         fetchReport();
+        setCurrentPage(1); // Reset to page 1 when filters change
     }, [filterType, filterDate]);
+
+    // ✅ PAGINATION LOGIC
+    const totalPages = Math.ceil(reportData.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedData = reportData.slice(startIndex, endIndex);
 
     // Export as CSV
     const handleExportCSV = async () => {
@@ -233,7 +242,7 @@ export default function InventoryReport() {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {reportData.map((row, idx) => (
+                                        {paginatedData.map((row, idx) => (
                                             <tr
                                                 key={idx}
                                                 className="border-b border-gray-200 hover:bg-gray-50"
@@ -245,11 +254,10 @@ export default function InventoryReport() {
                                                     {row.product_name}
                                                 </td>
                                                 <td className="px-6 py-4 text-sm">
-                                                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                                                        row.status === 'active' 
-                                                            ? 'bg-green-100 text-green-800' 
+                                                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${row.status === 'active'
+                                                            ? 'bg-green-100 text-green-800'
                                                             : 'bg-gray-100 text-gray-800'
-                                                    }`}>
+                                                        }`}>
                                                         {row.status === 'active' ? 'Active' : 'Archived'}
                                                     </span>
                                                 </td>
@@ -282,6 +290,38 @@ export default function InventoryReport() {
                                     </tbody>
                                 </table>
                             </div>
+
+                            {/* Pagination */}
+                            {totalPages > 1 && (
+                                <div className="flex justify-center items-center gap-6 py-4 border-t border-gray-200">
+                                    <button
+                                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                        disabled={currentPage === 1}
+                                        className="text-gray-900 hover:text-[#9C0306] disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-sm"
+                                    >
+                                        Prev
+                                    </button>
+                                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                                        <button
+                                            key={page}
+                                            onClick={() => setCurrentPage(page)}
+                                            className={`font-semibold text-sm ${page === currentPage
+                                                    ? 'text-[#9C0306]'
+                                                    : 'text-gray-900 hover:text-[#9C0306]'
+                                                }`}
+                                        >
+                                            {page}
+                                        </button>
+                                    ))}
+                                    <button
+                                        onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                        disabled={currentPage === totalPages}
+                                        className="text-gray-900 hover:text-[#9C0306] disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-sm"
+                                    >
+                                        Next
+                                    </button>
+                                </div>
+                            )}
 
                             {/* Totals Section */}
                             <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">

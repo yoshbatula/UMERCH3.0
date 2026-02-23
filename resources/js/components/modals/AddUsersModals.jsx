@@ -10,6 +10,36 @@ export default function AddUsersModals({ isOpen, onClose, onUserAdded }) {
     });
 
     const [visible, setVisible] = useState(false);
+    const [passwordStrength, setPasswordStrength] = useState({ level: '', color: '', text: '' });
+
+    // Function to calculate password strength
+    const calculatePasswordStrength = (password) => {
+        if (!password) {
+            return { level: '', color: '', text: '' };
+        }
+
+        let strength = 0;
+        const hasLowerCase = /[a-z]/.test(password);
+        const hasUpperCase = /[A-Z]/.test(password);
+        const hasNumbers = /\d/.test(password);
+        const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+        const isLongEnough = password.length >= 8;
+
+        if (hasLowerCase) strength++;
+        if (hasUpperCase) strength++;
+        if (hasNumbers) strength++;
+        if (hasSpecialChar) strength++;
+        if (isLongEnough) strength++;
+
+        // Determine strength level
+        if (password.length < 6 || strength <= 2) {
+            return { level: 'weak', color: 'bg-red-500', text: 'Weak' };
+        } else if (password.length >= 6 && strength <= 3) {
+            return { level: 'medium', color: 'bg-yellow-500', text: 'Medium' };
+        } else {
+            return { level: 'strong', color: 'bg-green-500', text: 'Strong' };
+        }
+    };
 
     useEffect(() => {
         if (isOpen) {
@@ -25,6 +55,13 @@ export default function AddUsersModals({ isOpen, onClose, onUserAdded }) {
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setData(name, value);
+
+        // Calculate password strength when password changes
+        if (name === 'password') {
+            const strength = calculatePasswordStrength(value);
+            setPasswordStrength(strength);
+        }
+
         // Clear the specific field error as the user corrects it
         clearErrors(name);
     };
@@ -40,6 +77,7 @@ export default function AddUsersModals({ isOpen, onClose, onUserAdded }) {
                     onUserAdded(newUser);
                 }
                 reset();
+                setPasswordStrength({ level: '', color: '', text: '' });
                 onClose();
             },
             onError: (errors) => {
@@ -146,6 +184,33 @@ export default function AddUsersModals({ isOpen, onClose, onUserAdded }) {
                                 placeholder="Enter password"
                                 required
                             />
+
+                            {/* Password Strength Indicator */}
+                            {data.password && (
+                                <div className="mt-2">
+                                    <div className="flex items-center gap-2">
+                                        <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                                            <div
+                                                className={`h-full transition-all duration-300 ${passwordStrength.color}`}
+                                                style={{
+                                                    width: passwordStrength.level === 'weak' ? '33%' :
+                                                        passwordStrength.level === 'medium' ? '66%' : '100%'
+                                                }}
+                                            ></div>
+                                        </div>
+                                        <span className={`text-sm font-medium ${passwordStrength.level === 'weak' ? 'text-red-500' :
+                                                passwordStrength.level === 'medium' ? 'text-yellow-500' :
+                                                    'text-green-500'
+                                            }`}>
+                                            {passwordStrength.text}
+                                        </span>
+                                    </div>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        Use 8+ characters with a mix of uppercase, lowercase, numbers & symbols
+                                    </p>
+                                </div>
+                            )}
+
                             {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
                         </div>
                     </div>

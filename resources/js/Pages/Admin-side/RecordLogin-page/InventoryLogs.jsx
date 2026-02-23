@@ -156,29 +156,39 @@ function InventoryLogs() {
 
                     {/* Pagination */}
                     {!loading && logs.length > 0 && (
-                        <div className="px-6 py-4 flex items-center justify-between border-t border-gray-200">
-                            <div className="text-sm text-gray-600">
-                                Page {currentPage} of {totalPages}
-                            </div>
-                            <div className="flex gap-2">
+                        <>
+                            <div className="border-t border-gray-200" />
+                            <div className="py-4 flex items-center justify-center gap-7 text-sm font-semibold">
                                 <button
                                     onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                                     disabled={currentPage === 1}
-                                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="text-black hover:text-[#9C0306] disabled:opacity-80 disabled:cursor-not-allowed"
                                 >
-                                    Previous
+                                    Prev
                                 </button>
+                                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                                    <button
+                                        key={page}
+                                        onClick={() => setCurrentPage(page)}
+                                        className={`${page === currentPage
+                                            ? 'text-[#9C0306]'
+                                            : 'text-gray-900 hover:text-[#9C0306]'
+                                            }`}
+                                    >
+                                        {page}
+                                    </button>
+                                ))}
                                 <button
                                     onClick={() =>
                                         setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                                     }
                                     disabled={currentPage === totalPages}
-                                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="text-black hover:text-[#9C0306] disabled:opacity-80 disabled:cursor-not-allowed"
                                 >
                                     Next
                                 </button>
                             </div>
-                        </div>
+                        </>
                     )}
                 </div>
 

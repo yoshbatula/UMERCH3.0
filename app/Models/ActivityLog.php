@@ -48,6 +48,8 @@ class ActivityLog extends Model
      */
     public static function logLogout($user)
     {
+       
+            
         return self::create([
             'action' => 'Logout',
             'description' => "User {$user->user_fullname} (ID: {$user->um_id}) logged out",

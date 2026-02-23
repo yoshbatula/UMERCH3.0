@@ -28,8 +28,8 @@ const StatCard = ({ title, value, className, icon }) => (
 export default function AddProducts() {
     const { products, openAdd, setOpenAdd, openEdit, setOpenEdit, selectedProduct, setSelectedProduct,
         openDelete, setOpenDelete, toast, showingToast, expandedProducts, searchQuery, setSearchQuery,
-        normalizeImageUrl, groupProductsByName, fetchProducts, showToast, toggleExpanded,
-        handleDelete, handleArchive, handleRestore, } = useAddProducts();
+        currentPage, setCurrentPage, totalPages, normalizeImageUrl, groupProductsByName, fetchProducts, showToast, toggleExpanded,
+        handleDelete, handleArchive, handleRestore, getPaginatedProducts, getFilteredAndGroupedProducts, } = useAddProducts();
 
     return (<>
         <div className="flex min-h-screen bg-gray-100">
@@ -111,23 +111,17 @@ export default function AddProducts() {
                                     );
                                 }
 
-                                const groupedProducts = groupProductsByName(products);
-                                const filteredProducts = Object.entries(groupedProducts).filter(
-                                    ([productName]) => {
-                                        if (!productName) return false;
-                                        return productName.toLowerCase().includes(searchQuery.toLowerCase());
-                                    }
-                                );
+                                const paginatedProducts = getPaginatedProducts();
 
-                                if (filteredProducts.length === 0) {
+                                if (paginatedProducts.length === 0) {
                                     return (
                                         <div className="text-center py-20 text-gray-400">
                                             No products found
                                         </div>
                                     );
                                 }
-// done fixing the product
-                                return filteredProducts.map(
+                                // done fixing the product
+                                return paginatedProducts.map(
                                     ([productName, variants]) => (
                                         <div key={productName}>
                                             {/* Main Product Row */}
@@ -238,6 +232,41 @@ export default function AddProducts() {
                                 );
                             })()}
                         </div>
+
+                        {/* Pagination */}
+                        {totalPages > 1 && (
+                            <>
+                                <div className="border-t border-gray-200" />
+                                <div className="py-4 flex items-center justify-center gap-7 text-sm font-semibold">
+                                    <button
+                                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                        disabled={currentPage === 1}
+                                        className="text-black hover:text-[#9C0306] disabled:opacity-80 disabled:cursor-not-allowed"
+                                    >
+                                        Prev
+                                    </button>
+                                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                                        <button
+                                            key={page}
+                                            onClick={() => setCurrentPage(page)}
+                                            className={`${page === currentPage
+                                                ? 'text-[#9C0306]'
+                                                : 'text-gray-900 hover:text-[#9C0306]'
+                                                }`}
+                                        >
+                                            {page}
+                                        </button>
+                                    ))}
+                                    <button
+                                        onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                        disabled={currentPage === totalPages}
+                                        className="text-black hover:text-[#9C0306] disabled:opacity-80 disabled:cursor-not-allowed"
+                                    >
+                                        Next
+                                    </button>
+                                </div>
+                            </>
+                        )}
                     </div>
                 </div>
 

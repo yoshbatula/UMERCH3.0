@@ -31,7 +31,7 @@ const StatCard = ({ title, value, bg, icon }) => (
 );
 
 export default function StockOut() {
-    const { logs, stocks, fetchStocks, fetchLogs, } = useStockOut();
+    const { logs, allLogs, stocks, searchQuery, setSearchQuery, currentPage, setCurrentPage, totalPages, itemsPerPage, fetchStocks, fetchLogs, } = useStockOut();
 
     return (
         <div className="flex min-h-screen bg-gray-100">
@@ -82,6 +82,8 @@ export default function StockOut() {
                             type="text"
                             placeholder="Search Product Name"
                             className="bg-transparent outline-none w-full text-sm"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
                         />
                     </div>
                 </div>
@@ -115,6 +117,41 @@ export default function StockOut() {
                             ))
                         )}
                     </div>
+
+                    {/* Pagination */}
+                    {allLogs.length > 0 && totalPages > 1 && (
+                        <>
+                            <div className="border-t border-gray-200" />
+                            <div className="py-4 flex items-center justify-center gap-7 text-sm font-semibold">
+                                <button
+                                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                    disabled={currentPage === 1}
+                                    className="text-black hover:text-[#9C0306] disabled:opacity-80 disabled:cursor-not-allowed"
+                                >
+                                    Prev
+                                </button>
+                                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                                    <button
+                                        key={page}
+                                        onClick={() => setCurrentPage(page)}
+                                        className={`${page === currentPage
+                                            ? 'text-[#9C0306]'
+                                            : 'text-gray-900 hover:text-[#9C0306]'
+                                            }`}
+                                    >
+                                        {page}
+                                    </button>
+                                ))}
+                                <button
+                                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                    disabled={currentPage === totalPages}
+                                    className="text-black hover:text-[#9C0306] disabled:opacity-80 disabled:cursor-not-allowed"
+                                >
+                                    Next
+                                </button>
+                            </div>
+                        </>
+                    )}
                 </div>
 
                 <AdminFooter />

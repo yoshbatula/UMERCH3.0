@@ -29,8 +29,8 @@ const StatCard = ({ title, value, bg, icon }) => (
 );
 
 export default function StockIn() {
-    const { stocks, filteredStocks, searchQuery, setSearchQuery, openAdd, setOpenAdd, openEdit, setOpenEdit, selectedStock, setSelectedStock,
-        toast, showingToast, receiptFormOpen, openReceiptForm,
+    const { stocks, filteredStocks, paginatedStocks, searchQuery, setSearchQuery, openAdd, setOpenAdd, openEdit, setOpenEdit, selectedStock, setSelectedStock,
+        toast, showingToast, receiptFormOpen, currentPage, setCurrentPage, totalPages, openReceiptForm,
         closeReceiptForm, fetchStocks, showToast, getStatus, } = useStockIn();
 
     return (
@@ -104,7 +104,7 @@ export default function StockIn() {
                     </div>
 
                     <div className="min-h-[420px]">
-                        {filteredStocks.map(stock => {
+                        {paginatedStocks.map(stock => {
                             const status = getStatus(stock.stock_qty);
                             return (
                                 <div
@@ -150,6 +150,41 @@ export default function StockIn() {
                             );
                         })}
                     </div>
+
+                    {/* Pagination */}
+                    {totalPages > 1 && (
+                        <>
+                            <div className="border-t border-gray-200" />
+                            <div className="py-4 flex items-center justify-center gap-7 text-sm font-semibold">
+                                <button
+                                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                    disabled={currentPage === 1}
+                                    className="text-black hover:text-[#9C0306] disabled:opacity-80 disabled:cursor-not-allowed"
+                                >
+                                    Prev
+                                </button>
+                                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                                    <button
+                                        key={page}
+                                        onClick={() => setCurrentPage(page)}
+                                        className={`${page === currentPage
+                                            ? 'text-[#9C0306]'
+                                            : 'text-gray-900 hover:text-[#9C0306]'
+                                            }`}
+                                    >
+                                        {page}
+                                    </button>
+                                ))}
+                                <button
+                                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                    disabled={currentPage === totalPages}
+                                    className="text-black hover:text-[#9C0306] disabled:opacity-80 disabled:cursor-not-allowed"
+                                >
+                                    Next
+                                </button>
+                            </div>
+                        </>
+                    )}
                 </div>
 
                 <AdminFooter />
