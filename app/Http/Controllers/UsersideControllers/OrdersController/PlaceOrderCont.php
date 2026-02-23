@@ -107,6 +107,8 @@ class PlaceOrderCont extends Controller
         }
     }
 
+    // Get orders for the authenticated user
+
     public function getUserOrders()
     {
         try {
@@ -197,10 +199,10 @@ class PlaceOrderCont extends Controller
             $file = request()->file('receipt_form');
             
             // Validate file type
-            $allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'];
+            $allowedMimes = ['image/jpeg', 'image/png', 'application/pdf'];
             if (!in_array($file->getMimeType(), $allowedMimes)) {
                 return response()->json([
-                    'message' => 'Invalid file type. Only images and PDF are allowed'
+                    'message' => 'Invalid file type. Only JPG, PNG, and PDF are allowed'
                 ], 400);
             }
 
