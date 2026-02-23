@@ -23,7 +23,7 @@ use App\Http\Controllers\UsersideControllers\LoginControllers\LoginCont;
 | ADMIN DASHBOARD
 |--------------------------------------------------------------------------
 */
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'is_admin'])->group(function () {
     // Debug endpoint to verify session and auth
     Route::get('/admin/debug', function () {
         return response()->json([
@@ -76,23 +76,14 @@ Route::middleware('auth')->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::get('admin/inventory/add', function () {
-        if (!Auth::check() || Auth::user()->role !== 'Admin') {
-            abort(403, 'Only admins can add products');
-        }
         return inertia('Admin-side/Inventory-page/AddProducts');
     })->name('AddProducts');
 
     Route::get('/admin/inventory/stock-in', function () {
-        if (!Auth::check() || Auth::user()->role !== 'Admin') {
-            abort(403, 'Only admins can access stock-in');
-        }
         return inertia('Admin-side/Inventory-page/Stock-In');
     })->name('StockIn');
 
     Route::get('/admin/inventory/stock-out', function () {
-        if (!Auth::check() || Auth::user()->role !== 'Admin') {
-            abort(403, 'Only admins can access stock-out');
-        }
         return inertia('Admin-side/Inventory-page/Stock-Out');
     })->name('StockOut');
 
@@ -111,10 +102,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/products', [InventoryController::class, 'index']);
         Route::post('/products', [InventoryController::class, 'store']);
         Route::post('/products/store', [InventoryController::class, 'store']);
-        Route::patch('/products/{id}', [InventoryController::class, 'update']);
-        Route::delete('/products/{id}', [InventoryController::class, 'destroy']);
-        Route::patch('/products/{id}/archive', [InventoryController::class, 'archive']);
-        Route::patch('/products/{id}/restore', [InventoryController::class, 'restore']);
+        Route::patch('/products/{product_id}', [InventoryController::class, 'update']);
+        Route::delete('/products/{product_id}', [InventoryController::class, 'destroy']);
+        Route::patch('/products/{product_id}/archive', [InventoryController::class, 'archive']);
+        Route::patch('/products/{product_id}/restore', [InventoryController::class, 'restore']);
 
         // STOCK IN
         Route::get('/stock-in', [StockInController::class, 'index']);

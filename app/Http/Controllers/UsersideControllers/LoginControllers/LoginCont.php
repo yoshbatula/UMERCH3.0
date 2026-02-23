@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Mail;
-// This controllers handles user login functionality
+
 class LoginCont extends Controller
 {
     
@@ -30,15 +30,14 @@ class LoginCont extends Controller
         // user:admin
         // password:umerch2026
         if ($credentials['login'] === 'admin' && $credentials['password'] === 'umerch2026') {
-            // Check if admin user exists in database
             $adminUser = User::where('email', 'admin@umerch.com')->first();
             
             if (!$adminUser) {
-                // Create admin user if not exists
+               
                 $adminUser = User::create([
                     'user_fullname' => 'Admin',
                     'email' => 'admin@umerch.com',
-                    'um_id' => 1,  // Use integer ID
+                    'um_id' => 1,  
                     'user_password' => 'umerch2026',
                     'role' => 'Admin',
                     'status' => 'active'
@@ -54,10 +53,9 @@ class LoginCont extends Controller
             Auth::login($adminUser, $credentials['remember'] ?? false);
             $request->session()->regenerate();
             
-            // Log the login activity
+           
             ActivityLog::logLogin($adminUser);
             
-            // Return JSON for axios or redirect for form submissions
             if ($request->expectsJson()) {
                 return response()->json(['redirect' => '/admin']);
             }
@@ -71,7 +69,7 @@ class LoginCont extends Controller
         $user = User::where($field, $credentials['login'])->first();
 
         if ($user) {
-            // Check if user account is inactive
+         
             if (isset($user->status) && $user->status === 'inactive') {
                 $message = 'Your account has been deactivated. Please contact an administrator.';
                 if ($request->expectsJson()) {
