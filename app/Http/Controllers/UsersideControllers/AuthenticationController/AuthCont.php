@@ -4,6 +4,7 @@ namespace App\Http\Controllers\UsersideControllers\AuthenticationController;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Mail\OtpMail;
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -56,10 +57,7 @@ class AuthCont extends Controller {
         $otp = random_int(100000, 999999);
         session(['otp' => $otp, 'otp_expires' => now()->addMinutes(5), 'otp_attempts' => 0]);
 
-        Mail::raw("Your OTP code is: $otp", function ($message) use ($user) {
-            $message->to($user->email)
-                    ->subject('Your OTP Code');
-        });
+        Mail::to($user->email)->send(new OtpMail($otp, $user->user_fullname ?? 'User'));
 
         return redirect()->route('authentication')->with('status', 'OTP resent successfully');
     }
@@ -99,5 +97,6 @@ class AuthCont extends Controller {
         return $censoredName . '@' . $domain;
     }
 }
+
 
 

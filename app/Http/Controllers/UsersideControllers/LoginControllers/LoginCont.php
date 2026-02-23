@@ -96,10 +96,7 @@ class LoginCont extends Controller
                 // Generate and send OTP
                 $otp = random_int(100000, 999999);
                 session(['otp' => $otp, 'otp_expires' => now()->addMinutes(5)]);
-                Mail::raw("Your OTP code is: $otp", function ($message) use ($user) {
-                    $message->to($user->email)
-                            ->subject('Your OTP Code');
-                });
+                Mail::to($user->email)->send(new \App\Mail\OtpMail($otp, $user->user_fullname ?? 'User'));
 
                 // Return JSON for axios or redirect for form submissions
                 if ($request->expectsJson()) {
