@@ -4,6 +4,7 @@ namespace App\Http\Controllers\UsersideControllers\AuthenticationController;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Models\ActivityLog;
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -77,6 +78,14 @@ class AuthCont extends Controller {
     // Logout user
     public function logout(Request $request)
     {
+        // Get the authenticated user before logging out
+        $user = Auth::user();
+        
+        // Log the logout activity if user exists
+        if ($user) {
+            ActivityLog::logLogout($user);
+        }
+        
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();

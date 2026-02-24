@@ -121,6 +121,13 @@ class LoginCont extends Controller
      */
     public function logout(Request $request)
     {   
+        // Get the authenticated user before logging out
+        $user = Auth::user();
+        
+        // Log the logout activity if user exists
+        if ($user) {
+            ActivityLog::logLogout($user);
+        }
         
         Auth::logout();
         $request->session()->invalidate();
