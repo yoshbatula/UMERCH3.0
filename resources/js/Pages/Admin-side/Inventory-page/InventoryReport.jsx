@@ -86,27 +86,203 @@ export default function InventoryReport() {
         }
     };
 
-    // Export as Excel
+    // Export as Excel (professional, client-side via ExcelJS)
     const handleExportExcel = async () => {
         try {
-            const response = await axios.get("/admin/inventory-report/export-excel", {
-                params: {
-                    filterType: filterType,
-                    filterDate: filterDate,
-                },
-                responseType: "blob",
+            const ExcelJS = (await import("exceljs")).default;
+            const workbook = new ExcelJS.Workbook();
+            workbook.creator = "UMERCH Admin";
+            workbook.created = new Date();
+
+            const sheet = workbook.addWorksheet("Inventory Report", {
+                pageSetup: { paperSize: 9, orientation: "landscape", fitToPage: true, fitToWidth: 1 },
             });
 
-            const url = window.URL.createObjectURL(new Blob([response.data]));
+            // ── Column definitions ──────────────────────────────────────
+            sheet.columns = [
+                { key: "date", width: 20 },
+                { key: "name", width: 30 },
+                { key: "status", width: 12 },
+                { key: "variant", width: 14 },
+                { key: "price", width: 14 },
+                { key: "sold_qty", width: 12 },
+                { key: "sold_val", width: 16 },
+                { key: "decrease", width: 14 },
+                { key: "purch_qty", width: 14 },
+                { key: "purch_val", width: 16 },
+                { key: "stock", width: 14 },
+            ];
+
+            const totalCols = sheet.columns.length;                 // 11
+            const DARK_RED = "FF9C0306";
+            const MID_RED = "FFB71C1C";
+            const LIGHT_RED = "FFFCE4EC";
+            const ALT_ROW = "FFFFF8F8";
+            const WHITE = "FFFFFFFF";
+            const GOLD = "FFFFD700";
+            const DARK_TEXT = "FF1A1A1A";
+            const WHITE_TEXT = "FFFFFFFF";
+            const GRAY_FILL = "FFF5F5F5";
+
+            // ── Helper: merge & style a banner row ──────────────────────
+            const addBanner = (text, rowNum, bgColor, fontColor, fontSize, bold = true) => {
+                sheet.mergeCells(rowNum, 1, rowNum, totalCols);
+                const row = sheet.getRow(rowNum);
+                const cell = row.getCell(1);
+                cell.value = text;
+                cell.font = { name: "Calibri", bold, size: fontSize, color: { argb: fontColor } };
+                cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: bgColor } };
+                cell.alignment = { horizontal: "center", vertical: "middle" };
+                row.height = fontSize * 2.4;
+            };
+
+            // ── Row 1: Company / Report title ───────────────────────────
+            addBanner("UMERCH — INVENTORY REPORT", 1, DARK_RED, WHITE_TEXT, 18);
+
+            // ── Row 2: Period subtitle ───────────────────────────────────
+            const periodLabel = reportData.length > 0
+                ? `Period: ${reportData[0].date_range.display}  |  Generated: ${new Date().toLocaleDateString("en-PH", { year: "numeric", month: "long", day: "numeric" })}`
+                : `Generated: ${new Date().toLocaleDateString("en-PH", { year: "numeric", month: "long", day: "numeric" })}`;
+            addBanner(periodLabel, 2, MID_RED, WHITE_TEXT, 11, false);
+
+            // ── Row 3: Empty spacer ──────────────────────────────────────
+            sheet.getRow(3).height = 6;
+
+            // ── Row 4: Column headers ────────────────────────────────────
+            const headers = [
+                "Date / Period", "Product Name", "Status", "Variant",
+                "Unit Price", "Sold Qty", "Sold Value",
+                "Stock Decrease", "Purchased Qty", "Purchased Value", "Current Stock",
+            ];
+            const headerRow = sheet.getRow(4);
+            headers.forEach((h, i) => {
+                const cell = headerRow.getCell(i + 1);
+                cell.value = h;
+                cell.font = { name: "Calibri", bold: true, size: 11, color: { argb: WHITE_TEXT } };
+                cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: DARK_RED } };
+                cell.alignment = { horizontal: i >= 4 ? "right" : "left", vertical: "middle", wrapText: true };
+                cell.border = {
+                    top: { style: "thin", color: { argb: "FFEEEEEE" } },
+                    bottom: { style: "thin", color: { argb: "FFEEEEEE" } },
+                    left: { style: "thin", color: { argb: "FFEEEEEE" } },
+                    right: { style: "thin", color: { argb: "FFEEEEEE" } },
+                };
+            });
+            headerRow.height = 28;
+
+            // ── Rows 5+: Data ────────────────────────────────────────────
+            reportData.forEach((row, idx) => {
+                const isAlt = idx % 2 === 1;
+                const fill = { type: "pattern", pattern: "solid", fgColor: { argb: isAlt ? ALT_ROW : WHITE } };
+                const border = {
+                    top: { style: "hair", color: { argb: "FFDDDDDD" } },
+                    bottom: { style: "hair", color: { argb: "FFDDDDDD" } },
+                    left: { style: "hair", color: { argb: "FFDDDDDD" } },
+                    right: { style: "hair", color: { argb: "FFDDDDDD" } },
+                };
+
+                const r = sheet.addRow({
+                    date: row.date_range.display,
+                    name: row.product_name,
+                    status: row.status === "active" ? "Active" : "Archived",
+                    variant: row.variant_type || "-",
+                    price: row.unit_price,
+                    sold_qty: row.sold_qty,
+                    sold_val: row.sold_value,
+                    decrease: row.stock_decrease,
+                    purch_qty: row.purchased_qty,
+                    purch_val: row.purchased_value,
+                    stock: row.current_stock,
+                });
+
+                r.eachCell((cell, colNum) => {
+                    cell.fill = fill;
+                    cell.border = border;
+                    cell.font = { name: "Calibri", size: 10, color: { argb: DARK_TEXT } };
+                    // Right-align numeric columns (5–11)
+                    cell.alignment = { horizontal: colNum >= 5 ? "right" : "left", vertical: "middle" };
+                    // Currency format for price / value columns
+                    if ([5, 7, 10].includes(colNum)) {
+                        cell.numFmt = '"₱"#,##0.00';
+                    }
+                    // Status color
+                    if (colNum === 3) {
+                        cell.font = {
+                            name: "Calibri", size: 10, bold: true,
+                            color: { argb: row.status === "active" ? "FF1B5E20" : "FF616161" },
+                        };
+                    }
+                    // Sold value red
+                    if ([6, 7].includes(colNum)) {
+                        cell.font = { name: "Calibri", size: 10, bold: true, color: { argb: "FF9C0306" } };
+                    }
+                    // Purchased value green
+                    if ([9, 10].includes(colNum)) {
+                        cell.font = { name: "Calibri", size: 10, bold: true, color: { argb: "FF1B5E20" } };
+                    }
+                });
+                r.height = 20;
+            });
+
+            // ── Spacer row ───────────────────────────────────────────────
+            const spacer = sheet.addRow([]);
+            spacer.height = 6;
+
+            // ── Totals row ───────────────────────────────────────────────
+            const totalsRow = sheet.addRow({
+                date: "TOTALS",
+                name: "",
+                status: "",
+                variant: "",
+                price: "",
+                sold_qty: totals.sold_qty,
+                sold_val: totals.sold_value,
+                decrease: totals.sold_qty,
+                purch_qty: totals.purchased_qty,
+                purch_val: totals.purchased_value,
+                stock: "",
+            });
+
+            totalsRow.eachCell((cell, colNum) => {
+                cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: GRAY_FILL } };
+                cell.font = { name: "Calibri", size: 11, bold: true, color: { argb: DARK_TEXT } };
+                cell.alignment = { horizontal: colNum >= 5 ? "right" : "left", vertical: "middle" };
+                cell.border = {
+                    top: { style: "medium", color: { argb: DARK_RED } },
+                    bottom: { style: "medium", color: { argb: DARK_RED } },
+                };
+                if ([7, 10].includes(colNum)) cell.numFmt = '"₱"#,##0.00';
+            });
+            totalsRow.height = 24;
+
+            // Highlight "TOTALS" label cell
+            const totalsLabelCell = totalsRow.getCell(1);
+            totalsLabelCell.font = { name: "Calibri", size: 11, bold: true, color: { argb: WHITE_TEXT } };
+            totalsLabelCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: DARK_RED } };
+            sheet.mergeCells(totalsRow.number, 1, totalsRow.number, 4);
+
+            // ── Footer row ───────────────────────────────────────────────
+            const footerRowNum = totalsRow.number + 2;
+            sheet.mergeCells(footerRowNum, 1, footerRowNum, totalCols);
+            const footerCell = sheet.getRow(footerRowNum).getCell(1);
+            footerCell.value = "This report is system-generated by UMERCH. For internal use only.";
+            footerCell.font = { name: "Calibri", italic: true, size: 9, color: { argb: "FF999999" } };
+            footerCell.alignment = { horizontal: "center" };
+
+            // ── Freeze panes ─────────────────────────────────────────────
+            sheet.views = [{ state: "frozen", xSplit: 0, ySplit: 4, showGridLines: true }];
+
+            // ── Download ─────────────────────────────────────────────────
+            const buffer = await workbook.xlsx.writeBuffer();
+            const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+            const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
             link.href = url;
-            link.setAttribute(
-                "download",
-                `inventory-report-${new Date().toISOString().split('T')[0]}.xlsx`
-            );
+            link.download = `inventory-report-${new Date().toISOString().split("T")[0]}.xlsx`;
             document.body.appendChild(link);
             link.click();
-            link.parentElement.removeChild(link);
+            link.remove();
+            URL.revokeObjectURL(url);
         } catch (err) {
             setError("Failed to export Excel. Please try again.");
             console.error("Error exporting Excel:", err);
@@ -173,11 +349,11 @@ export default function InventoryReport() {
                         {/* Export Buttons */}
                         <div className="flex gap-2">
                             <button
-                                onClick={handleExportCSV}
-                                disabled={loading}
-                                className="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-semibold disabled:opacity-50"
+                                onClick={handleExportExcel}
+                                disabled={loading || reportData.length === 0}
+                                className="flex-1 bg-[#9C0306] hover:bg-red-900 text-white px-4 py-2 rounded-lg text-sm font-semibold disabled:opacity-50"
                             >
-                                Export CSV
+                                Export Excel
                             </button>
                         </div>
                     </div>
@@ -255,8 +431,8 @@ export default function InventoryReport() {
                                                 </td>
                                                 <td className="px-6 py-4 text-sm">
                                                     <span className={`px-3 py-1 rounded-full text-xs font-semibold ${row.status === 'active'
-                                                            ? 'bg-green-100 text-green-800'
-                                                            : 'bg-gray-100 text-gray-800'
+                                                        ? 'bg-green-100 text-green-800'
+                                                        : 'bg-gray-100 text-gray-800'
                                                         }`}>
                                                         {row.status === 'active' ? 'Active' : 'Archived'}
                                                     </span>
@@ -306,8 +482,8 @@ export default function InventoryReport() {
                                             key={page}
                                             onClick={() => setCurrentPage(page)}
                                             className={`font-semibold text-sm ${page === currentPage
-                                                    ? 'text-[#9C0306]'
-                                                    : 'text-gray-900 hover:text-[#9C0306]'
+                                                ? 'text-[#9C0306]'
+                                                : 'text-gray-900 hover:text-[#9C0306]'
                                                 }`}
                                         >
                                             {page}

@@ -1,22 +1,18 @@
 import React, { useState, useEffect } from "react";
-import { useForm } from "@inertiajs/react";
+import axios from "axios";
 
 export default function AdminEditProduct({ open, onClose, product, onSuccess }) {
     const [preview, setPreview] = useState(null);
     const [priceError, setPriceError] = useState("");
     const [selectedVariantType, setSelectedVariantType] = useState("");
-
-    const variantTypesMap = {
-        size: ["XS", "S", "M", "L", "XL"],
-        mug: ["11ml", "13ml"],
-        tumbler: ["12oz", "16oz", "20oz", "24oz"],
-        notebook: ["30 pages", "50 pages", "100 pages"],
-        pen: [],
-        umbrella: [],
-        keychain: [],
-        totebag: [],
-        pillow: [],
-    };
+    const [processing, setProcessing] = useState(false);
+    const [formData, setFormData] = useState({
+        product_name: "",
+        product_price: "",
+        variant_type: "",
+        product_description: "",
+        product_image: null,
+    });
 
     const variantTypes = [
         { id: "size", label: "Size XS-XL", hasVariants: true },
@@ -30,17 +26,9 @@ export default function AdminEditProduct({ open, onClose, product, onSuccess }) 
         { id: "pillow", label: "Pillow", hasVariants: false },
     ];
 
-    const { data, setData, patch, processing, errors, reset, clearErrors } = useForm({
-        product_name: "",
-        product_price: "",
-        variant_type: "",
-        product_description: "",
-        product_image: null,
-    });
-
     useEffect(() => {
         if (product) {
-            setData({
+            setFormData({
                 product_name: product.product_name || "",
                 product_price: product.product_price || "",
                 variant_type: product.variant_type || "",
@@ -62,20 +50,15 @@ export default function AdminEditProduct({ open, onClose, product, onSuccess }) 
     if (!open) return null;
 
     const handleVariantTypeChange = (typeId) => {
-        if (selectedVariantType === typeId) {
-            setSelectedVariantType("");
-            setData("variant_type", "");
-        } else {
-            setSelectedVariantType(typeId);
-            setData("variant_type", typeId);
-        }
+        const newType = selectedVariantType === typeId ? "" : typeId;
+        setSelectedVariantType(newType);
+        setFormData((prev) => ({ ...prev, variant_type: newType }));
     };
 
     const handleInput = (e) => {
         const { name, value } = e.target;
-        
-        // Check for zero or negative price and show error message
-        if (name === 'product_price') {
+
+        if (name === "product_price") {
             const numValue = parseFloat(value);
             if (value && numValue <= 0) {
                 setPriceError("Price must be greater than zero. Please enter a valid price.");
@@ -83,46 +66,67 @@ export default function AdminEditProduct({ open, onClose, product, onSuccess }) 
                 setPriceError("");
             }
         }
-        
-        setData(name, value);
-        clearErrors(name);
+
+        setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
     const handleFile = (e) => {
         const file = e.target.files?.[0] || null;
-        setData("product_image", file);
+        setFormData((prev) => ({ ...prev, product_image: file }));
         setPreview(file ? URL.createObjectURL(file) : preview);
-        clearErrors("product_image");
     };
 
-    const handleSave = (e) => {
+    const handleSave = async (e) => {
         e.preventDefault();
 
-        // Validate variation type is selected
         if (!selectedVariantType) {
             alert("Please select a variation type.");
             return;
         }
 
-        // Validate price is not zero or negative
         if (priceError) {
             alert("Price must be greater than zero. Please enter a valid price.");
             return;
         }
 
-        if (!data.product_price || parseFloat(data.product_price) <= 0) {
+        if (!formData.product_price || parseFloat(formData.product_price) <= 0) {
             alert("Price must be greater than zero. Please enter a valid price.");
             return;
         }
 
-        patch(`/admin/products/${product.product_id}`, {
-            onSuccess: () => {
-                if (onSuccess) onSuccess();
-                setPriceError("");
-                reset();
-                onClose && onClose();
-            },
-        });
+        setProcessing(true);
+
+        try {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
+
+            const payload = new FormData();
+            payload.append("product_name", formData.product_name);
+            payload.append("product_price", formData.product_price);
+            payload.append("variant_type", formData.variant_type);
+            payload.append("product_description", formData.product_description);
+            if (formData.product_image) {
+                payload.append("product_image", formData.product_image);
+            }
+            // Laravel requires this for PATCH via FormData
+            payload.append("_method", "PATCH");
+
+            await axios.post(`/admin/products/${product.product_id}`, payload, {
+                headers: {
+                    "X-CSRF-TOKEN": csrfToken,
+                    "Content-Type": "multipart/form-data",
+                },
+            });
+
+            setPriceError("");
+            if (onSuccess) onSuccess();
+            if (onClose) onClose();
+        } catch (error) {
+            console.error("Update failed", error);
+            const msg = error.response?.data?.message || "Failed to update product. Please try again.";
+            alert(msg);
+        } finally {
+            setProcessing(false);
+        }
     };
 
     return (
@@ -158,7 +162,7 @@ export default function AdminEditProduct({ open, onClose, product, onSuccess }) 
                         <label className="text-sm font-semibold">Description:</label>
                         <textarea
                             name="product_description"
-                            value={data.product_description}
+                            value={formData.product_description}
                             onChange={handleInput}
                             className="mt-2 w-full h-[180px] border rounded-lg p-3 text-sm resize-none outline-red-600"
                         />
@@ -169,7 +173,7 @@ export default function AdminEditProduct({ open, onClose, product, onSuccess }) 
                         <label className="text-sm font-semibold">Product Name:</label>
                         <input
                             name="product_name"
-                            value={data.product_name}
+                            value={formData.product_name}
                             onChange={handleInput}
                             className="mt-2 w-full border rounded-full px-4 py-2 text-sm outline-red-600"
                         />
@@ -183,7 +187,7 @@ export default function AdminEditProduct({ open, onClose, product, onSuccess }) 
                             min="1"
                             step="0.01"
                             name="product_price"
-                            value={data.product_price}
+                            value={formData.product_price}
                             onChange={handleInput}
                             className="mt-2 w-full border rounded-full px-4 py-2 text-sm outline-red-600"
                         />
@@ -218,7 +222,12 @@ export default function AdminEditProduct({ open, onClose, product, onSuccess }) 
 
                 {/* Footer */}
                 <div className="flex justify-end gap-4 px-6 pb-6">
-                    <button type="submit" form="editProductForm" disabled={processing} className="bg-red-800 hover:bg-red-900 text-white px-10 py-2 rounded-full font-semibold hover:cursor-pointer">
+                    <button
+                        type="submit"
+                        form="editProductForm"
+                        disabled={processing}
+                        className="bg-red-800 hover:bg-red-900 text-white px-10 py-2 rounded-full font-semibold hover:cursor-pointer disabled:opacity-60"
+                    >
                         {processing ? "Saving..." : "Save Changes"}
                     </button>
 

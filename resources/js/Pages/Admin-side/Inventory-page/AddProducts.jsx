@@ -127,12 +127,6 @@ export default function AddProducts() {
                                             {/* Main Product Row */}
                                             <div className="grid grid-cols-12 py-4 px-8 border-b border-gray-200 hover:bg-gray-50 bg-gray-50 font-semibold gap-4">
                                                 <div className="col-span-4 flex items-center gap-3">
-                                                    <button
-                                                        onClick={() => toggleExpanded(productName)}
-                                                        className="text-lg cursor-pointer w-6 flex-shrink-0"
-                                                    >
-                                                        {expandedProducts[productName] ? "▼" : "▶"}
-                                                    </button>
                                                     <div className="w-10 h-10 rounded overflow-hidden flex items-center justify-center bg-gray-200 flex-shrink-0">
                                                         <img
                                                             src={normalizeImageUrl(variants[0].product_image)}
@@ -150,14 +144,14 @@ export default function AddProducts() {
                                                     ₱{variants[0].product_price}
                                                 </div>
 
-                                                <div className="col-span-2 flex items-center text-gray-600">
-                                                    {variants.length}
+                                                <div className="col-span-2 flex items-center text-gray-600 capitalize">
+                                                    {variants[0].variant_type || "-"}
                                                 </div>
 
                                                 <div className="col-span-2 flex items-center">
                                                     <span className={`px-3 py-1 rounded-full text-xs font-semibold ${variants[0].status === 'active'
-                                                        ? 'bg-green-100 text-green-700'
-                                                        : 'bg-gray-100 text-gray-700'
+                                                            ? 'bg-green-100 text-green-700'
+                                                            : 'bg-gray-100 text-gray-700'
                                                         }`}>
                                                         {variants[0].status === 'active' ? 'Active' : 'Archived'}
                                                     </span>
@@ -180,53 +174,7 @@ export default function AddProducts() {
                                                 </div>
                                             </div>
 
-                                            {/* Expanded Variants */}
-                                            {expandedProducts[productName] &&
-                                                variants.map((variant) => (
-                                                    <div
-                                                        key={variant.product_id}
-                                                        className="grid grid-cols-12 py-3 px-8 border-b border-gray-200 hover:bg-gray-50 text-sm bg-white gap-4"
-                                                    >
-                                                        <div className="col-span-4 flex items-center gap-3 pl-10">
-                                                            <span className="text-gray-600 font-medium">
-                                                                {variant.variant}
-                                                            </span>
-                                                        </div>
 
-                                                        <div className="col-span-2 flex items-center">
-                                                            ₱{variant.product_price}
-                                                        </div>
-
-                                                        <div className="col-span-2 flex items-center text-gray-400 text-xs">
-                                                            -
-                                                        </div>
-
-                                                        <div className="col-span-2 flex items-center">
-                                                            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${variant.status === 'active'
-                                                                ? 'bg-green-100 text-green-700'
-                                                                : 'bg-gray-100 text-gray-700'
-                                                                }`}>
-                                                                {variant.status === 'active' ? 'Active' : 'Archived'}
-                                                            </span>
-                                                        </div>
-
-                                                        <div className="col-span-2 flex justify-end items-center">
-                                                            <ProductActionModal
-                                                                product={variant}
-                                                                onEdit={() => {
-                                                                    setSelectedProduct(variant);
-                                                                    setOpenEdit(true);
-                                                                }}
-                                                                onArchive={() => handleArchive(variant.product_id)}
-                                                                onRestore={() => handleRestore(variant.product_id)}
-                                                                onDelete={() => {
-                                                                    setSelectedProduct(variant);
-                                                                    setOpenDelete(true);
-                                                                }}
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                ))}
                                         </div>
                                     )
                                 );

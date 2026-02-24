@@ -90,13 +90,15 @@ export default function AdminTransaction() {
                         <select
                             value={status}
                             onChange={(e) => setStatus(e.target.value)}
-                            className="border border-gray-300 rounded-lg px-5 py-3 text-sm bg-white min-w-[170px]"
+                            className="border border-gray-300 rounded-lg px-5 py-3 text-sm bg-white min-w-[190px]"
                         >
-                            {["All statuses", "Pending", "Completed", "Processing", "Cancelled"].map(
-                                (s) => (
-                                    <option key={s}>{s}</option>
-                                )
-                            )}
+                            <option value="All statuses">All statuses</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Completed">Completed</option>
+                            <option value="Processing">Processing</option>
+                            <option value="out-of-delivery">Out for Delivery</option>
+                            <option value="Ready-for-pickup">Ready for Pickup</option>
+                            <option value="Cancelled">Cancelled</option>
                         </select>
                     </div>
                 </div>

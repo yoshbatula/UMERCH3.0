@@ -216,7 +216,7 @@ export const useTransaction = () => {
         const q = query.trim().toLowerCase();
         return orders.filter((order) => {
             const matchQ = !q || order?.order_id?.toString().toLowerCase().includes(q);
-            const matchS = status === "All statuses" || order?.order_status === status;
+            const matchS = status === "All statuses" || order?.order_status?.toLowerCase() === status.toLowerCase();
             return matchQ && matchS;
         });
     }, [orders, query, status]);

@@ -47,14 +47,14 @@ export default function DeleteProductModal({ open, onClose, product, onDeleted, 
             onClick={handleClose}
         >
             <div
-                className="bg-[#F6F6F6] shadow-lg relative w-120 rounded-xl"
+                className="bg-[#F6F6F6] shadow-lg relative w-130 h-40 rounded-xl"
                 onClick={e => e.stopPropagation()}
             >
-                <div className='flex flex-col items-center justify-center'>
+                <div className='flex flex-col items-center justify-center p-10'>
                     <h1 className='text-center font-semibold text-lg mb-2'>Are you sure you want to remove this product?</h1>
                     <div className='py-2 flex flex-col items-center'>
                     </div>
-                    <div className='flex flex-row gap-3 mt-5'>
+                    <div className='flex flex-row gap-3'>
                         <button
                             type='button'
                             disabled={isLoading}
