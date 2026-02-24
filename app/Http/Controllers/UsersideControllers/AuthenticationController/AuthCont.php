@@ -4,11 +4,8 @@ namespace App\Http\Controllers\UsersideControllers\AuthenticationController;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
-<<<<<<< HEAD
 use App\Models\ActivityLog;
-=======
 use App\Mail\OtpMail;
->>>>>>> af3b38ac0ca19a3b22d180b220ff037d050069e6
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
