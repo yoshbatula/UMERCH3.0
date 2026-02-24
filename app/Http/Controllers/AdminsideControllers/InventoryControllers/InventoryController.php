@@ -144,6 +144,22 @@ class InventoryController extends Controller
         
         $product = Products::findOrFail($product_id);
 
+        // Check if trying to archive/disable product with pending orders
+        if (isset($request->status) && $request->status !== 'active') {
+            $pendingOrders = OrderItems::where('product_id', $product_id)
+                ->whereHas('order', function ($query) {
+                    $query->whereIn('status', ['pending', 'to_pay', 'to_receive']);
+                })
+                ->exists();
+            
+            if ($pendingOrders) {
+                return response()->json([
+                    'message' => 'Cannot archive/disable product! There are pending orders for this product.',
+                    'success' => false
+                ], 409);
+            }
+        }
+
         $data = [
             'product_name' => $request->product_name,
             'product_price' => $request->product_price,
@@ -183,19 +199,18 @@ class InventoryController extends Controller
         }
         $product = Products::findOrFail($product_id);
         
-        // Check if there are any pending or processing orders for this product
+        // Check for pending orders containing this product
         $pendingOrders = OrderItems::where('product_id', $product_id)
-            ->whereHas('order', function($query) {
-                $query->whereIn('status', ['Pending', 'Processing', 'Ready-for-pickup', 'Out-of-delivery']);
+            ->whereHas('order', function ($query) {
+                $query->whereIn('status', ['pending', 'to_pay', 'to_receive']);
             })
             ->exists();
         
         if ($pendingOrders) {
             return response()->json([
-                'message' => 'Cannot delete this product. There are pending or processing orders containing this item.',
-                'error' => 'pending_orders_exist',
+                'message' => 'Cannot delete product! There are pending orders for this product.',
                 'success' => false
-            ], 400);
+            ], 409);
         }
         
         // Log the delete product operation

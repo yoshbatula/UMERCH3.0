@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 
-export default function DeleteProductModal({ open, onClose, product, onDeleted }) {
-    const [error, setError] = useState('');
+export default function DeleteProductModal({ open, onClose, product, onDeleted, onShowToast }) {
+    const [isLoading, setIsLoading] = useState(false);
 
     if (!open || !product) return null;
 
     const handleDelete = async (e) => {
         e.preventDefault();
-        setError('');
+        setIsLoading(true);
 
         try {
             const response = await fetch(`/admin/products/${product.product_id}`, {
@@ -22,18 +22,22 @@ export default function DeleteProductModal({ open, onClose, product, onDeleted }
 
             if (data.success) {
                 if (onDeleted) onDeleted();
+                setIsLoading(false);
                 onClose();
             } else {
-                setError(data.message || 'Failed to delete product');
+                if (onShowToast) onShowToast(data.message || 'Failed to delete product', 'error');
+                setIsLoading(false);
+                onClose();
             }
         } catch (error) {
             console.error('Delete error:', error);
-            setError('An error occurred while deleting the product');
+            if (onShowToast) onShowToast('An error occurred while deleting the product', 'error');
+            setIsLoading(false);
+            onClose();
         }
     };
 
     const handleClose = () => {
-        setError('');
         onClose();
     };
 
@@ -43,23 +47,28 @@ export default function DeleteProductModal({ open, onClose, product, onDeleted }
             onClick={handleClose}
         >
             <div
-                className="bg-[#F6F6F6] shadow-lg relative w-120 rounded-2xl p-10"
+                className="bg-[#F6F6F6] shadow-lg relative w-120 rounded-xl"
                 onClick={e => e.stopPropagation()}
             >
                 <div className='flex flex-col items-center justify-center'>
                     <h1 className='text-center font-semibold text-lg mb-2'>Are you sure you want to remove this product?</h1>
-                    {error && (
-                        <div className='mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm text-center'>
-                            {error}
-                        </div>
-                    )}
                     <div className='py-2 flex flex-col items-center'>
                     </div>
                     <div className='flex flex-row gap-3 mt-5'>
-                        <button type='button' className='flex justify-center items-center bg-[#9C0306] text-white text-[16px] font-semibold w-30 h-10 rounded-[5px] hover:cursor-pointer hover:bg-red-900' onClick={handleDelete}>
-                            Yes
+                        <button
+                            type='button'
+                            disabled={isLoading}
+                            className='flex justify-center items-center bg-[#9C0306] text-white text-[16px] font-semibold w-30 h-10 rounded-[5px] hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
+                            onClick={handleDelete}
+                        >
+                            {isLoading ? 'Deleting...' : 'Yes'}
                         </button>
-                        <button type='button' className='flex justify-center items-center bg-white text-[#9C0306] text-[16px] font-semibold border border-[#9C0306] w-30 h-10 rounded-[5px] hover:cursor-pointer hover:bg-gray-50' onClick={handleClose}>
+                        <button
+                            type='button'
+                            disabled={isLoading}
+                            className='flex justify-center items-center bg-white text-[#9C0306] text-[16px] font-semibold border border-[#9C0306] w-30 h-10 rounded-[5px] hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
+                            onClick={onClose}
+                        >
                             No
                         </button>
                     </div>

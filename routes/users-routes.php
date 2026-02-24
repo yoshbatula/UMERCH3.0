@@ -44,6 +44,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/place-order', [PlaceOrderCont::class, 'placeOrder'])->name('place.order');
     Route::get('/api/orders', [PlaceOrderCont::class, 'getUserOrders'])->name('api.orders');
     Route::post('/api/orders/{orderId}/upload-receipt', [PlaceOrderCont::class, 'uploadReceipt'])->name('upload.receipt');
+    Route::post('/api/orders/{orderId}/buy-again', [PlaceOrderCont::class, 'buyAgain'])->name('buy.again');
     Route::get('/api/admin/orders', [PlaceOrderCont::class, 'getAllOrders'])->name('api.admin.orders');
     Route::put('/api/admin/orders/{orderId}/status', [PlaceOrderCont::class, 'updateOrderStatus'])->name('update.order.status');
 

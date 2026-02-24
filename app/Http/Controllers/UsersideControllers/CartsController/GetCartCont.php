@@ -44,6 +44,8 @@ class GetCartCont extends Controller {
             return response()->json(['message' => 'Error removing item'], 500);
         }
     }
+
+    // Update cart item variant (e.g., size/color) and check inventory
     public function updateCartItem(Request $request, $cartItemId) {
         if (!Auth::check()) {
             return response()->json(['message' => 'Unauthorized'], 401);
@@ -62,6 +64,7 @@ class GetCartCont extends Controller {
         }
     }
 
+    // Check inventory for a specific product variant
     public function checkInventory(Request $request) {
         if (!Auth::check()) {
             return response()->json(['message' => 'Unauthorized'], 401);

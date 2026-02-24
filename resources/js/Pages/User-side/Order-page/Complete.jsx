@@ -53,61 +53,30 @@ export default function Completed() {
     const handleBuyAgain = async (order) => {
         try {
             setBuyingAgain(order.order_id);
-            console.log(`✅ Adding items from order ${order.order_id} to cart...`);
+            console.log(`✅ Buy Again clicked for order ${order.order_id}...`);
 
-            let successCount = 0;
-            let outOfStockItems = [];
+            const response = await axios.post(`/api/orders/${order.order_id}/buy-again`);
 
-            // Add each item from the order to the cart
-            for (const item of order.order_items) {
-                try {
-                    // Check inventory availability first
-                    const inventoryResponse = await axios.get('/api/check-inventory', {
-                        params: {
-                            product_id: item.product?.product_id,
-                            variant: item.variant,
-                            quantity: item.quantity
-                        }
-                    });
+            console.log(`✅ Response from buyAgain:`, response.data);
 
-                    // If inventory check passes, add to cart
-                    await axios.post('/add-to-cart', {
-                        product_id: item.product?.product_id,
-                        variant: item.variant,
-                        quantity: item.quantity,
-                        price: item.price
-                    });
-                    successCount++;
-                } catch (error) {
-                    const errorMsg = error.response?.data?.message || error.message;
-                    
-                    if (errorMsg.includes('stock') || error.response?.status === 400) {
-                        outOfStockItems.push(`${item.product?.product_name} (${item.variant}) - Out of Stock`);
-                    } else {
-                        outOfStockItems.push(`${item.product?.product_name} (${item.variant})`);
-                    }
-                    console.warn('⚠️ Item unavailable:', errorMsg);
+            if (response.status === 200) {
+                const { message, success_count, failed_items } = response.data;
+
+                if (failed_items && failed_items.length > 0) {
+                    showToast(`${success_count} items added to cart. ${failed_items.length} items unavailable.`, 'warning');
+                } else {
+                    showToast(message, 'success');
                 }
-            }
 
-            if (successCount === 0) {
-                showToast('All items are out of stock. Please check back later.', 'error');
-            } else if (outOfStockItems.length === 0) {
-                showToast('All items added to cart! Redirecting...', 'success');
-                // Redirect to cart after 1 second
+                // Redirect to cart after 1-2 seconds
                 setTimeout(() => {
                     router.visit('/Cart');
-                }, 1000);
-            } else {
-                showToast(`${successCount} items added to cart. ${outOfStockItems.length} items out of stock.`, 'warning');
-                // Redirect to cart anyway
-                setTimeout(() => {
-                    router.visit('/Cart');
-                }, 2000);
+                }, 1500);
             }
         } catch (error) {
             console.error('❌ Error in Buy Again:', error);
-            showToast('Error processing request. Please try again.', 'error');
+            const errorMsg = error.response?.data?.message || error.message || 'Error processing request. Please try again.';
+            showToast(errorMsg, 'error');
         } finally {
             setBuyingAgain(null);
         }
