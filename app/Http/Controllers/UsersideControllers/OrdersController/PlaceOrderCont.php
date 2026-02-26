@@ -243,6 +243,10 @@ class PlaceOrderCont extends Controller
 
     public function getAllOrders()
     {
+        if (!Auth::check() || Auth::user()->role !== 'Admin') {
+            abort(403, 'Only admins can view all orders');
+        }
+
         try {
             $orders = Orders::with(['orderItems.product', 'user'])
                 ->orderBy('created_at', 'desc')
