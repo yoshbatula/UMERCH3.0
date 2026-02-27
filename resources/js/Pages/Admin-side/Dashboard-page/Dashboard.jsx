@@ -73,6 +73,7 @@ export default function Dashboard() {
         return () => clearInterval(interval);
     }, []);
 
+    // Auto-refresh sales overview every 30 seconds
     useEffect(() => {
         fetchSalesOverview();
     }, [salesPeriod]);
