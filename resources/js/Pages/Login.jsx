@@ -1,15 +1,17 @@
-import React, {Suspense, Lazy} from 'react';
+import React, {Suspense, lazy} from 'react';
 import {Link} from '@inertiajs/react';
 import Navbar from '../components/layouts/Navbar';
-import Knowledge from '../components/ui/Knowledge';
-import Advertisement from '../components/ui/Advertisement';
-import DiscountedProduct from '../components/ui/DiscountedProduct';
-import FeatureProducts from '../components/ui/FeatureProducts';
-import LimitedOffer from '../components/ui/LimitedOffer';
-import Accessories from '../components/ui/Accessories';
-import FeatureSection from '../components/ui/FeatureSection'
-import Hero from '../components/ui/Hero';
-import Footer from '../components/layouts/Footer';
+
+// Lazy load components
+const Hero = lazy(() => import('../components/ui/Hero'));
+const FeatureSection = lazy(() => import('../components/ui/FeatureSection'));
+const Accessories = lazy(() => import('../components/ui/Accessories'));
+const LimitedOffer = lazy(() => import('../components/ui/LimitedOffer'));
+const FeatureProducts = lazy(() => import('../components/ui/FeatureProducts'));
+const DiscountedProduct = lazy(() => import('../components/ui/DiscountedProduct'));
+const Advertisement = lazy(() => import('../components/ui/Advertisement'));
+const Knowledge = lazy(() => import('../components/ui/Knowledge'));
+const Footer = lazy(() => import('../components/layouts/Footer'));
 export default function Login() {
 
     const [showLogin, setShowLogin] = React.useState(false);
@@ -32,34 +34,19 @@ export default function Login() {
         <>
             <div>
                 {/* Navigation components */}
-                <Navbar onSignInClick={handleSignInClick}/>
-
-                {/* Knowledge components*/}
-                <Knowledge showLogin={showLogin} onCloseLogin={() => setShowLogin(false)} />
-
-                {/* Advertisement components*/}
-                <Advertisement/>
-
-                {/* Discounted Product components*/}
-                <DiscountedProduct/>
-
-                {/* Featured Products components */}
-                <FeatureProducts/>
-
-                {/* Limited Offer components */}
-                <LimitedOffer/>
-
-                {/* UM Accessories components */}
-                <Accessories/>
-
-                {/* Feature Section components */}
-                <FeatureSection/>
-
-                {/* Hero components */}
-                <Hero/>
-
-                {/* Footer components */}
-                <Footer onSmoothClick={handleSignInClick}/>
+                <Navbar onSignInClick={handleSignInClick} />
+                {/*  */}
+                <Suspense fallback={<div>Loading...</div>}>
+                    <Knowledge showLogin={showLogin} onCloseLogin={() => setShowLogin(false)} />
+                    <Advertisement />
+                    <DiscountedProduct />
+                    <FeatureProducts />
+                    <Accessories />
+                    <LimitedOffer />
+                    <FeatureSection />
+                    <Hero />
+                </Suspense>
+                <Footer />
             </div>
         </>
     );

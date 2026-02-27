@@ -15,7 +15,7 @@ export default function Footer({ onSignInClick  }) {
                 <div className="flex flex-col">
                     <h1 className="text-[20px]">Menu</h1>
                     <div className="mt-1 flex flex-col text-[#727272] gap-1">
-                        <Link href="/" onClick={onSignInClick}>Home</Link>
+                        <Link href="/">Home</Link>
                         <Link href="#">Shop</Link>
                         <Link href="#">About us</Link>
                     </div>
