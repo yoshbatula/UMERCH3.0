@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {Suspense, Lazy} from 'react';
 import {Link} from '@inertiajs/react';
 import Navbar from '../components/layouts/Navbar';
 import Knowledge from '../components/ui/Knowledge';
