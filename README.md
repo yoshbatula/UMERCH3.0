@@ -88,11 +88,21 @@ npm install qrcode
 ### 8. Create and Configure Environment File
 cp .env.example .env
 
-### 9. Generate Application Key
+### 9. Setting up the smtp in .env
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=your email here
+MAIL_PASSWORD=your app password here
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS=your email here
+MAIL_FROM_NAME="UMERCH"
+
+### 10. Generate Application Key
 php artisan key:generate
 
-### 10. Database Migrate
+### 11. Database Migrate
 php artisan migrate
 
-### 11. Development Server
+### 12. Development Server
 composer run dev
