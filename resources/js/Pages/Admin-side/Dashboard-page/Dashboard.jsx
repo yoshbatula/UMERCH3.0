@@ -118,7 +118,7 @@ export default function Dashboard() {
     };
 
     return (
-        // Main container with sidebar and content area
+        
         <div className="flex min-h-screen bg-[#f5f5f5]">
             <div className="h-screen sticky top-0">
                 <Sidebar />
