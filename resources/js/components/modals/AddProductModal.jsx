@@ -28,7 +28,7 @@ export default function AddProductModal({ open, isOpen, onClose, onSuccess }) {
         { id: "pen", label: "Pen", hasVariants: false },
         { id: "umbrella", label: "Umbrella", hasVariants: false },
         { id: "keychain", label: "Keychain", hasVariants: false },
-        { id: "totebag", label: "Tote bag", hasVariants: false },
+        { id: "totebag", label: "Totebag", hasVariants: false },
         { id: "pillow", label: "Pillow", hasVariants: false },
     ];
 

@@ -152,7 +152,7 @@ export default function Dashboard() {
                         bgColor="bg-[#EF2F2A]"
                     />
                     <StatCard
-                        title="Total login Users"
+                        title="Total Users"
                         value={stats.totalUsers || 0}
                         icon={TotalLoginUserIcon}
                         bgColor="bg-[#9C0306]"
@@ -165,15 +165,7 @@ export default function Dashboard() {
                         <h2 className="text-2xl font-bold">Charts & Metrics</h2>
                         <div className="flex gap-2">
                             {/* Export File Button with Dropdown */}
-                            <ExportFile
-                                stats={stats}
-                                weeklyStats={weeklyStats}
-                                salesOverview={salesOverview}
-                                recentTransactions={recentTransactions}
-                                inventoryStatus={inventoryStatus}
-                                topProducts={topProducts}
-                            />
-
+                            
                             {/* Period Toggle */}
                             {['daily', 'weekly', 'monthly'].map((period) => (
                                 <button

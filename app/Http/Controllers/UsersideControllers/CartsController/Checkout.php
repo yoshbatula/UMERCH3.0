@@ -11,6 +11,7 @@ use App\Models\Inventory;
 
 class Checkout extends Controller {
     
+// TODO: Implement checkout logic (e.g., create order, reduce inventory, etc.)
     public function checkout(Request $request) {
         if (!Auth::check()) {
             return response()->json(['message' => 'Unauthorized'], 401);

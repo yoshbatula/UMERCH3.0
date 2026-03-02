@@ -26,8 +26,15 @@ class DashboardController extends Controller
                 return $order->orderItems->sum('subtotal');
             });
 
-        // Today's Products - count of active products in inventory
-        $todayProducts = Products::where('product_stock', '>', 0)->count();
+        // Active products - count of products that have total inventory > 0
+        $activeProducts = \App\Models\Inventory::selectRaw('product_id, SUM(quantity) as total_quantity')
+            ->groupBy('product_id')
+            ->havingRaw('SUM(quantity) > 0')
+            ->get()
+            ->count();
+
+        // New products added today
+        $newProductsToday = Products::whereDate('created_at', $today)->count();
 
         // Today's Sales - count of orders placed today
         $todaySales = Orders::whereDate('created_at', $today)->count();
@@ -54,7 +61,8 @@ class DashboardController extends Controller
 
         return response()->json([
             'todayEarnings' => $todayEarnings,
-            'todayProducts' => $todayProducts,
+            'todayProducts' => $newProductsToday,
+            'activeProducts' => $activeProducts,
             'todaySales' => $todaySales,
             'todaySalesAmount' => $todaySalesAmount,
             'totalSalesAmount' => $totalSalesAmount,
@@ -207,6 +215,7 @@ class DashboardController extends Controller
                 return [
                     'rank' => $index + 1,
                     'name' => $product ? $product->product_name : 'Unknown',
+                    'product_image' => $product ? $product->product_image : null,
                     'category' => $product ? $product->variant : 'N/A',
                     'quantity' => (int)$item->total_qty,
                     'sales' => (float)$item->total_sales,

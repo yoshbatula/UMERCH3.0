@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from '@inertiajs/react';
 
 export default function RecentTransaction({ recentTransactions }) {
     const [currentPage, setCurrentPage] = useState(1);
@@ -14,7 +15,7 @@ export default function RecentTransaction({ recentTransactions }) {
         <div className="flex-1 bg-white rounded-xl p-6 shadow-sm border border-gray-200">
             <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold text-lg">Recent Transaction</h3>
-                <button className="text-sm text-gray-500">View all &gt;</button>
+                <a href="/admin/transaction" className="text-sm text-gray-500">View all &gt;</a>
             </div>
 
             {/* Table Header */}
@@ -30,8 +31,7 @@ export default function RecentTransaction({ recentTransactions }) {
                 {paginatedTransactions.length > 0 ? (
                     paginatedTransactions.map((transaction, index) => (
                         <div key={index} className="grid grid-cols-4 py-3 items-center text-sm">
-                            <div className="flex items-center gap-2">
-                                <div className="w-8 h-8 bg-gray-200 rounded-full" />
+                            <div className="flex items-center">
                                 <span>{transaction.customer}</span>
                             </div>
                             <div>

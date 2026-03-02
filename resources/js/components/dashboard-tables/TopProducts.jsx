@@ -1,11 +1,23 @@
 import React from 'react';
+import Tshirt from '@images/tshirt.jpg';
+import { Link } from '@inertiajs/react';
 
+    const normalizeImageUrl = (u) => {
+        if (!u) return Tshirt;
+        const s = String(u).trim();
+        if (!s) return Tshirt;
+        if (s.startsWith('http')) return s;
+        if (s.startsWith('/')) return s;
+        if (s.startsWith('public/storage/')) return '/' + s.replace(/^public\//, '');
+        if (s.startsWith('storage/')) return '/' + s;
+        return '/' + s;
+    };
 export default function TopProducts({ topProducts = [], topProductsPeriod, setTopProductsPeriod }) {
     return (
         <div className="w-[320px] bg-white rounded-xl p-6 shadow-sm border border-gray-200">
             <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold text-lg">Top Products</h3>
-                <button className="text-sm text-gray-500">View All</button>
+                <Link href="/admin/inventory/add" prefetch className="text-sm text-gray-500">View All</Link>
             </div>
 
             {/* Period Toggle */}
@@ -36,7 +48,11 @@ export default function TopProducts({ topProducts = [], topProductsPeriod, setTo
                     topProducts.map((product, index) => (
                         <div key={index} className="flex items-center gap-3 hover:bg-gray-50 p-2 rounded-lg transition-colors">
                             <span className="text-lg font-bold text-gray-400 w-6">{product.rank || index + 1}</span>
-                            <div className="w-10 h-10 bg-gray-200 rounded-lg flex-shrink-0" />
+                            <img
+                                src={normalizeImageUrl(product.product_image || product.image)}
+                                alt={product.name || 'Product'}
+                                className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
+                            />
                             <div className="flex-1 min-w-0">
                                 <div className="font-semibold text-sm truncate">{product.name || 'Product'}</div>
                                 <div className="text-xs text-gray-500 truncate">{product.category || 'N/A'}</div>
