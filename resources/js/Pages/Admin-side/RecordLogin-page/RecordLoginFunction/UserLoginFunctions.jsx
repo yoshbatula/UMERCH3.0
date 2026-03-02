@@ -154,9 +154,8 @@ export const useUserLogs = () => {
 
     const filterUsers = (users, query) => {
         return users.filter((userRaw) => {
-            // Filter out Admin users by role, um_id, or email
+            // Filter out Admin users by role or email (keep um_id 1 so it can be sorted/shown)
             if (userRaw.role === 'Admin') return false;
-            if (userRaw.um_id === 1 || userRaw.um_id === '1') return false;
             if (userRaw.email === 'admin@umerch.com') return false;
             if (!query.trim()) return true;
             const searchLower = query.toLowerCase();

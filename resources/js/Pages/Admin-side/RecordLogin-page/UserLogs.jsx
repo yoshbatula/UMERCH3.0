@@ -104,8 +104,14 @@ function UserLogs() {
           {/* Users List */}
           {(() => {
             const filteredUsers = filterUsers(users, query);
-            const totalPages = getTotalPages(filteredUsers, itemsPerPage);
-            const paginatedUsers = getPaginatedUsers(filteredUsers, currentPage, itemsPerPage);
+            const idOf = (u) => Number(u.id ?? u.um_id ?? u.userId ?? u.user_id ?? u.ID ?? 0);
+            const sortedUsers = [...filteredUsers].sort((a, b) => {
+              if (idOf(a) === 1) return -1;
+              if (idOf(b) === 1) return 1;
+              return idOf(a) - idOf(b);
+            });
+            const totalPages = getTotalPages(sortedUsers, itemsPerPage);
+            const paginatedUsers = getPaginatedUsers(sortedUsers, currentPage, itemsPerPage);
 
             if (paginatedUsers.length > 0) {
               return paginatedUsers.map((userRaw) => {
@@ -162,9 +168,15 @@ function UserLogs() {
           {/* Pagination */}
           {(() => {
             const filteredUsers = filterUsers(users, query);
-            const totalPages = getTotalPages(filteredUsers, itemsPerPage);
+            const idOf = (u) => Number(u.id ?? u.um_id ?? u.userId ?? u.user_id ?? u.ID ?? 0);
+            const sortedUsers = [...filteredUsers].sort((a, b) => {
+              if (idOf(a) === 1) return -1;
+              if (idOf(b) === 1) return 1;
+              return idOf(a) - idOf(b);
+            });
+            const totalPages = getTotalPages(sortedUsers, itemsPerPage);
 
-            if (filteredUsers.length > 0) {
+            if (sortedUsers.length > 0) {
               return (
                 <>
                   <div className="border-t border-gray-200" />
