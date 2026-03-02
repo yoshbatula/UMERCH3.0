@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { Link, router } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import AddToCart from '@images/Cart.svg';
 import DefaultImage from '@images/product-placeholder.svg';
 import SizeChart from '@images/SizeChart.png';
@@ -11,6 +11,8 @@ export default function ProductCardModal({ isOpen, onClose, product, onShowToast
     const [selectedVariant, setSelectedVariant] = useState(null);
     const [loading, setLoading] = useState(false);
     const [variantStocks, setVariantStocks] = useState({});
+    const page = usePage();
+    const authProps = page.props?.auth;
 
     const variantTypesMap = {
         size: ["XS", "S", "M", "L", "XL"],
@@ -120,6 +122,20 @@ export default function ProductCardModal({ isOpen, onClose, product, onShowToast
     };
 
     const handleBuyNow = async () => {
+        // If user is not authenticated, save pending buy and redirect to login on Landing
+        if (!authProps || !authProps.user) {
+            try {
+                const pending = {
+                    product_id: product.product_id,
+                    variant: selectedVariant,
+                    quantity,
+                    price: product.product_price,
+                };
+                sessionStorage.setItem('pendingBuy', JSON.stringify(pending));
+            } catch (e) {}
+            router.visit('/Landing?popup=1');
+            return;
+        }
         if (!product?.product_id) {
             onShowToast('Product information missing', 'error');
             return;

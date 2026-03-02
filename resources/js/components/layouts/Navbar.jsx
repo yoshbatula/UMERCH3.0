@@ -1,5 +1,5 @@
 import React from 'react';
-import {Link} from '@inertiajs/react';
+import {Link, router} from '@inertiajs/react';
 import Logo from '@images/UMERCH-LOGO.svg';
 import { usePage } from '@inertiajs/react';
 export default function Navbar({ onSignInClick }) {
@@ -21,10 +21,10 @@ export default function Navbar({ onSignInClick }) {
                 <Link href="#" prefetch className='font-bold text-[16px] leading-tight'>CONTACT US</Link>
             </div>
             <div className='flex flex-row gap-4 font-bold ml-auto text-white font-montserrat'>
-                <button
-                  className='font-bold text-[16px] leading-tight bg-transparent border-none cursor-pointer'
-                  onClick={onSignInClick}
-                >SIGN IN</button>
+                                <button
+                                    className='font-bold text-[16px] leading-tight bg-transparent border-none cursor-pointer'
+                                    onClick={onSignInClick ? onSignInClick : () => router.visit('/Landing?popup=1')}
+                                >SIGN IN</button>
             </div>
         </div>
     );

@@ -89,10 +89,28 @@ class PlaceOrderCont extends Controller
                 ]);
             }
 
-            // Clear the cart after order is placed
+            // Remove only the ordered items from the user's cart
             $cart = Carts::where('user_id', $userId)->first();
             if ($cart) {
-                Carts_Item::where('cart_id', $cart->cart_id)->delete();
+                // Prefer deleting by cart_item_id if provided by the client
+                $cartItemIds = [];
+                foreach ($validated['cart_items'] as $ci) {
+                    if (isset($ci['cart_item_id'])) {
+                        $cartItemIds[] = $ci['cart_item_id'];
+                    }
+                }
+
+                if (!empty($cartItemIds)) {
+                    Carts_Item::whereIn('cart_item_id', $cartItemIds)->delete();
+                } else {
+                    // Fallback: delete matching product_id + variant entries from this cart
+                    foreach ($validated['cart_items'] as $ci) {
+                        Carts_Item::where('cart_id', $cart->cart_id)
+                            ->where('product_id', $ci['product_id'])
+                            ->where('variant', $ci['variant'] ?? '')
+                            ->delete();
+                    }
+                }
             }
 
             return response()->json([

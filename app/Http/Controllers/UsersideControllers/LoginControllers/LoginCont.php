@@ -15,7 +15,7 @@ class LoginCont extends Controller
     // Displays the login form
     public function showLoginForm()
     {
-        return Inertia::render('Authentication');
+        return Inertia::render('Login');
     }
 
     // Handles user login

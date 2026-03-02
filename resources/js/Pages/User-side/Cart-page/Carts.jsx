@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Navbar from '../../../components/layouts/LandingNav';
 import BackgroundModel from '@images/BackgroundModel.png'; 
 import { Link, usePage, useForm, router } from '@inertiajs/react';
@@ -32,6 +32,7 @@ export default function Carts({ cartItems: initialCartItems = [] }) {
     const [toast, setToast] = useState(null);
     const { delete: destroy, put: update } = useForm();
     const [receiptFormOpen, setReceiptFormOpen] = useState(false);
+    const intervalRef = useRef(null);
 
     // Refresh cart items on component mount
     useEffect(() => {
@@ -43,6 +44,21 @@ export default function Carts({ cartItems: initialCartItems = [] }) {
             .catch(error => {
                 console.error('Error fetching cart:', error);
             });
+        
+        // Start polling the server every 2 seconds to keep cart data fresh
+        intervalRef.current = setInterval(() => {
+            axios.get('/get-cart')
+                .then(response => {
+                    setCartItems(response.data || []);
+                })
+                .catch(err => {
+                    console.error('Error polling cart:', err);
+                });
+        }, 2000);
+
+        return () => {
+            if (intervalRef.current) clearInterval(intervalRef.current);
+        };
     }, []);
 
     const openReceiptForm = () => {
@@ -289,7 +305,7 @@ export default function Carts({ cartItems: initialCartItems = [] }) {
                         </div>
                         <div className='mt-4 flex flex-row justify-center items-center gap-3'>
                             <div className='flex justify-center items-center w-65 h-8 border text-[#9C0306] border-[#9C0306] rounded-[10px] hover:cursor-pointer hover:bg-[#9C0306] hover:text-white transition duration-300'>
-                                <Link href="/Shop" prefetchclassName='text-[13px] font-bold hover:cursor-pointer'>Continue Shopping</Link>
+                                <Link href="/Shop" prefetch className='text-[13px] font-bold hover:cursor-pointer'>Continue Shopping</Link>
                             </div>
                         </div>
                         <div className='mt-3 flex flex-col justify-center bg-white w-263 h-65 rounded-[10px]'>

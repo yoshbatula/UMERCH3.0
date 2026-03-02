@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { router, usePage } from '@inertiajs/react';
 import Navbar from '../layouts/Navbar';
 import BackgroundModel from '@images/BackgroundModel.png';
 import ShopCards from '../cards/ProductCards';
@@ -13,6 +14,9 @@ import Placeholder from '@images/product-placeholder.svg';
 export default function ProductsView() {
     const [ProductModalOpen, setProductModalOpen] = useState(false);
     const [AccessoriesModalOpen, setAccessoriesModalOpen] = useState(false);
+    const [selectedProduct, setSelectedProduct] = useState(null);
+    const [toast, setToast] = useState(null);
+    const [showLoginPrompt, setShowLoginPrompt] = useState(false);
     const [products, setProducts] = useState([]);
     const [filteredProducts, setFilteredProducts] = useState([]);
     
@@ -39,8 +43,26 @@ export default function ProductsView() {
     }
 
     const handleProductClick = () => {
-        alert('You need to sign in');
-        window.location.href = '/?popup=1';
+        // open modal for product details
+        // (deprecated) keep empty - actual handler below
+    };
+
+    const page = usePage();
+    const auth = page.props?.auth;
+
+    const openProductModalWith = (product) => {
+        if (auth && auth.user) {
+            setSelectedProduct(product);
+            setProductModalOpen(true);
+        } else {
+            setSelectedProduct(product);
+            setShowLoginPrompt(true);
+        }
+    };
+
+    const showToast = (message, type = 'success') => {
+        setToast({ message, type });
+        setTimeout(() => setToast(null), 4000);
     };
 
     const normalizeImageUrl = (u) => {
@@ -205,7 +227,7 @@ export default function ProductsView() {
                         paginatedProducts.map(p => (
                             <ShopCards
                                 key={p.product_id}
-                                onClick={handleProductClick}
+                                onClick={() => openProductModalWith(p)}
                                 image={normalizeImageUrl(p.product_image)}
                                 name={p.product_name}
                                 description={p.product_description}
@@ -258,6 +280,33 @@ export default function ProductsView() {
 
                 {/* Footer */}
                 <Footer />
+                {ProductModalOpen && (
+                    <ProductCardModal
+                        isOpen={ProductModalOpen}
+                        onClose={() => setProductModalOpen(false)}
+                        product={selectedProduct}
+                        onShowToast={showToast}
+                    />
+                )}
+
+                {showLoginPrompt && (
+                    <div className='fixed inset-0 z-50 flex justify-center items-center backdrop-blur-xs bg-black/40' onClick={() => setShowLoginPrompt(false)}>
+                        <div className='bg-white rounded-lg p-6 w-[420px]' onClick={e => e.stopPropagation()}>
+                            <h2 className='text-lg font-semibold mb-2'>Sign in required</h2>
+                            <p className='text-sm text-gray-600 mb-4'>You need to sign in to view product details and purchase items.</p>
+                            <div className='flex gap-3 justify-end'>
+                                <button onClick={() => setShowLoginPrompt(false)} className='px-4 py-2 border rounded hover:cursor-pointer'>Cancel</button>
+                                <button onClick={() => router.visit('/login')} className='px-4 py-2 bg-[#9C0306] text-white rounded hover:cursor-pointer'>Sign in</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {toast && (
+                    <div className={`fixed bottom-6 right-6 px-6 py-3 rounded-lg shadow-lg text-white z-[70] ${toast.type === 'success' ? 'bg-green-500' : 'bg-red-500'}`}>
+                        {toast.message}
+                    </div>
+                )}
 
 
             </div>

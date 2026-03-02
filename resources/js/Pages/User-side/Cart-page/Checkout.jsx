@@ -20,6 +20,7 @@ export default function Checkout() {
     const [isReceiptFormOpen, setIsReceiptFormOpen] = useState(false);
     const [customerData, setCustomerData] = useState({ name: 'Customer', id: 'N/A' });
     const intervalRef = React.useRef(null);
+    const prevCartSerialized = React.useRef(null);
 
     // Set customer data from both auth.user and props.user
     React.useEffect(() => {
@@ -40,11 +41,13 @@ export default function Checkout() {
         // Function to load items from sessionStorage
         const loadCheckoutItems = () => {
             const stored = sessionStorage.getItem('checkoutItems');
-            console.log('Stored items:', stored);
             if (stored) {
                 const items = JSON.parse(stored);
-                console.log('Parsed items:', items);
-                setCartItems(items);
+                const serialized = JSON.stringify(items);
+                if (serialized !== prevCartSerialized.current) {
+                    prevCartSerialized.current = serialized;
+                    setCartItems(items);
+                }
             } else {
                 // If no items in sessionStorage, redirect to cart
                 router.visit('/Cart');
@@ -54,8 +57,39 @@ export default function Checkout() {
         // Load items on mount
         loadCheckoutItems();
 
-        // Set up interval to check for changes every 500ms
-        intervalRef.current = setInterval(loadCheckoutItems, 500);
+        // Fetch cart from server when sessionStorage is empty
+        const fetchCartFromServer = async () => {
+            try {
+                const res = await axios.get('/get-cart');
+                const items = res.data || [];
+                const serialized = JSON.stringify(items);
+                if (serialized !== prevCartSerialized.current) {
+                    prevCartSerialized.current = serialized;
+                    if (Array.isArray(items) && items.length > 0) {
+                        setCartItems(items);
+                    } else {
+                        setCartItems([]);
+                    }
+                }
+            } catch (err) {
+                console.error('Failed to fetch cart from server:', err);
+            }
+        };
+
+        // Initial server fetch if no session checkout items
+        if (!sessionStorage.getItem('checkoutItems')) {
+            fetchCartFromServer();
+        }
+
+        // Set up interval to refresh data every 2s
+        intervalRef.current = setInterval(() => {
+            loadCheckoutItems();
+
+            // Only refresh from server when there's no checkoutItems in sessionStorage
+            if (!sessionStorage.getItem('checkoutItems')) {
+                fetchCartFromServer();
+            }
+        }, 2000);
 
         return () => clearInterval(intervalRef.current);
     }, []);
