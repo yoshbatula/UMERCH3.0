@@ -10,6 +10,7 @@ export default function AddUsersModals({ isOpen, onClose, onUserAdded }) {
     });
 
     const [visible, setVisible] = useState(false);
+    const [userIdError, setUserIdError] = useState('');
     const [passwordStrength, setPasswordStrength] = useState({ level: '', color: '', text: '' });
 
     // Function to calculate password strength
@@ -64,10 +65,26 @@ export default function AddUsersModals({ isOpen, onClose, onUserAdded }) {
 
         // Clear the specific field error as the user corrects it
         clearErrors(name);
+        if (name === 'userId') {
+            const val = value.trim();
+            if (val === '') {
+                setUserIdError('');
+            } else if (!/^\d+$/.test(val)) {
+                setUserIdError('User ID must be an integer');
+            } else {
+                setUserIdError('');
+            }
+        }
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        // Client-side validation for userId: must be an integer
+        const userIdVal = (data.userId || '').toString().trim();
+        if (!/^\d+$/.test(userIdVal)) {
+            setUserIdError('User ID must be an integer');
+            return;
+        }
         post('/admin/add-user', {
             onSuccess: (page) => {
 
@@ -78,6 +95,7 @@ export default function AddUsersModals({ isOpen, onClose, onUserAdded }) {
                 }
                 reset();
                 setPasswordStrength({ level: '', color: '', text: '' });
+                setUserIdError('');
                 onClose();
             },
             onError: (errors) => {
@@ -125,9 +143,10 @@ export default function AddUsersModals({ isOpen, onClose, onUserAdded }) {
                                 required
                             />
                             {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+                            {/* Temporarily disabled frontend uniqueness hint for whitebox testing
                             {errors["name"] && errors["name"].toString().toLowerCase().includes("unique") && (
                                 <p className="text-red-500 text-sm mt-1">This name is already taken.</p>
-                            )}
+                            )} */}
                         </div>
 
                         <div>
@@ -168,6 +187,7 @@ export default function AddUsersModals({ isOpen, onClose, onUserAdded }) {
                             {errors["userId"] && errors["userId"].toString().toLowerCase().includes("unique") && (
                                 <p className="text-red-500 text-sm mt-1">This user ID is already taken.</p>
                             )}
+                            {userIdError && <p className="text-red-500 text-sm mt-1">{userIdError}</p>}
                         </div>
 
                         <div>

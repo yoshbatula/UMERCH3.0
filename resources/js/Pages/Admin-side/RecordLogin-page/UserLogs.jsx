@@ -111,7 +111,7 @@ function UserLogs() {
               return idOf(a) - idOf(b);
             });
             const totalPages = getTotalPages(sortedUsers, itemsPerPage);
-            const paginatedUsers = getPaginatedUsers(sortedUsers, currentPage, itemsPerPage);
+            const paginatedUsers = getPaginatedUsers(sortedUsers, currentPage, itemsPerPage).slice(0, itemsPerPage);
 
             if (paginatedUsers.length > 0) {
               return paginatedUsers.map((userRaw) => {
