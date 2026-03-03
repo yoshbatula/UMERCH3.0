@@ -7,7 +7,7 @@ export const StatCard = ({ title, value, className, icon }) => (
     >
         <div>
             <div className="text-lg opacity-90">{title}</div>
-            <div className="text-4xl font-bold leading-tight mt-1">{value}</div>
+            <div className="text-3xl font-bold leading-tight mt-1">{value}</div>
         </div>
 
         <div className="w-12 h-12 rounded-lg flex items-center justify-center">

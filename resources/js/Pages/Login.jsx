@@ -30,7 +30,7 @@ export default function Login() {
         setShowLogin(true);
     };
 
-    // just a placeholder for the actual login page, you can replace it with your actual login component or page
+    
     return (
         <>
             <div>

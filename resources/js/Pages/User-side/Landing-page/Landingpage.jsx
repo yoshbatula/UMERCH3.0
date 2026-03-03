@@ -55,11 +55,8 @@ export default function Landingpage() {
             {/* Navigation component */}
             <Navbar/>
 
-            {/* Login modal (appears when ?popup=1 is present) */}
+            {/* Knowledge Login modal (appears when ?popup=1 is present) */}
             <LoginModal showLogin={showLogin} onCloseLogin={() => setShowLogin(false)} />
-
-            {/* Knowledge component */}
-            <KnowledgeSection />
 
             {/* Advertisement component */}
             <Advertisement/>
