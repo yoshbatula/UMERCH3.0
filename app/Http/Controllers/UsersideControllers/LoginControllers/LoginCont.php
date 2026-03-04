@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Log;
 
 class LoginCont extends Controller
 {
@@ -97,12 +96,7 @@ class LoginCont extends Controller
                 // Generate and send OTP
                 $otp = random_int(100000, 999999);
                 session(['otp' => $otp, 'otp_expires' => now()->addMinutes(5)]);
-                try {
-                    Mail::to($user->email)->send(new \App\Mail\OtpMail($otp, $user->user_fullname ?? 'User'));
-                } catch (\Throwable $e) {
-                    Log::error('Failed to send OTP email: ' . $e->getMessage());
-                    // Do not fail the login flow if mail sending fails in local/dev
-                }
+                Mail::to($user->email)->send(new \App\Mail\OtpMail($otp, $user->user_fullname ?? 'User'));
 
                 // Return JSON for axios or redirect for form submissions
                 if ($request->expectsJson()) {

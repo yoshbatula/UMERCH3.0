@@ -2,6 +2,7 @@ import React from 'react';
 import {Link, router} from '@inertiajs/react';
 import Logo from '@images/UMERCH-LOGO.svg';
 import { usePage } from '@inertiajs/react';
+import UMLOGO from '@images/UM-LOGO.png';
 export default function Navbar({ onSignInClick }) {
 
     const { url } = usePage();
@@ -13,6 +14,7 @@ export default function Navbar({ onSignInClick }) {
 
     return (
         <div className="bg-[#9C0306] flex flex-row items-center p-6 h-20 sticky top-0 z-50">
+            {/* <img src={UMLOGO} alt="UM-LOGO" className='w-20'/> */}
             <img src={Logo} alt="UMERCH LOGO" />
             <div className='flex flex-row gap-6 p-8 text-white font-montserrat'>
                 <Link href="/" prefetch className={`font-bold text-[16px] leading-tight ${isActive('/') ? 'text-[#FFB600]' : ''}`}>HOME</Link>
@@ -21,10 +23,10 @@ export default function Navbar({ onSignInClick }) {
                 <Link href="#" prefetch className='font-bold text-[16px] leading-tight'>CONTACT US</Link>
             </div>
             <div className='flex flex-row gap-4 font-bold ml-auto text-white font-montserrat'>
-                                <button
-                                    className='font-bold text-[16px] leading-tight bg-transparent border-none cursor-pointer'
-                                    onClick={onSignInClick ? onSignInClick : () => router.visit('/Landing?popup=1')}
-                                >SIGN IN</button>
+                <button
+                    className='font-bold text-[16px] leading-tight bg-transparent border-none cursor-pointer'
+                    onClick={onSignInClick ? onSignInClick : () => router.visit('/Landing?popup=1')}
+                >SIGN IN</button>
             </div>
         </div>
     );

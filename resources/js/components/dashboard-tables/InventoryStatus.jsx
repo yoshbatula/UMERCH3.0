@@ -1,5 +1,5 @@
 import React from 'react';
-
+import {Link} from '@inertiajs/react';
 export default function InventoryStatus({ inventoryStatus }) {
     // Provide default values if inventoryStatus is not loaded
     const {
@@ -15,7 +15,7 @@ export default function InventoryStatus({ inventoryStatus }) {
         <div className="w-[280px] bg-white rounded-xl p-6 shadow-sm border border-gray-200">
             <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold text-lg">Inventory Status</h3>
-                <button className="text-sm text-gray-500">View All</button>
+                <Link href="/inventory" prefetch className="text-sm text-gray-500">View All</Link>
             </div>
 
             {/* Donut Chart */}
