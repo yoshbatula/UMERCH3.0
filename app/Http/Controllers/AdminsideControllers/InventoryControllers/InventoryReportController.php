@@ -19,8 +19,8 @@ class InventoryReportController extends Controller
     public function getReport(Request $request)
     {
         try {
-            // [WB-SR-68 TESTING] Simulated DB failure — remove after testing
-            // throw new \Exception('DB CONNECTION FAILED');
+            // [WB-SR-68 / WB-SR-74 TESTING] Simulated DB failure — remove after testing
+            throw new \Exception('DB CONNECTION FAILED');
 
             $filterType = $request->query('filterType', 'day'); // day, week, month
             $filterDate = $request->query('filterDate', now()->toDateString()); // YYYY-MM-DD
@@ -48,7 +48,7 @@ class InventoryReportController extends Controller
 
             foreach ($products as $product) {
                 // Determine date range based on filter type
-                [$startDate, $endDate] = $this->getDateRange($filterType, $filterDate);
+                [$startDate, $endDate, $dateFallback] = $this->getDateRange($filterType, $filterDate);
 
                 // Get sold quantity and value from stock_outs
                 $soldData = DB::table('stock_outs')
@@ -115,6 +115,7 @@ class InventoryReportController extends Controller
             return response()->json([
                 'filter_type' => $filterType,
                 'filter_date' => $filterDate,
+                'date_fallback' => $dateFallback ?? false, // [WB-SR-77] true = filterDate was malformed, fell back to today
                 'data' => $reportData,
                 'total_sold_qty' => $totalSoldQty,
                 'total_purchased_qty' => $totalPurchasedQty,
@@ -210,10 +211,17 @@ class InventoryReportController extends Controller
      */
     private function getDateRange($filterType, $filterDate)
     {
+        $usedFallback = false;
         try {
             $date = Carbon::createFromFormat('Y-m-d', $filterDate);
+            // [WB-SR-77] Reject overflow dates (e.g. 2026-99-99 parses but re-formats differently)
+            if ($date->format('Y-m-d') !== $filterDate) {
+                throw new \Exception('Overflowed date');
+            }
         } catch (\Exception $e) {
+            // [WB-SR-77] Fallback to today when date is malformed
             $date = Carbon::now();
+            $usedFallback = true;
         }
 
         switch ($filterType) {
@@ -232,7 +240,7 @@ class InventoryReportController extends Controller
                 break;
         }
 
-        return [$startDate, $endDate];
+        return [$startDate, $endDate, $usedFallback];
     }
 
     /**
