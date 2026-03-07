@@ -6,6 +6,7 @@ export const useUserLogs = () => {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [toast, setToast] = useState("");
+    const [toastType, setToastType] = useState("success");
     const [showingToast, setShowingToast] = useState(false);
     const [isEditOpen, setEditOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
@@ -34,17 +35,11 @@ export const useUserLogs = () => {
         fetchUsers();
     }, []);
 
-    // Auto-refresh users every 5 seconds
-    useEffect(() => {
-        const interval = setInterval(() => {
-            fetchUsers();
-        }, 5000);
 
-        return () => clearInterval(interval);
-    }, []);
 
-    const showToast = (message) => {
+    const showToast = (message, type = 'success') => {
         setToast(message);
+        setToastType(type);
         setShowingToast(true);
         setTimeout(() => setShowingToast(false), 5000);
     };
@@ -87,8 +82,13 @@ export const useUserLogs = () => {
     };
 
     const handleDeleteSuccess = () => {
-        showToast('User deleted successfully!');
+        showToast('User deleted successfully!', 'success');
         fetchUsers();
+        closeDeleteModal();
+    };
+
+    const handleDeleteError = (message) => {
+        showToast(message || 'Failed to delete user. Please try again.', 'error');
         closeDeleteModal();
     };
 
@@ -192,12 +192,12 @@ export const useUserLogs = () => {
 
     return {
         // State
-        query, setQuery, isAddUsersOpen, users, loading, toast, showingToast, isEditOpen, selectedUser, isDeleteOpen, userToDelete,
+        query, setQuery, isAddUsersOpen, users, loading, toast, toastType, showingToast, isEditOpen, selectedUser, isDeleteOpen, userToDelete,
         currentPage, setCurrentPage, actionModalOpen, setActionModalOpen, itemsPerPage,
 
         // Functions
         fetchUsers, showToast, openAddUsersModal, closeAddUsersModal, handleUserAdded, openUpdateModal, closeEditModal,
-        handleUpdateSuccess, openDeleteModal, closeDeleteModal, handleDeleteSuccess, handleReactivate, handleDeactivate, filterUsers,
+        handleUpdateSuccess, openDeleteModal, closeDeleteModal, handleDeleteSuccess, handleDeleteError, handleReactivate, handleDeactivate, filterUsers,
         getPaginatedUsers, getTotalPages, goToPage, mapUser,
     };
 };

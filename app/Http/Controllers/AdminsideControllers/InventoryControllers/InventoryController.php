@@ -48,7 +48,7 @@ class InventoryController extends Controller
         }
         $request->validate([
             'product_name' => 'required',
-            'product_price' => 'required|numeric|min:0',
+            'product_price' => 'required|numeric|min:0.01',
             'variant' => 'required',
             'variant_type' => 'required',
             'product_image' => 'nullable|image'
@@ -66,19 +66,11 @@ class InventoryController extends Controller
             ->first();
 
         if ($existingProduct) {
-            // Update existing product instead of creating duplicate
-            $existingProduct->update([
-                'product_price' => $request->product_price,
-                'product_description' => $request->product_description,
-                'product_image' => $imagePath ? Storage::url($imagePath) : $existingProduct->product_image,
-                'variant_type' => $request->variant_type,
-                'status' => 'active',
-            ]);
-
+            // WB-PR-02: Reject duplicate product (same name + variant) with 409
             return response()->json([
-                'message' => 'Product updated successfully!',
-                'success' => true
-            ]);
+                'message' => 'Product already exists!',
+                'success' => false
+            ], 409);
         }
 
         // Check if product with same name exists (but different variant)

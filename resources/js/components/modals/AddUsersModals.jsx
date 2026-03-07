@@ -65,26 +65,25 @@ export default function AddUsersModals({ isOpen, onClose, onUserAdded }) {
 
         // Clear the specific field error as the user corrects it
         clearErrors(name);
-        if (name === 'userId') {
-            const val = value.trim();
-            if (val === '') {
-                setUserIdError('');
-            } else if (!/^\d+$/.test(val)) {
-                setUserIdError('User ID must be an integer');
-            } else {
-                setUserIdError('');
-            }
-        }
+        // if (name === 'userId') {
+        //     const val = value.trim();
+        //     if (val === '') {
+        //         setUserIdError('');
+        //     } else if (!/^\d+$/.test(val)) {
+        //         setUserIdError('User ID must be an integer');
+        //     } else {
+        //         setUserIdError('');
+        //     }
+        // }
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        // Client-side validation for userId: must be an integer
-        const userIdVal = (data.userId || '').toString().trim();
-        if (!/^\d+$/.test(userIdVal)) {
-            setUserIdError('User ID must be an integer');
-            return;
-        }
+        // const userIdVal = (data.userId || '').toString().trim();
+        // if (!/^\d+$/.test(userIdVal)) {
+        //     setUserIdError('User ID must be an integer');
+        //     return;
+        // }
         post('/admin/add-user', {
             onSuccess: (page) => {
 
@@ -143,10 +142,9 @@ export default function AddUsersModals({ isOpen, onClose, onUserAdded }) {
                                 required
                             />
                             {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
-                            {/* Temporarily disabled frontend uniqueness hint for whitebox testing
                             {errors["name"] && errors["name"].toString().toLowerCase().includes("unique") && (
                                 <p className="text-red-500 text-sm mt-1">This name is already taken.</p>
-                            )} */}
+                            )}
                         </div>
 
                         <div>
@@ -183,11 +181,12 @@ export default function AddUsersModals({ isOpen, onClose, onUserAdded }) {
                                 placeholder="Enter user ID"
                                 required
                             />
-                            {errors.userId && <p className="text-red-500 text-sm mt-1">{errors.userId}</p>}
+                            {/* Comment for whitebox backend validation */}
+                            {/* {errors.userId && <p className="text-red-500 text-sm mt-1">{errors.userId}</p>}
                             {errors["userId"] && errors["userId"].toString().toLowerCase().includes("unique") && (
                                 <p className="text-red-500 text-sm mt-1">This user ID is already taken.</p>
                             )}
-                            {userIdError && <p className="text-red-500 text-sm mt-1">{userIdError}</p>}
+                            {userIdError && <p className="text-red-500 text-sm mt-1">{userIdError}</p>} */}
                         </div>
 
                         <div>
@@ -219,8 +218,8 @@ export default function AddUsersModals({ isOpen, onClose, onUserAdded }) {
                                             ></div>
                                         </div>
                                         <span className={`text-sm font-medium ${passwordStrength.level === 'weak' ? 'text-red-500' :
-                                                passwordStrength.level === 'medium' ? 'text-yellow-500' :
-                                                    'text-green-500'
+                                            passwordStrength.level === 'medium' ? 'text-yellow-500' :
+                                                'text-green-500'
                                             }`}>
                                             {passwordStrength.text}
                                         </span>

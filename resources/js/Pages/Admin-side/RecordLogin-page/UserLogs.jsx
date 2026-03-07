@@ -28,9 +28,9 @@ const StatCard = ({ title, value, className = "bg-green-700", icon }) => (
 
 function UserLogs() {
   const {
-    query, setQuery, isAddUsersOpen, users, toast, showingToast, isEditOpen, selectedUser, isDeleteOpen, userToDelete, currentPage,
+    query, setQuery, isAddUsersOpen, users, toast, toastType, showingToast, isEditOpen, selectedUser, isDeleteOpen, userToDelete, currentPage,
     setCurrentPage, actionModalOpen, setActionModalOpen, itemsPerPage, openAddUsersModal, closeAddUsersModal, handleUserAdded, openUpdateModal,
-    closeEditModal, handleUpdateSuccess, openDeleteModal, closeDeleteModal, handleDeleteSuccess, handleReactivate,
+    closeEditModal, handleUpdateSuccess, openDeleteModal, closeDeleteModal, handleDeleteSuccess, handleDeleteError, handleReactivate,
     handleDeactivate, filterUsers, getPaginatedUsers, getTotalPages, goToPage, mapUser,
   } = useUserLogs();
 
@@ -227,11 +227,14 @@ function UserLogs() {
           onClose={closeDeleteModal}
           user={userToDelete}
           onDeleted={handleDeleteSuccess}
+          onError={handleDeleteError}
         />
         <AdminFooter />
-        {/* Toast Success */}
+        {/* Toast Notification */}
         {showingToast && (
-          <div className="fixed bottom-6 right-6 bg-green-600 text-white px-4 py-3 rounded-lg shadow-lg">
+          <div className={`fixed bottom-6 right-6 px-4 py-3 rounded-lg shadow-lg text-white z-[70] transition-all ${
+            toastType === 'error' ? 'bg-red-600' : 'bg-green-600'
+          }`}>
             {toast}
           </div>
         )}

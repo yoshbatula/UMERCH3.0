@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\InventoryLog;
 use Inertia\Inertia;
-
+use Illuminate\Support\Facades\Log;
 class InventoryLogsController extends Controller
 {
     // Render the Inventory Logs page
@@ -46,7 +46,7 @@ class InventoryLogsController extends Controller
                 'to' => $logs->lastItem(),
             ]);
         } catch (\Exception $e) {
-            \Log::error('InventoryLogsController Error: ' . $e->getMessage());
+            Log::error('InventoryLogsController Error: ' . $e->getMessage());
             return response()->json([
                 'data' => [],
                 'current_page' => 1,

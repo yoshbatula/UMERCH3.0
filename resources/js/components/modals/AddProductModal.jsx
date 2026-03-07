@@ -5,8 +5,8 @@ import axios from "axios";
 export default function AddProductModal({ open, isOpen, onClose, onSuccess }) {
     const [preview, setPreview] = useState(null);
     const [selectedVariantType, setSelectedVariantType] = useState("");
-    const [existingProducts, setExistingProducts] = useState([]);
     const [priceError, setPriceError] = useState("");
+    const [formError, setFormError] = useState("");
 
     const variantTypesMap = {
         size: ["XS", "S", "M", "L", "XL"],
@@ -49,17 +49,7 @@ export default function AddProductModal({ open, isOpen, onClose, onSuccess }) {
             setPreview(null);
             setSelectedVariantType("");
             setPriceError("");
-        }
-    }, [visible]);
-
-    useEffect(() => {
-        if (visible) {
-            // Fetch existing products when modal opens
-            axios.get("/admin/products").then(res => {
-                setExistingProducts(res.data);
-            }).catch(err => {
-                console.error("Error fetching products:", err);
-            });
+            setFormError("");
         }
     }, [visible]);
 
@@ -117,38 +107,28 @@ export default function AddProductModal({ open, isOpen, onClose, onSuccess }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        setFormError("");
 
         // Validate variant type is selected
         if (!selectedVariantType) {
-            alert("Please select a variant type.");
+            setFormError("Please select a variant type.");
             return;
         }
 
         // Validate price is not zero or negative
         if (priceError) {
-            alert("Price must be greater than zero. Please enter a valid price.");
+            setFormError("Price must be greater than zero. Please enter a valid price.");
             return;
         }
 
         if (!data.product_price || parseFloat(data.product_price) <= 0) {
-            alert("Price must be greater than zero. Please enter a valid price.");
-            return;
-        }
-
-        // Check if product with same name already exists
-        const isDuplicate = existingProducts.some(
-            (product) => 
-                product.product_name === data.product_name
-        );
-
-        if (isDuplicate) {
-            alert(`Product "${data.product_name}" already exists!`);
+            setFormError("Price must be greater than zero. Please enter a valid price.");
             return;
         }
 
         const csrfToken = getCsrfToken();
         if (!csrfToken) {
-            alert('Security error: CSRF token not found. Please refresh the page.');
+            setFormError('Security error: CSRF token not found. Please refresh the page.');
             return;
         }
 
@@ -175,12 +155,12 @@ export default function AddProductModal({ open, isOpen, onClose, onSuccess }) {
             setPreview(null);
             setSelectedVariantType("");
             setPriceError("");
+            setFormError("");
             onClose && onClose();
         }).catch((error) => {
             console.error('Error adding product:', error.response?.data || error.message);
-            console.error('Error status:', error.response?.status);
             const errorMessage = error.response?.data?.message || 'Failed to add product. Please try again.';
-            alert(errorMessage);
+            setFormError(errorMessage);
         });
     };
 
@@ -196,7 +176,7 @@ export default function AddProductModal({ open, isOpen, onClose, onSuccess }) {
                     <div>
                         <label className="text-sm font-semibold mb-2 block">Product Image</label>
                         <label className="border-2 border-dashed border-red-400 rounded-lg h-[180px] flex flex-col items-center justify-center cursor-pointer text-red-600">
-                            <input type="file" className="hidden" onChange={handleFile} />
+                            <input type="file" className="hidden" onChange={handleFile} required/>
                             {preview ? (
                                 <img src={preview} alt="preview" className="h-full object-contain" />
                             ) : (
@@ -235,6 +215,7 @@ export default function AddProductModal({ open, isOpen, onClose, onSuccess }) {
                             value={data.product_name}
                             onChange={handleInput}
                             className="w-full border rounded-full px-4 py-2 outline-red-600"
+                            required
                         />
                         {errors.product_name && (
                             <p className="text-red-600 text-xs mt-1">{errors.product_name}</p>
@@ -253,6 +234,7 @@ export default function AddProductModal({ open, isOpen, onClose, onSuccess }) {
                             value={data.product_price}
                             onChange={handleInput}
                             className="w-full border rounded-full px-4 py-2 outline-red-600"
+                            required
                         />
                         {errors.product_price && (
                             <p className="text-red-600 text-xs mt-1">{errors.product_price}</p>
@@ -284,6 +266,13 @@ export default function AddProductModal({ open, isOpen, onClose, onSuccess }) {
                             <p className="text-red-600 text-xs mt-2">Please select a variant type</p>
                         )}
                     </div>
+
+                    {/* Form Error */}
+                    {/* {formError && (
+                        <div className="col-span-2 bg-red-50 border border-red-300 text-red-700 text-sm rounded-lg px-4 py-2">
+                            {formError}
+                        </div>
+                    )} */}
 
                     {/* Footer */}
                     <div className="col-span-2 flex justify-end gap-4">

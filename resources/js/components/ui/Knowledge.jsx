@@ -4,7 +4,7 @@ import BackgroundImage from '@images/um5.jpg';
 import LoginLogo from '@images/UMERCH-LOGIN-LOGO.svg';
 import EmailIcon from '@images/email-icon.svg';
 import PasswordIcon from '@images/password-icon.svg';
-import RealUmLogo from '@images/UM-LOGO.png';
+// import RealUmLogo from '@images/UM-LOGO.png';
 import axios from 'axios';
 
 export default function Knowledge({ showLogin, onCloseLogin }) {
@@ -94,16 +94,13 @@ export default function Knowledge({ showLogin, onCloseLogin }) {
                         <form onSubmit={handleSubmit}>
                             <div className='bg-black/60 rounded-[15px] p-8 w-96'>
                                 <div className='flex flex-col justify-center items-center'>
-                                    <div className='h-50 relative'>
-                                        <img src={LoginLogo} alt="UMERCH Login Logo" className='w-40 transform translate-x-[41px] translate-y-[40px]'/>
-                                        <div className='relative flex items-center justify-center transform translate-y-[-170px]'>
-                                            <img src={RealUmLogo} alt="" className='opacity-10 w-60'/>
-                                        </div>
+                                    <div className='flex items-center justify-center'>
+                                        <img src={LoginLogo} alt="UMERCH Login Logo" className='w-40'/>
                                     </div>
-                                    <h1 className='text-white text-[20px] font-bold leading-tight transform translate-y-[27px]'>LOGIN</h1>
+                                    <h1 className='text-white text-[20px] font-bold leading-tight'>LOGIN</h1>
                                     
                                     {showError && Object.keys(errors).length > 0 && (
-                                        <div className='p-4 py-2 bg-red-100 border border-red-400 rounded-[10px] w-full mt-3 flex justify-center items-center'>
+                                        <div className='p-4 py-2 bg-red-100 border border-red-400 rounded-[10px] mt-2 w-full flex justify-center items-center'>
                                             <p className="text-red-700 text-[12px]">
                                                 {errors.login || errors.password || errors.email || Object.values(errors)[0]}
                                             </p>
