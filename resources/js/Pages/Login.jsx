@@ -34,6 +34,7 @@ export default function Login() {
     return (
         <>
         {/* merging  */}
+        {/* jerlyn */}
             <div>
                 {/* Navigation components */}
                 <Navbar onSignInClick={handleSignInClick} />
