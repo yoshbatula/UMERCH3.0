@@ -33,6 +33,7 @@ export default function Login() {
     
     return (
         <>
+        {/* merging  */}
             <div>
                 {/* Navigation components */}
                 <Navbar onSignInClick={handleSignInClick} />
