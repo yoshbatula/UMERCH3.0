@@ -7,7 +7,7 @@ export default function Navbar({ onSignInClick }) {
 
     const { url } = usePage();
     const isActive = (href) => {
-        if (href === '/') return url === '/';
+        if (href === '/login') return url === '/login';
         if (href === '/Products') return url === '/Products';
         return url.startsWith(href);
     };
@@ -17,7 +17,7 @@ export default function Navbar({ onSignInClick }) {
             {/* <img src={UMLOGO} alt="UM-LOGO" className='w-20'/> */}
             <img src={Logo} alt="UMERCH LOGO" />
             <div className='flex flex-row gap-6 p-8 text-white font-montserrat'>
-                <Link href="/" prefetch className={`font-bold text-[16px] leading-tight ${isActive('/') ? 'text-[#FFB600]' : ''}`}>HOME</Link>
+                <Link href="/login" prefetch className={`font-bold text-[16px] leading-tight ${isActive('/login') ? 'text-[#FFB600]' : ''}`}>HOME</Link>
                 <Link href="/Products" prefetch className={`font-bold text-[16px] leading-tight ${isActive('/Products') ? 'text-[#FFB600]' : ''}`} >PRODUCTS</Link>
                 <Link href="#" prefetch className='font-bold text-[16px] leading-tight'>ABOUT US</Link>
                 <Link href="#" prefetch className='font-bold text-[16px] leading-tight'>CONTACT US</Link>
