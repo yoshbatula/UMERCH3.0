@@ -7,6 +7,7 @@ export default function AddProductModal({ open, isOpen, onClose, onSuccess }) {
     const [selectedVariantType, setSelectedVariantType] = useState("");
     const [priceError, setPriceError] = useState("");
     const [formError, setFormError] = useState("");
+    const [imageError, setImageError] = useState("");
 
     const variantTypesMap = {
         size: ["XS", "S", "M", "L", "XL"],
@@ -50,6 +51,7 @@ export default function AddProductModal({ open, isOpen, onClose, onSuccess }) {
             setSelectedVariantType("");
             setPriceError("");
             setFormError("");
+            setImageError("");
         }
     }, [visible]);
 
@@ -89,6 +91,7 @@ export default function AddProductModal({ open, isOpen, onClose, onSuccess }) {
         setData("product_image", file);
         setPreview(file ? URL.createObjectURL(file) : null);
         clearErrors("product_image");
+        if (file) setImageError("");
     };
 
     const getCsrfToken = () => {
@@ -108,6 +111,12 @@ export default function AddProductModal({ open, isOpen, onClose, onSuccess }) {
     const handleSubmit = (e) => {
         e.preventDefault();
         setFormError("");
+
+        // Validate image is uploaded
+        if (!data.product_image) {
+            setImageError("Please upload a product image.");
+            return;
+        }
 
         // Validate variant type is selected
         if (!selectedVariantType) {
@@ -175,8 +184,8 @@ export default function AddProductModal({ open, isOpen, onClose, onSuccess }) {
                     {/* Image Upload */}
                     <div>
                         <label className="text-sm font-semibold mb-2 block">Product Image</label>
-                        <label className="border-2 border-dashed border-red-400 rounded-lg h-[180px] flex flex-col items-center justify-center cursor-pointer text-red-600">
-                            <input type="file" className="hidden" onChange={handleFile} required/>
+                        <label className={`border-2 border-dashed rounded-lg h-[180px] flex flex-col items-center justify-center cursor-pointer ${imageError ? 'border-red-600 bg-red-50' : 'border-red-400'} text-red-600`}>
+                            <input type="file" className="hidden" onChange={handleFile} />
                             {preview ? (
                                 <img src={preview} alt="preview" className="h-full object-contain" />
                             ) : (
@@ -189,6 +198,9 @@ export default function AddProductModal({ open, isOpen, onClose, onSuccess }) {
                                 <p className="text-red-600 text-xs mt-2">{errors.product_image}</p>
                             )}
                         </label>
+                        {imageError && (
+                            <p className="text-red-600 text-xs mt-1">{imageError}</p>
+                        )}
                     </div>
 
                     {/* Description */}
