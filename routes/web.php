@@ -7,8 +7,8 @@ use Inertia\Middleware;
 use Inertia\Inertia;
 
 Route::get('/', function () {
-return inertia('Login');
-})->name('login');
+    return inertia('LoadingAnimation');
+})->name('splash');
 
 Route::get('Products', function () {
     return inertia('Products');
