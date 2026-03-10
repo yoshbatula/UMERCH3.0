@@ -140,50 +140,45 @@ export default function Shop() {
                 </div>
 
                 {/* Filters */}
-                <div className='py-15 flex flex-row text-center justify-between text-[#727272] gap-5 px-20'>
-                    <div className='flex flex-row gap-5'>
-                        <div className='flex flex-row gap-1 items-center'>
-                            <p>View</p>
-                            <select className='border border-[#727272] rounded px-2 py-1' value={itemsPerPage} onChange={handleItemsPerPageChange}>
-                                <option value="8">8</option>
-                                <option value="12">12</option>
-                                <option value="16">16</option>
-                                <option value="20">20</option>
-                            </select>
+                <div className='py-4 sm:py-8 flex flex-col sm:flex-row justify-between text-[#727272] gap-3 px-4 sm:px-10 lg:px-20'>
+                    <div className='flex flex-col gap-2 sm:flex-row sm:gap-5'>
+                        {/* Row 1 on mobile: View + Sort by */}
+                        <div className='flex flex-row gap-3 items-center'>
+                            <div className='flex flex-row gap-1 items-center'>
+                                <p className='text-sm whitespace-nowrap'>View</p>
+                                <select className='border border-[#727272] rounded px-2 py-1 text-sm' value={itemsPerPage} onChange={handleItemsPerPageChange}>
+                                    <option value="8">8</option>
+                                    <option value="12">12</option>
+                                    <option value="16">16</option>
+                                    <option value="20">20</option>
+                                </select>
+                            </div>
+                            <div className='flex flex-row gap-1 items-center'>
+                                <p className='text-sm whitespace-nowrap'>Sort by</p>
+                                <select className='border border-[#727272] rounded px-2 py-1 text-sm' value={sortBy} onChange={handleSortChange}>
+                                    <option value="default">Default</option>
+                                    <option value="price-low">Price: Low to High</option>
+                                    <option value="price-high">Price: High to Low</option>
+                                    <option value="name">Name: A to Z</option>
+                                </select>
+                            </div>
                         </div>
-                        <div className='flex flex-row gap-1 items-center'>
-                            <p>Sort by</p>
-                            <select className='border border-[#727272] rounded px-2 py-1' value={sortBy} onChange={handleSortChange}>
-                                <option value="default">Default</option>
-                                <option value="price-low">Price: Low to High</option>
-                                <option value="price-high">Price: High to Low</option>
-                                <option value="name">Name: A to Z</option>
-                            </select>
-                        </div>
-                        <div className='flex flex-row items-center gap-2 border border-[#727272] rounded px-2 py-1'>
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                                <path
-                                    d="M21 21l-4.35-4.35"
-                                    stroke="#727272"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                />
-                                <path
-                                    d="M11 19a8 8 0 100-16 8 8 0 000 16z"
-                                    stroke="#727272"
-                                    strokeWidth="2"
-                                />
+                        {/* Row 2 on mobile: Search */}
+                        <div className='flex flex-row items-center gap-2 border border-[#727272] rounded px-2 py-1 w-full sm:w-auto'>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className='shrink-0'>
+                                <path d="M21 21l-4.35-4.35" stroke="#727272" strokeWidth="2" strokeLinecap="round" />
+                                <path d="M11 19a8 8 0 100-16 8 8 0 000 16z" stroke="#727272" strokeWidth="2" />
                             </svg>
                             <input type="text" placeholder="Search products..." className="border-none outline-none bg-transparent w-full text-sm text-gray-700 placeholder:text-gray-400" value={searchQuery} onChange={handleSearchChange} />
                         </div>
                     </div>
-                    <div className='flex flex-row gap-1 items-center'>
-                        <p>Showing {totalItems === 0 ? 0 : startIndex + 1}-{endIndex} of {totalItems} results </p>
+                    <div className='flex flex-row gap-1 items-center text-sm'>
+                        <p>Showing {totalItems === 0 ? 0 : startIndex + 1}-{endIndex} of {totalItems} results</p>
                     </div>
                 </div>
 
                 {/* Shop cards */}
-                <div className='flex flex-row flex-wrap justify-center gap-6 px-10 pb-10'>
+                <div className='grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 px-4 sm:px-8 lg:px-10 pb-10'>
                     {paginatedProducts.map(p => (
                         <ShopCards
                             key={p.product_id}

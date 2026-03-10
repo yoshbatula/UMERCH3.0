@@ -27,12 +27,12 @@ export default function ProductCard({
         return `₱${num.toFixed(2)}`;
     };
     return (
-        <div>
+        <div className="w-full sm:w-80">
             <div
-                className="bg-white shadow-md rounded-[20px]  w-80 hover:scale-105 transition-transform duration-300 hover:cursor-pointer"
+                className="bg-white shadow-md rounded-[20px] w-full hover:scale-105 transition-transform duration-300 hover:cursor-pointer"
                 onClick={onClick}
             >
-                <div className='w-full h-64 overflow-hidden rounded-t-[20px]'>
+                <div className='w-full h-40 sm:h-64 overflow-hidden rounded-t-[20px]'>
                     <img
                         src={imgSrc}
                         alt={name || 'Product'}

@@ -212,40 +212,48 @@ export default function ProductCardModal({ isOpen, onClose, product, onShowToast
         return (
             <>
                 <div
-                    className='fixed inset-0 z-50 flex justify-center items-center backdrop-blur-xs bg-white/5'
+                    className='fixed inset-0 z-50 flex justify-center items-center backdrop-blur-xs bg-white/5 p-4'
                     onClick={onClose}
                 >
                     <div
-                        className="bg-white p-2 rounded-[20px] shadow-lg relative w-210 h-115"
+                        className="bg-white p-2 rounded-[20px] shadow-lg relative w-full max-w-xs sm:max-w-2xl lg:max-w-4xl max-h-[90vh] overflow-y-auto"
                         onClick={e => e.stopPropagation()}
                     >
-                        <div className='flex flex-row p-8 gap-5'>
-                            <div className='flex items-start justify-center'>
+                        {/* Close button */}
+                        <button
+                            onClick={onClose}
+                            className="absolute top-3 right-4 text-gray-400 hover:text-gray-700 text-2xl font-bold leading-none z-10"
+                            aria-label="Close"
+                        >×</button>
+
+                        <div className='flex flex-col sm:flex-row p-5 sm:p-8 gap-5'>
+                            {/* Product image */}
+                            <div className='flex items-start justify-center sm:flex-shrink-0'>
                                 <img
                                     src={imgSrc}
                                     alt={name}
-                                    className='w-[400px] h-auto rounded-[20px]'
+                                    className='w-full sm:w-[280px] lg:w-[350px] h-auto rounded-[20px] object-contain'
                                     onError={(e) => { e.currentTarget.src = DefaultImage; }}
                                 />
                             </div>
-                            <div className='flex flex-col justify-start'>
-                                <div>
-                                    <h2 className='font-semibold text-[24px] leading-tight text-based/6 whitespace-nowrap'>{name}</h2>
-                                </div>
+
+                            {/* Product details */}
+                            <div className='flex flex-col justify-start flex-1'>
+                                <h2 className='font-semibold text-[20px] sm:text-[24px] leading-tight'>{name}</h2>
                                 <div className='mt-2 text-[12px]'>
                                     {description}
                                 </div>
-                                <div className='mt-3 flex flex-row gap-2'>
-                                    <h1 className='text-[#9C0306] font-semibold text-[24px]'>{formatPrice(price)}</h1>
+                                <div className='mt-3'>
+                                    <h1 className='text-[#9C0306] font-semibold text-[22px] sm:text-[24px]'>{formatPrice(price)}</h1>
                                 </div>
-                                <div className='mt-5 flex flex-row'>
-                                    <span className='text-[12px] py-3'>{variantLabel}</span>
-                                    <div className='flex flex-row flex-wrap gap-y-1 px-6 items-center'>
+                                <div className='mt-5 flex flex-row flex-wrap items-start gap-2'>
+                                    <span className='text-[12px] py-2 shrink-0'>{variantLabel}</span>
+                                    <div className='flex flex-row flex-wrap gap-2 items-center'>
                                         {variants.map(variant => (
                                             <button
                                                 key={variant}
                                                 onClick={() => setSelectedVariant(variant)}
-                                                className={`w-25 h-10 font-semibold hover:cursor-pointer transition-all ${selectedVariant === variant
+                                                className={`px-3 h-10 font-semibold hover:cursor-pointer transition-all text-sm ${selectedVariant === variant
                                                         ? 'bg-[#9C0306] text-white border-2 border-[#9C0306]'
                                                         : 'bg-white text-black border-2 border-[#DDDDDD] hover:border-[#9C0306]'
                                                     }`}
@@ -256,49 +264,43 @@ export default function ProductCardModal({ isOpen, onClose, product, onShowToast
                                     </div>
                                 </div>
                                 {variantType === 'size' && (
-                                    <div className='mt-5'>
-                                        <button onClick={() => setShowSizeChart(true)} className='text-[#0058B2] hover:underline hover:cursor-pointer'>Size Chart &gt;</button>
+                                    <div className='mt-3'>
+                                        <button onClick={() => setShowSizeChart(true)} className='text-[#0058B2] hover:underline hover:cursor-pointer text-sm'>Size Chart &gt;</button>
                                     </div>
                                 )}
-                                <div className='mt-5 flex flex-row gap-4 items-center'>
+                                <div className='mt-5 flex flex-row gap-4 items-center flex-wrap'>
                                     <span className='text-[12px]'>Quantity</span>
                                     <div className='flex flex-row'>
                                         <button
                                             type="button"
-                                            className="w-6 h-6 flex items-center justify-center border border-[#DDDDDD] text-lg font-bold bg-white"
+                                            className="w-8 h-8 flex items-center justify-center border border-[#DDDDDD] text-lg font-bold bg-white"
                                             onClick={() => setQuantity(q => Math.max(1, q - 1))}
-                                        >
-                                            -
-                                        </button>
-                                        <span className="w-13 h-6 text-center text-[#9C0306] border border-[#DDDDDD]">{quantity}</span>
+                                        >-</button>
+                                        <span className="w-12 h-8 flex items-center justify-center text-[#9C0306] border border-[#DDDDDD]">{quantity}</span>
                                         <button
                                             type="button"
-                                            className="w-6 h-6 flex items-center justify-center border border-[#DDDDDD] text-lg font-bold bg-white"
+                                            className="w-8 h-8 flex items-center justify-center border border-[#DDDDDD] text-lg font-bold bg-white"
                                             onClick={() => setQuantity(q => q + 1)}
-                                        >
-                                            +
-                                        </button>
+                                        >+</button>
                                     </div>
                                     <span className='text-[#7F7F7F] text-[10px] font-light'>{variantStocks[selectedVariant] !== undefined ? variantStocks[selectedVariant] : 0} pieces available</span>
                                 </div>
-                                <div className='mt-6 flex flex-row gap-3'>
-                                    <div className='absolute flex flex-row gap-3'>
-                                        <button
-                                            onClick={handleAddToCart}
-                                            disabled={loading || variantStocks[selectedVariant] === 0}
-                                            className='bg-white border border-[#9C0306] w-40 h-10 rounded-[10px] flex justify-center items-center hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
-                                        >
-                                            <img src={AddToCart} alt="Add to Cart" className='mr-2' />
-                                            <span className='text-[#9C0306] text-[16px] font-semibold'>{loading ? 'Adding...' : 'Add to Cart'}</span>
-                                        </button>
-                                        <button
-                                            onClick={handleBuyNow}
-                                            disabled={loading || variantStocks[selectedVariant] === 0}
-                                            className='bg-[#9C0306] w-40 h-10 rounded-[10px] flex justify-center items-center hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
-                                        >
-                                            <span className='text-white text-[16px] font-semibold'>{loading ? 'Processing...' : 'Buy Now'}</span>
-                                        </button>
-                                    </div>
+                                <div className='mt-6 flex flex-row flex-wrap gap-3'>
+                                    <button
+                                        onClick={handleAddToCart}
+                                        disabled={loading || variantStocks[selectedVariant] === 0}
+                                        className='bg-white border border-[#9C0306] flex-1 min-w-[130px] h-10 rounded-[10px] flex justify-center items-center hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
+                                    >
+                                        <img src={AddToCart} alt="Add to Cart" className='mr-2 w-5 h-5' />
+                                        <span className='text-[#9C0306] text-[14px] font-semibold'>{loading ? 'Adding...' : 'Add to Cart'}</span>
+                                    </button>
+                                    <button
+                                        onClick={handleBuyNow}
+                                        disabled={loading || variantStocks[selectedVariant] === 0}
+                                        className='bg-[#9C0306] flex-1 min-w-[130px] h-10 rounded-[10px] flex justify-center items-center hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
+                                    >
+                                        <span className='text-white text-[14px] font-semibold'>{loading ? 'Processing...' : 'Buy Now'}</span>
+                                    </button>
                                 </div>
                             </div>
                         </div>

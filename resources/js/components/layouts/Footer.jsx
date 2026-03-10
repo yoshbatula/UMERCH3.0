@@ -11,7 +11,7 @@ export default function Footer({ onSignInClick  }) {
     return (
         <>
         <div id="footer" className="p-8 bg-[#F6F6F6] flex flex-col justify-center items-center">
-            <div className="flex flex-row gap-30">
+            <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-10 sm:gap-16 lg:gap-24">
                 <div className="flex flex-col">
                     <h1 className="text-[20px]">Menu</h1>
                     <div className="mt-1 flex flex-col text-[#727272] gap-1">

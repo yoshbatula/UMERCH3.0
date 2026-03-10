@@ -72,28 +72,43 @@ export default function Knowledge({ showLogin, onCloseLogin }) {
             </div>
             
             {/* Content */}
-            <div className='relative z-10 flex items-center pl-16 min-h-screen'>
-                <div className='flex flex-col'>
+            <div className='relative z-10 flex flex-col lg:flex-row items-center justify-between px-6 sm:px-10 lg:px-16 min-h-screen py-20 lg:py-0 gap-10'>
+                <div className='flex flex-col text-center lg:text-left'>
                     <h1 className='font-montserrat text-[16px] text-white'>CASUAL & EVERYDAY</h1>
-                    <div className='mt-5 font-medium gap-2 text-white text-[70px] leading-tight' style={{fontFamily: "'Cormorant Garamond', serif"}}>
+                    <div className='mt-5 font-medium gap-2 text-white text-[44px] sm:text-[56px] lg:text-[70px] leading-tight' style={{fontFamily: "'Cormorant Garamond', serif"}}>
                         <h1>Effortlessly combine</h1>
                         <h1>comfort with campus style!</h1>
                     </div>
-                    <div className='mt-5 flex flex-col text-white font-montserrat text-[16px] leading-tight'>
+                    <div className='mt-5 flex flex-col text-white font-montserrat text-[14px] sm:text-[16px] leading-tight'>
                         <span>Discover our Casual & Everyday Collection at UMerch, where relaxed designs meet a refined</span>
                         <span>university look.</span>
                     </div>
-                    <div className='mt-10'>
+                    <div className='mt-10 flex justify-center lg:justify-start'>
                         <Link href="/Products" prefetch className='bg-[#9C0306] text-white text-[16px] px-6 py-3 hover:cursor-pointer hover:bg-[#FFB600] transition-colors duration-300'>SHOP NOW</Link>
                     </div>
                 </div>
                 
                 {/* Login Container */}
                 {showLogin && (
-                    <div className='absolute right-16 top-1/2 -translate-y-1/2'>
-                        <form onSubmit={handleSubmit}>
-                            <div className='bg-black/60 rounded-[15px] p-8 w-96'>
-                                <div className='flex flex-col justify-center items-center'>
+                    <>
+                        {/* Mobile backdrop */}
+                        <div className="lg:hidden fixed inset-0 z-40 bg-black/50" onClick={onCloseLogin} />
+
+                        {/* Fixed modal on mobile, inline panel on desktop */}
+                        <div
+                            className='fixed lg:relative inset-0 lg:inset-auto z-50 lg:z-auto flex items-center justify-center lg:block flex-shrink-0 px-4 lg:px-0'
+                            onClick={onCloseLogin}
+                        >
+                            <div className="w-full max-w-sm lg:w-auto" onClick={e => e.stopPropagation()}>
+                                <form onSubmit={handleSubmit}>
+                                    <div className='relative bg-black/80 lg:bg-black/60 rounded-[15px] p-8 w-full lg:w-96'>
+                                        <button
+                                            type="button"
+                                            className="lg:hidden absolute top-3 right-4 text-white text-2xl font-bold leading-none hover:text-gray-300"
+                                            onClick={onCloseLogin}
+                                            aria-label="Close"
+                                        >×</button>
+                                        <div className='flex flex-col justify-center items-center'>
                                     <div className='flex items-center justify-center'>
                                         <img src={LoginLogo} alt="UMERCH Login Logo" className='w-40'/>
                                     </div>
@@ -167,10 +182,12 @@ export default function Knowledge({ showLogin, onCloseLogin }) {
                                             {processing ? 'LOGGING IN...' : 'LOGIN'}
                                         </button>
                                     </div>
-                                </div>
+                                        </div>
+                                    </div>
+                                </form>
                             </div>
-                        </form>
-                    </div>
+                        </div>
+                    </>
                 )}
             </div>
         </div>

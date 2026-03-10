@@ -30,12 +30,12 @@ export default function FeatureProducts() {
 
     return (
         <div className="bg-[#F6F6F6] mt-7">
-            <div className="flex flex-col justify-center items-center py-15">
-                <h1 className="font-bold text-[42px]">Feature Products</h1>
-                <div className="mx-auto w-52 h-1 bg-[#FFB600]" />
+            <div className="flex flex-col justify-center items-center py-10 sm:py-15 px-4">
+                <h1 className="font-bold text-[28px] sm:text-[42px] text-center">Feature Products</h1>
+                <div className="mx-auto w-40 sm:w-52 h-1 bg-[#FFB600]" />
             </div>
             {/* Feature Cards */}
-            <div className='flex flex-row flex-wrap justify-center gap-6'>
+            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 justify-items-center gap-6 px-4 sm:px-6'>
                 {items.map((p) => (
                     <ProductCard
                         key={p.product_id}
