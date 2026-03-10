@@ -290,68 +290,67 @@ export default function InventoryReport() {
     };
 
     return (
-        <div className="flex min-h-screen bg-gray-100">
+        <div className="flex min-h-screen bg-[#f5f5f5]">
             <div className="h-screen sticky top-0">
                 <Sidebar />
             </div>
 
             <div className="flex-1 px-10 py-10">
-                <h1 className="text-4xl font-extrabold tracking-[0.25em] mb-1">
-                    INVENTORY REPORT
-                </h1>
-                <p className="text-gray-500 mb-8">
-                    View inventory movement and generate reports.
-                </p>
+                {/* Page Header */}
+                <h1 className="text-4xl font-extrabold tracking-[0.25em] mb-1">INVENTORY REPORT</h1>
+                <p className="text-gray-500 mb-8">View inventory movement and generate reports.</p>
+
+                {/* Summary Cards */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-5 mb-8">
+                    <div className="bg-[#9C0306] text-white rounded-xl px-6 py-5 flex flex-col gap-1 shadow-sm">
+                        <p className="text-xs font-semibold uppercase tracking-wide opacity-80">Total Sold Qty</p>
+                        <p className="text-3xl font-extrabold">{totals.sold_qty}</p>
+                    </div>
+                    <div className="bg-[#9C0306] text-white rounded-xl px-6 py-5 flex flex-col gap-1 shadow-sm">
+                        <p className="text-xs font-semibold uppercase tracking-wide opacity-80">Total Sold Value</p>
+                        <p className="text-3xl font-extrabold">₱{Number(totals.sold_value).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</p>
+                    </div>
+                    <div className="bg-[#5C975A] text-white rounded-xl px-6 py-5 flex flex-col gap-1 shadow-sm">
+                        <p className="text-xs font-semibold uppercase tracking-wide opacity-80">Total Purchased Qty</p>
+                        <p className="text-3xl font-extrabold">{totals.purchased_qty}</p>
+                    </div>
+                    <div className="bg-[#5C975A] text-white rounded-xl px-6 py-5 flex flex-col gap-1 shadow-sm">
+                        <p className="text-xs font-semibold uppercase tracking-wide opacity-80">Total Purchased Value</p>
+                        <p className="text-3xl font-extrabold">₱{Number(totals.purchased_value).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</p>
+                    </div>
+                </div>
 
                 {/* Filter Section */}
-                <div className="bg-white rounded-xl border border-gray-200 p-6 mb-8">
+                <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6 shadow-sm">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-                        {/* Filter Type */}
                         <div>
-                            <label className="block text-sm font-semibold mb-2">
-                                Filter Type
-                            </label>
+                            <label className="block text-xs font-bold uppercase tracking-wide text-gray-500 mb-2">Filter Type</label>
                             <select
                                 value={filterType}
                                 onChange={(e) => setFilterType(e.target.value)}
-                                className="w-full border rounded-lg px-4 py-2 text-sm outline-red-600"
+                                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#9C0306] focus:border-transparent"
                             >
                                 <option value="day">Daily</option>
                                 <option value="week">Weekly</option>
                                 <option value="month">Monthly</option>
                             </select>
                         </div>
-
-                        {/* Date Picker */}
                         <div>
-                            <label className="block text-sm font-semibold mb-2">
+                            <label className="block text-xs font-bold uppercase tracking-wide text-gray-500 mb-2">
                                 {filterType === "month" ? "Month" : "Date"}
                             </label>
                             <input
                                 type={filterType === "month" ? "month" : "date"}
-                                value={
-                                    filterType === "month"
-                                        ? filterDate.slice(0, 7)
-                                        : filterDate
-                                }
-                                onChange={(e) => {
-                                    if (filterType === "month") {
-                                        // Convert month format (YYYY-MM) to date format (YYYY-MM-01)
-                                        setFilterDate(e.target.value + "-01");
-                                    } else {
-                                        setFilterDate(e.target.value);
-                                    }
-                                }}
-                                className="w-full border rounded-lg px-4 py-2 text-sm outline-red-600"
+                                value={filterType === "month" ? filterDate.slice(0, 7) : filterDate}
+                                onChange={(e) => setFilterDate(filterType === "month" ? e.target.value + "-01" : e.target.value)}
+                                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#9C0306] focus:border-transparent"
                             />
                         </div>
-
-                        {/* Export Buttons */}
-                        <div className="flex gap-2">
+                        <div>
                             <button
                                 onClick={handleExportExcel}
                                 disabled={loading || reportData.length === 0}
-                                className="flex-1 bg-[#9C0306] hover:bg-red-900 text-white px-4 py-2 rounded-lg text-sm font-semibold disabled:opacity-50"
+                                className="w-full bg-[#9C0306] hover:bg-red-900 text-white px-4 py-2.5 rounded-lg text-sm font-bold tracking-wide disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                             >
                                 Export Excel
                             </button>
@@ -359,108 +358,59 @@ export default function InventoryReport() {
                     </div>
                 </div>
 
-                {/* Error Message */}
+                {/* Error */}
                 {error && (
-                    <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-6">
+                    <div className="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-lg mb-6 text-sm">
                         {error}
                     </div>
                 )}
 
-                {/* Report Table */}
-                <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                {/* Table */}
+                <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
                     {loading ? (
-                        <div className="p-8 text-center text-gray-500">
-                            Loading report data...
-                        </div>
+                        <div className="p-12 text-center text-gray-400 text-sm">Loading report data...</div>
                     ) : reportData.length === 0 ? (
-                        <div className="p-8 text-center text-gray-500">
-                            No data available for the selected period.
-                        </div>
+                        <div className="p-12 text-center text-gray-400 text-sm">No data available for the selected period.</div>
                     ) : (
                         <>
                             <div className="overflow-x-auto">
                                 <table className="w-full">
                                     <thead>
-                                        <tr className="bg-red-800 text-white">
-                                            <th className="px-6 py-4 text-left text-sm font-bold">
-                                                Date/Period
-                                            </th>
-                                            <th className="px-6 py-4 text-left text-sm font-bold">
-                                                Product Name
-                                            </th>
-                                            <th className="px-6 py-4 text-left text-sm font-bold">
-                                                Status
-                                            </th>
-                                            <th className="px-6 py-4 text-left text-sm font-bold">
-                                                Variant
-                                            </th>
-                                            <th className="px-6 py-4 text-right text-sm font-bold">
-                                                Unit Price
-                                            </th>
-                                            <th className="px-6 py-4 text-right text-sm font-bold">
-                                                Sold Qty
-                                            </th>
-                                            <th className="px-6 py-4 text-right text-sm font-bold">
-                                                Sold Value
-                                            </th>
-                                            <th className="px-6 py-4 text-right text-sm font-bold">
-                                                Stock Decrease
-                                            </th>
-                                            <th className="px-6 py-4 text-right text-sm font-bold">
-                                                Purchased Qty
-                                            </th>
-                                            <th className="px-6 py-4 text-right text-sm font-bold">
-                                                Purchased Value
-                                            </th>
-                                            <th className="px-6 py-4 text-right text-sm font-bold">
-                                                Current Stock
-                                            </th>
+                                        <tr className="bg-[#9C0306] text-white text-xs">
+                                            <th className="px-3 py-3 text-left font-bold whitespace-nowrap">Date / Period</th>
+                                            <th className="px-3 py-3 text-left font-bold whitespace-nowrap">Product Name</th>
+                                            <th className="px-3 py-3 text-left font-bold whitespace-nowrap">Status</th>
+                                            <th className="px-3 py-3 text-left font-bold whitespace-nowrap">Variant</th>
+                                            <th className="px-3 py-3 text-right font-bold whitespace-nowrap">Unit Price</th>
+                                            <th className="px-3 py-3 text-right font-bold whitespace-nowrap">Sold Qty</th>
+                                            <th className="px-3 py-3 text-right font-bold whitespace-nowrap">Sold Value</th>
+                                            <th className="px-3 py-3 text-right font-bold whitespace-nowrap">Stock Decrease</th>
+                                            <th className="px-3 py-3 text-right font-bold whitespace-nowrap">Purchased Qty</th>
+                                            <th className="px-3 py-3 text-right font-bold whitespace-nowrap">Purchased Value</th>
+                                            <th className="px-3 py-3 text-right font-bold whitespace-nowrap">Current Stock</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {paginatedData.map((row, idx) => (
                                             <tr
                                                 key={idx}
-                                                className="border-b border-gray-200 hover:bg-gray-50"
+                                                className={`border-b border-gray-100 hover:bg-red-50 transition-colors text-xs ${idx % 2 === 1 ? 'bg-gray-50' : 'bg-white'}`}
                                             >
-                                                <td className="px-6 py-4 text-sm text-gray-700">
-                                                    {row.date_range.display}
-                                                </td>
-                                                <td className="px-6 py-4 text-sm font-semibold text-gray-900">
-                                                    {row.product_name}
-                                                </td>
-                                                <td className="px-6 py-4 text-sm">
-                                                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${row.status === 'active'
-                                                        ? 'bg-green-100 text-green-800'
-                                                        : 'bg-gray-100 text-gray-800'
-                                                        }`}>
+                                                <td className="px-3 py-2 text-gray-500 whitespace-nowrap">{row.date_range.display}</td>
+                                                <td className="px-3 py-2 font-semibold text-gray-900">{row.product_name}</td>
+                                                <td className="px-3 py-2">
+                                                    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${row.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
                                                         {row.status === 'active' ? 'Active' : 'Archived'}
                                                     </span>
                                                 </td>
-                                                <td className="px-6 py-4 text-sm text-gray-600">
-                                                    {row.variant_type}
-                                                </td>
-                                                <td className="px-6 py-4 text-right text-sm text-gray-700">
-                                                    ₱{row.unit_price.toFixed(2)}
-                                                </td>
-                                                <td className="px-6 py-4 text-right text-sm font-semibold text-red-600">
-                                                    {row.sold_qty}
-                                                </td>
-                                                <td className="px-6 py-4 text-right text-sm font-semibold text-red-600">
-                                                    ₱{row.sold_value.toFixed(2)}
-                                                </td>
-                                                <td className="px-6 py-4 text-right text-sm font-semibold text-orange-600">
-                                                    {row.stock_decrease}
-                                                </td>
-                                                <td className="px-6 py-4 text-right text-sm font-semibold text-green-600">
-                                                    {row.purchased_qty}
-                                                </td>
-                                                <td className="px-6 py-4 text-right text-sm font-semibold text-green-600">
-                                                    ₱{row.purchased_value.toFixed(2)}
-                                                </td>
-                                                <td className="px-6 py-4 text-right text-sm font-semibold text-blue-600">
-                                                    {row.current_stock}
-                                                </td>
+                                                <td className="px-3 py-2 text-gray-500 capitalize">{row.variant_type}</td>
+                                                <td className="px-3 py-2 text-right text-gray-700">₱{row.unit_price.toFixed(2)}</td>
+                                                <td className="px-3 py-2 text-right font-semibold text-gray-800">{row.sold_qty}</td>
+                                                <td className="px-3 py-2 text-right font-semibold text-[#9C0306]">₱{row.sold_value.toFixed(2)}</td>
+                                                <td className="px-3 py-2 text-right text-gray-700">{row.stock_decrease}</td>
+                                                <td className="px-3 py-2 text-right font-semibold text-gray-800">{row.purchased_qty}</td>
+                                                <td className="px-3 py-2 text-right font-semibold text-green-700">₱{row.purchased_value.toFixed(2)}</td>
+                                                <td className="px-3 py-2 text-right font-bold text-[#9C0306]">{row.current_stock}</td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -469,22 +419,19 @@ export default function InventoryReport() {
 
                             {/* Pagination */}
                             {totalPages > 1 && (
-                                <div className="flex justify-center items-center gap-6 py-4 border-t border-gray-200">
+                                <div className="flex justify-center items-center gap-2 py-4 border-t border-gray-100">
                                     <button
                                         onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                                         disabled={currentPage === 1}
-                                        className="text-gray-900 hover:text-[#9C0306] disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-sm"
+                                        className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:border-[#9C0306] hover:text-[#9C0306] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                                     >
-                                        Prev
+                                        ← Prev
                                     </button>
                                     {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
                                         <button
                                             key={page}
                                             onClick={() => setCurrentPage(page)}
-                                            className={`font-semibold text-sm ${page === currentPage
-                                                ? 'text-[#9C0306]'
-                                                : 'text-gray-900 hover:text-[#9C0306]'
-                                                }`}
+                                            className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${page === currentPage ? 'bg-[#9C0306] text-white border-[#9C0306]' : 'border-gray-300 text-gray-600 hover:border-[#9C0306] hover:text-[#9C0306]'}`}
                                         >
                                             {page}
                                         </button>
@@ -492,42 +439,12 @@ export default function InventoryReport() {
                                     <button
                                         onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                                         disabled={currentPage === totalPages}
-                                        className="text-gray-900 hover:text-[#9C0306] disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-sm"
+                                        className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:border-[#9C0306] hover:text-[#9C0306] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                                     >
-                                        Next
+                                        Next →
                                     </button>
                                 </div>
                             )}
-
-                            {/* Totals Section */}
-                            <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                                    <div className="text-center">
-                                        <p className="text-sm text-gray-600 mb-1">Total Sold Qty</p>
-                                        <p className="text-2xl font-bold text-red-600">
-                                            {totals.sold_qty}
-                                        </p>
-                                    </div>
-                                    <div className="text-center">
-                                        <p className="text-sm text-gray-600 mb-1">Total Sold Value</p>
-                                        <p className="text-2xl font-bold text-red-600">
-                                            ₱{totals.sold_value.toFixed(2)}
-                                        </p>
-                                    </div>
-                                    <div className="text-center">
-                                        <p className="text-sm text-gray-600 mb-1">Total Purchased Qty</p>
-                                        <p className="text-2xl font-bold text-green-600">
-                                            {totals.purchased_qty}
-                                        </p>
-                                    </div>
-                                    <div className="text-center">
-                                        <p className="text-sm text-gray-600 mb-1">Total Purchased Value</p>
-                                        <p className="text-2xl font-bold text-green-600">
-                                            ₱{totals.purchased_value.toFixed(2)}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
                         </>
                     )}
                 </div>
