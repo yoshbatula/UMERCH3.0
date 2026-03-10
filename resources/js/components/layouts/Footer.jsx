@@ -10,7 +10,7 @@ import Youtube from '@images/Youtube.svg';
 export default function Footer({ onSignInClick  }) {
     return (
         <>
-        <div className="p-8 bg-[#F6F6F6] flex flex-col justify-center items-center">
+        <div id="footer" className="p-8 bg-[#F6F6F6] flex flex-col justify-center items-center">
             <div className="flex flex-row gap-30">
                 <div className="flex flex-col">
                     <h1 className="text-[20px]">Menu</h1>
@@ -63,7 +63,7 @@ export default function Footer({ onSignInClick  }) {
             </div>
         </div>
         <div className="p-6 bg-white flex justify-center items-center">
-            <h1 className="text-[#727272] font-medium">Copyright © 2025 UMerch | Powered by Univebersity of Mindanao</h1>
+            <h1 className="text-[#727272] font-medium">Copyright © 2025 UMerch | Powered by University of Mindanao</h1>
         </div>
         </>
     );

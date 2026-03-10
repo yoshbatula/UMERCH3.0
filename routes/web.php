@@ -14,6 +14,10 @@ Route::get('Products', function () {
     return inertia('Products');
 })->name('products');
 
+Route::get('AboutUs', function () {
+    return inertia('AboutUs');
+})->name('aboutus');
+
 // API Routes for inventory data
 Route::get('/api/inventory', [InventoryApiController::class, 'index']);
 Route::get('/api/inventory/{productId}', [InventoryApiController::class, 'getByProduct']);

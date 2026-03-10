@@ -20,7 +20,7 @@ class InventoryReportController extends Controller
     {
         try {
             // [WB-SR-68 / WB-SR-74 TESTING] Simulated DB failure — remove after testing
-            throw new \Exception('DB CONNECTION FAILED');
+            // throw new \Exception('DB CONNECTION FAILED');
 
             $filterType = $request->query('filterType', 'day'); // day, week, month
             $filterDate = $request->query('filterDate', now()->toDateString()); // YYYY-MM-DD

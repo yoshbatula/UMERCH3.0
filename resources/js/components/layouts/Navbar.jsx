@@ -19,8 +19,15 @@ export default function Navbar({ onSignInClick }) {
             <div className='flex flex-row gap-6 p-8 text-white font-montserrat'>
                 <Link href="/login" prefetch className={`font-bold text-[16px] leading-tight ${isActive('/login') ? 'text-[#FFB600]' : ''}`}>HOME</Link>
                 <Link href="/Products" prefetch className={`font-bold text-[16px] leading-tight ${isActive('/Products') ? 'text-[#FFB600]' : ''}`} >PRODUCTS</Link>
-                <Link href="#" prefetch className='font-bold text-[16px] leading-tight'>ABOUT US</Link>
-                <Link href="#" prefetch className='font-bold text-[16px] leading-tight'>CONTACT US</Link>
+                <Link href="/AboutUs" prefetch className={`font-bold text-[16px] leading-tight ${isActive('/AboutUs') ? 'text-[#FFB600]' : ''}`} >ABOUT US</Link>
+                <a
+                    href="#footer"
+                    onClick={(e) => {
+                        e.preventDefault();
+                        document.getElementById('footer')?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                    className='font-bold text-[16px] leading-tight cursor-pointer'
+                >CONTACT US</a>
             </div>
             <div className='flex flex-row gap-4 font-bold ml-auto text-white font-montserrat'>
                 <button
