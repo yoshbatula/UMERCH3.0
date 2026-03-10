@@ -84,7 +84,7 @@ export default function Knowledge({ showLogin, onCloseLogin }) {
                         <span>university look.</span>
                     </div>
                     <div className='mt-10'>
-                        <Link href="#" className='bg-[#9C0306] text-white text-[16px] px-6 py-3 hover:cursor-pointer hover:bg-[#FFB600] transition-colors duration-300'>SHOP NOW</Link>
+                        <Link href="/Products" prefetch className='bg-[#9C0306] text-white text-[16px] px-6 py-3 hover:cursor-pointer hover:bg-[#FFB600] transition-colors duration-300'>SHOP NOW</Link>
                     </div>
                 </div>
                 

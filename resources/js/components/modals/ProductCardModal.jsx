@@ -5,7 +5,7 @@ import DefaultImage from '@images/product-placeholder.svg';
 import SizeChart from '@images/SizeChart.png';
 import axios from 'axios';
 
-export default function ProductCardModal({ isOpen, onClose, product, onShowToast }) {
+export default function ProductCardModal({ isOpen, onClose, product, onShowToast, onCartAdded }) {
     const [quantity, setQuantity] = useState(1);
     const [showSizeChart, setShowSizeChart] = useState(false);
     const [selectedVariant, setSelectedVariant] = useState(null);
@@ -110,6 +110,7 @@ export default function ProductCardModal({ isOpen, onClose, product, onShowToast
                 price: product.product_price
             });
             onShowToast('Item added to cart successfully!', 'success');
+            if (onCartAdded) onCartAdded();
             setQuantity(1);
             setTimeout(() => onClose(), 50);
         } catch (error) {

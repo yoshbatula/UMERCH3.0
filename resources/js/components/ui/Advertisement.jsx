@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import CHSE from '@images/CHSE.svg';
 import CTE from '@images/CTE-LOGO.svg';
 import CHE from '@images/CHE.svg';
@@ -24,18 +24,46 @@ const Images = [
 ];
 
 export default function Advertisement() {
+  const trackRef = useRef(null);
+
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track) return;
+
+    let animId;
+    let offset = 0;
+    const speed = 0.6; // px per frame
+
+    const animate = () => {
+      offset += speed;
+      // Reset when we've scrolled exactly half the track width (one full set)
+      const half = track.scrollWidth / 2;
+      if (offset >= half) offset = 0;
+      track.style.transform = `translateX(-${offset}px)`;
+      animId = requestAnimationFrame(animate);
+    };
+
+    animId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animId);
+  }, []);
+
+  const renderSet = (prefix) =>
+    Images.map((img, idx) => (
+      <img
+        key={`${prefix}-${idx}`}
+        src={img}
+        alt={`Logo ${idx}`}
+        draggable={false}
+        loading="eager"
+        className="h-[120px] w-auto mx-6 shrink-0"
+      />
+    ));
+
   return (
-    <div className="mt-6 max-w-full overflow-hidden bg-white hidden lg:flex h-[120px]">
-      <div className="flex items-center gap-x-12 infiniteSlider whitespace-nowrap">
-        {[...Images, ...Images].map((img, idx) => (
-          <img
-            key={idx}
-            src={img}
-            alt={`Logo ${idx}`}
-            draggable={false}
-            className="inline-block h-[120px] w-auto"
-          />
-        ))}
+    <div className="mt-6 w-full overflow-hidden bg-white hidden lg:block h-[120px]">
+      <div ref={trackRef} className="flex items-center h-full">
+        {renderSet('a')}
+        {renderSet('b')}
       </div>
     </div>
   );

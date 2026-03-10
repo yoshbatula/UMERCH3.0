@@ -84,6 +84,7 @@ class DashboardController extends Controller
                 $dayName = $date->format('D');
                 
                 $sales = Orders::whereDate('created_at', $date)
+                    ->where('status', 'Completed')
                     ->with('orderItems')
                     ->get()
                     ->sum(function ($order) {
@@ -102,6 +103,7 @@ class DashboardController extends Controller
                 $endOfWeek = $today->copy()->subWeeks($i)->endOfWeek();
                 
                 $sales = Orders::whereBetween('created_at', [$startOfWeek, $endOfWeek])
+                    ->where('status', 'Completed')
                     ->with('orderItems')
                     ->get()
                     ->sum(function ($order) {
@@ -121,6 +123,7 @@ class DashboardController extends Controller
                 
                 $sales = Orders::whereMonth('created_at', $date->month)
                     ->whereYear('created_at', $date->year)
+                    ->where('status', 'Completed')
                     ->with('orderItems')
                     ->get()
                     ->sum(function ($order) {

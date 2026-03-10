@@ -27,6 +27,11 @@ const developers = [
         role: 'Back End Developer',
         photo: null,
     },
+    {
+        name: 'John Vincent Oclarit',
+        role: 'Founder of UMERCH',
+        photo: null,
+    },
 ];
 
 export default function AboutUs() {

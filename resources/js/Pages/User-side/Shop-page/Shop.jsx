@@ -19,6 +19,16 @@ export default function Shop() {
     const [sortBy, setSortBy] = useState('default');
     const [itemsPerPage, setItemsPerPage] = useState(8);
     const [currentPage, setCurrentPage] = useState(1);
+    const [cartCount, setCartCount] = useState(0);
+
+    const fetchCartCount = () => {
+        axios.get('/get-cart')
+            .then(res => {
+                const items = Array.isArray(res.data) ? res.data : [];
+                setCartCount(items.length);
+            })
+            .catch(() => setCartCount(0));
+    };
 
     const showToast = (message, type = 'success') => {
         setToast({ message, type });
@@ -72,6 +82,7 @@ export default function Shop() {
                 setProducts(grouped);
             })
             .catch(() => setProducts([]));
+        fetchCartCount();
     }, []);
 
     // Filter products based on search query
@@ -118,7 +129,7 @@ export default function Shop() {
 
     return (
         <>
-            <Navbar />
+            <Navbar cartCount={cartCount} />
             <div className='bg-[#F6F6F6] flex flex-col justify-center'>
                 <div className='w-full h-48 sm:h-56 md:h-64 lg:h-72 overflow-hidden'>
                     <img
@@ -220,7 +231,7 @@ export default function Shop() {
                 <Footer />
 
                 {/* Modals */}
-                <ProductCardModal isOpen={ProductModalOpen} onClose={closeProductModal} product={selectedProduct} onShowToast={showToast} />
+                <ProductCardModal isOpen={ProductModalOpen} onClose={closeProductModal} product={selectedProduct} onShowToast={showToast} onCartAdded={fetchCartCount} />
                 <AccessoriesCardModal isOpen={AccessoriesModalOpen} onClose={closeAccessoriesModal} />
 
                 {/* Toast Notification */}

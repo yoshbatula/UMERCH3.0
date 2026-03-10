@@ -6,7 +6,7 @@ import NotificationIcon from '@images/NotificationIcon.svg';
 import UserAvatar from '@images/AccountIcon.svg'
 import LogoutModal from '@/components/modals/LogoutModal';
 import RedUserAvatar from '@images/red-account-logo.svg';
-export default function LandingNav() {
+export default function LandingNav({ cartCount = 0 }) {
     const page = usePage();
     const url = page.url;
     const auth = page.props.auth;
@@ -52,7 +52,14 @@ export default function LandingNav() {
                         >ORDERS</Link>
                 </div>
                 <div className='flex flex-row gap-x-7 items-center font-bold ml-auto text-white font-montserrat'>
-                    <Link href="/Cart" prefetch><img src={CartIcon} alt="Cart Icon"/></Link>
+                    <Link href="/Cart" prefetch className="relative">
+                        <img src={CartIcon} alt="Cart Icon"/>
+                        {cartCount > 0 && (
+                            <span className="absolute -top-2 -right-2 bg-[#FFB600] text-[#9C0306] text-[10px] font-extrabold rounded-full w-5 h-5 flex items-center justify-center leading-none">
+                                {cartCount > 99 ? '99+' : cartCount}
+                            </span>
+                        )}
+                    </Link>
                     <div className='flex flex-row gap-1 items-center relative'>
                         <Link href="#"><img src={UserAvatar} alt="User Avatar"/></Link>
                         <button 

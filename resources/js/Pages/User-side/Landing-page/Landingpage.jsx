@@ -7,7 +7,7 @@ import axios from 'axios';
 import Advertisement from '../../../components/ui/Advertisement';
 import DiscountedProdcuts from "../../../components/ui/DiscountedProduct";
 import FeaturedProducts from './FeaturedProducts';
-import LimitedOffer from '../../../components/ui/LimitedOffer';
+import LimitedOffer from './LimitedOffer';
 import Accessories from './Accessories';
 import FeatureSection from '../../../components/ui/FeatureSection';
 import Hero from '../../../components/ui/Hero';
