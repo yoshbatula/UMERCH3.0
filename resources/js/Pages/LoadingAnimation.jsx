@@ -5,7 +5,7 @@ export default function LoadingAnimation() {
     useEffect(() => {
         const timer = setTimeout(() => {
             window.location.replace('/login');
-        }, 5000); // Redirect after 5 seconds
+        }, 3000); // Redirect after 5 seconds
         return () => clearTimeout(timer);
     }, []);
 

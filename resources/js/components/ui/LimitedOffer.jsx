@@ -7,7 +7,7 @@ export default function LimitedOffer() {
                 <div className='flex flex-col gap-4 z-10'>
                     <h2 className='text-white text-2xl sm:text-3xl font-bold' style={{ fontFamily: 'Cormorant Garamond' }}>LIMITED TIME OFFER!</h2>
                     <h1 className='text-white text-2xl sm:text-3xl font-bold' style={{ fontFamily: 'Cormorant Garamond' }}>SPECIAL EDITION</h1>
-                    <Link className='text-[#9C0306] bg-[#FBB600] rounded-[20px] w-32 h-10 flex items-center justify-center font-light text-[14px] leading-tight' href="/Products" prefetch>
+                    <Link className='text-[#9C0306] bg-[#FBB600] rounded-[10px] w-32 h-10 flex items-center justify-center font-light text-[14px] leading-tight' href="/Products" prefetch>
                         SHOP NOW
                     </Link>
                 </div>
@@ -16,5 +16,6 @@ export default function LimitedOffer() {
                 </div>
             </div>
         </div>
+        // INITIAL COMMIT
     );
 }

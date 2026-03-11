@@ -55,17 +55,13 @@ export default function AboutUs() {
                 <div className="bg-white rounded-2xl shadow-sm p-8 border-t-4 border-[#9C0306]">
                     <h2 className="text-xl font-bold text-[#9C0306] uppercase tracking-wide mb-3">Our Mission</h2>
                     <p className="text-[#727272] text-sm leading-relaxed">
-                        To provide the University of Mindanao community with a convenient, reliable, and modern
-                        platform for purchasing official university merchandise fostering pride, unity, and
-                        institutional identity.
+                        The UM Merchandise Store is committed to serving students, employees, and alumni with reliable products, transparent and efficient service, while adapting modern management solutions.
                     </p>
                 </div>
                 <div className="bg-white rounded-2xl shadow-sm p-8 border-t-4 border-[#FFB600]">
                     <h2 className="text-xl font-bold text-[#FFB600] uppercase tracking-wide mb-3">Our Vision</h2>
                     <p className="text-[#727272] text-sm leading-relaxed">
-                        To be the leading university merchandise e-commerce platform in Mindanao, recognized for
-                        its quality products, exceptional service, and its role in strengthening school spirit
-                        across every campus.
+                        To provide quality, affordable, and authentic University of Mindanao merchandise that fosters school pride and accessibility for the UM community.
                     </p>
                 </div>
             </div>
@@ -75,7 +71,7 @@ export default function AboutUs() {
                 <div className="text-center mb-12">
                     <h2 className="text-3xl font-extrabold text-[#9C0306] uppercase tracking-wide">Meet the Team</h2>
                     <div className="mt-2 mx-auto w-16 h-1 bg-[#FFB600] rounded-full"></div>
-                    <p className="mt-4 text-[#727272] text-sm">The developers behind UMerch 3.0</p>
+                    <p className="mt-4 text-[#727272] text-sm">The developers behind UMERCH</p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
