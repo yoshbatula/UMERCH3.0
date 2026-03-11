@@ -16,6 +16,5 @@ export default function LimitedOffer() {
                 </div>
             </div>
         </div>
-        // INITIAL COMMIT
     );
 }
