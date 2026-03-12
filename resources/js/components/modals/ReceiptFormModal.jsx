@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import Check from '@images/Check.svg';
+import Check from '@images/CHECK.svg';
 import { router } from '@inertiajs/react';
 import UMERCH_RECEIPT from '@images/UMERCH-RECEIPT.svg';
 import QRCode from 'qrcode';
