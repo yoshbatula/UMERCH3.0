@@ -8,15 +8,23 @@ export default function FeatureProducts() {
     const [items, setItems] = useState([]);
     const API = '/api/products';
 
+    const BASE_URL = "https://umerch-main-jnzea4.free.laravel.cloud";
+
     const normalizeImageUrl = (u) => {
         if (!u) return Placeholder;
+
         const s = String(u).trim();
         if (!s) return Placeholder;
-        if (s.startsWith('http')) return s;
-        if (s.startsWith('/')) return s;
-        if (s.startsWith('public/storage/')) return '/' + s.replace(/^public\//, '');
-        if (s.startsWith('storage/')) return '/' + s;
-        return '/' + s;
+
+        if (s.startsWith("http")) return s;
+
+        if (s.startsWith("public/storage/"))
+            return BASE_URL + "/" + s.replace(/^public\//, "");
+
+        if (s.startsWith("storage/"))
+            return BASE_URL + "/" + s;
+
+        return BASE_URL + "/storage/" + s;
     };
 
     useEffect(() => {
