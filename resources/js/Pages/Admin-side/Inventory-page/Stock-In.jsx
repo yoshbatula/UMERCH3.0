@@ -4,6 +4,7 @@ import AdminFooter from "../../../components/layouts/AdminFooter";
 import AddStock from "../../../components/modals/AddStocksModal";
 import EditStock from "../../../components/modals/EditStocks";
 import ReceiptForm from "../../../components/modals/ReceiptFormModal";
+import AddStockOut from "../../../components/modals/AddStockOutModal";
 import { useStockIn } from "./InventoryFunction/StockInFunctions";
 
 /* ✅ ICONS */
@@ -31,7 +32,7 @@ const StatCard = ({ title, value, bg, icon }) => (
 export default function StockIn() {
     const { stocks, filteredStocks, paginatedStocks, searchQuery, setSearchQuery, openAdd, setOpenAdd, openEdit, setOpenEdit, selectedStock, setSelectedStock,
         toast, showingToast, receiptFormOpen, currentPage, setCurrentPage, totalPages, openReceiptForm,
-        closeReceiptForm, fetchStocks, showToast, getStatus, } = useStockIn();
+        closeReceiptForm, fetchStocks, showToast, getStatus, openRemoveStock, setOpenRemoveStock } = useStockIn();
 
     return (
         <div className="flex min-h-screen bg-gray-100">
@@ -84,12 +85,20 @@ export default function StockIn() {
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
                     </div>
-                    <button
-                        onClick={() => setOpenAdd(true)}
-                        className="bg-red-800 hover:bg-red-900 text-white px-8 py-2 rounded-full text-sm font-semibold hover:cursor-pointer"
-                    >
-                        Add Stock
-                    </button>
+                    <div className="flex gap-3">
+                        <button
+                            onClick={() => setOpenRemoveStock(true)}
+                            className="bg-orange-600 hover:bg-orange-700 text-white px-8 py-2 rounded-full text-sm font-semibold hover:cursor-pointer"
+                        >
+                            Remove Stock
+                        </button>
+                        <button
+                            onClick={() => setOpenAdd(true)}
+                            className="bg-red-800 hover:bg-red-900 text-white px-8 py-2 rounded-full text-sm font-semibold hover:cursor-pointer"
+                        >
+                            Add Stock
+                        </button>
+                    </div>
                 </div>
 
 
@@ -214,6 +223,13 @@ export default function StockIn() {
             <ReceiptForm
                 open={receiptFormOpen}
                 onClose={closeReceiptForm}
+            />
+
+            {/* REMOVE STOCK MODAL */}
+            <AddStockOut
+                open={openRemoveStock}
+                onClose={() => setOpenRemoveStock(false)}
+                onSuccess={() => { fetchStocks(); showToast("Stock removed successfully!"); }}
             />
         </div >
     );

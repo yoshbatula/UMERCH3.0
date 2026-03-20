@@ -31,7 +31,7 @@ const StatCard = ({ title, value, bg, icon }) => (
 );
 
 export default function StockOut() {
-    const { logs, allLogs, stocks, searchQuery, setSearchQuery, currentPage, setCurrentPage, totalPages, itemsPerPage, fetchStocks, fetchLogs, } = useStockOut();
+    const { logs, allLogs, stocks, searchQuery, setSearchQuery, currentPage, setCurrentPage, totalPages, itemsPerPage, fetchStocks, fetchLogs } = useStockOut();
 
     return (
         <div className="flex min-h-screen bg-gray-100">
@@ -89,12 +89,13 @@ export default function StockOut() {
                 </div>
                 {/* Table */}
                 <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                    <div className="grid grid-cols-12 px-8 py-4 text-sm font-bold text-red-700 border-b gap-4">
-                        <div className="col-span-2">Date / Time</div>
-                        <div className="col-span-3">Product</div>
-                        <div className="col-span-2">Variant</div>
-                        <div className="col-span-2">Quantity</div>
-                        <div className="col-span-3">Modifier</div>
+                    <div className="grid gap-4 px-8 py-4 text-sm font-bold text-red-700 border-b" style={{gridTemplateColumns: '1.5fr 2fr 1fr 0.7fr 1.2fr 1.5fr'}}>
+                        <div>Date / Time</div>
+                        <div>Product</div>
+                        <div className="text-center">Variant</div>
+                        <div className="text-center">Qty</div>
+                        <div className="text-center">Reason</div>
+                        <div>Modifier</div>
                     </div>
 
                     <div className="min-h-[420px]">
@@ -106,13 +107,26 @@ export default function StockOut() {
                             logs.map(log => (
                                 <div
                                     key={log.id}
-                                    className="grid grid-cols-12 px-8 py-4 border-b text-sm gap-4"
+                                    className="grid gap-4 px-8 py-4 border-b text-sm items-center"
+                                    style={{gridTemplateColumns: '1.5fr 2fr 1fr 0.7fr 1.2fr 1.5fr'}}
                                 >
-                                    <div className="col-span-2">{log.date_time}</div>
-                                    <div className="col-span-3">{log.product_name}</div>
-                                    <div className="col-span-2">{log.variant || '-'}</div>
-                                    <div className="col-span-2">{log.quantity}</div>
-                                    <div className="col-span-3">{log.modified_by}</div>
+                                    <div className="text-gray-700 text-xs">{log.date_time}</div>
+                                    <div className="text-gray-800 font-medium text-sm">{log.product_name}</div>
+                                    <div className="text-center text-gray-700 text-sm">{log.variant || '-'}</div>
+                                    <div className="text-center font-bold text-gray-900">{log.quantity}</div>
+                                    <div className="flex justify-center">
+                                        <span className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap ${
+                                            log.reason === 'defected' ? 'bg-red-100 text-red-700' :
+                                            log.reason === 'damaged' ? 'bg-orange-100 text-orange-700' :
+                                            log.reason === 'return' ? 'bg-blue-100 text-blue-700' :
+                                            log.reason === 'adjustment' ? 'bg-purple-100 text-purple-700' :
+                                            log.reason === 'order' ? 'bg-green-100 text-green-700' :
+                                            'bg-gray-100 text-gray-700'
+                                        }`}>
+                                            {log.reason === 'order' ? 'Order Completed' : log.reason}
+                                        </span>
+                                    </div>
+                                    <div className="text-gray-700 text-sm">{log.modified_by}</div>
                                 </div>
                             ))
                         )}

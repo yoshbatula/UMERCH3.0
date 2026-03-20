@@ -14,7 +14,8 @@ class StockOut extends Model
         'order_id',
         'quantity',
         'modified_by',
-        'date_time'
+        'date_time',
+        'reason'
     ];
 
     public function order()

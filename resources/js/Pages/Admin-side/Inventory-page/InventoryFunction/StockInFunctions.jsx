@@ -6,6 +6,7 @@ export const useStockIn = () => {
     const [searchQuery, setSearchQuery] = useState("");
     const [openAdd, setOpenAdd] = useState(false);
     const [openEdit, setOpenEdit] = useState(false);
+    const [openRemoveStock, setOpenRemoveStock] = useState(false);
     const [selectedStock, setSelectedStock] = useState(null);
     const [toast, setToast] = useState("");
     const [showingToast, setShowingToast] = useState(false);
@@ -70,6 +71,8 @@ export const useStockIn = () => {
         setOpenAdd,
         openEdit,
         setOpenEdit,
+        openRemoveStock,
+        setOpenRemoveStock,
         selectedStock,
         setSelectedStock,
         toast,

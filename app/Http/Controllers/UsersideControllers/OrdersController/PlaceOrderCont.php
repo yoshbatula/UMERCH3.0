@@ -372,6 +372,7 @@ class PlaceOrderCont extends Controller
                             'order_id' => $order->order_id,
                             'quantity' => $item->quantity,
                             'modified_by' => $modifiedByUser,
+                            'reason' => 'order',
                             'date_time' => now()
                         ]);
                         
