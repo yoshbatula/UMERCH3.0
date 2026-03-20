@@ -234,3 +234,4 @@ export default function StockIn() {
         </div >
     );
 }
+// Finally done for the logic
