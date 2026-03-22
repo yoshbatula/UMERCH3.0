@@ -79,11 +79,7 @@ export default function AddUsersModals({ isOpen, onClose, onUserAdded }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        // const userIdVal = (data.userId || '').toString().trim();
-        // if (!/^\d+$/.test(userIdVal)) {
-        //     setUserIdError('User ID must be an integer');
-        //     return;
-        // }
+      
         post('/admin/add-user', {
             onSuccess: (page) => {
 
