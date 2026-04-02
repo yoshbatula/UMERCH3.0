@@ -41,8 +41,7 @@ export default function AddUsersModals({ isOpen, onClose, onUserAdded }) {
             return { level: 'strong', color: 'bg-green-500', text: 'Strong' };
         }
     };
-
-    // breh
+    
     useEffect(() => {
         if (isOpen) {
             setVisible(true);
