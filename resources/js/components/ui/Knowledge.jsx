@@ -17,6 +17,21 @@ export default function Knowledge({ showLogin, onCloseLogin }) {
     const [processing, setProcessing] = useState(false);
     const [showError, setShowError] = useState(false);
 
+    // Load reCAPTCHA script
+    useEffect(() => {
+        const script = document.createElement('script');
+        script.src = 'https://www.google.com/recaptcha/api.js?render=' + (import.meta.env.VITE_RECAPTCHA_SITE_KEY || 'PLACEHOLDER_KEY');
+        script.async = true;
+        script.defer = true;
+        document.body.appendChild(script);
+
+        return () => {
+            if (document.body.contains(script)) {
+                document.body.removeChild(script);
+            }
+        };
+    }, []);
+
     useEffect(() => {
         if (Object.keys(errors).length > 0) {
             setShowError(true);
@@ -38,10 +53,17 @@ export default function Knowledge({ showLogin, onCloseLogin }) {
         setErrors({});
         
         try {
+            // Get reCAPTCHA token
+            let recaptchaToken = null;
+            if (window.grecaptcha) {
+                recaptchaToken = await window.grecaptcha.execute(import.meta.env.VITE_RECAPTCHA_SITE_KEY || 'PLACEHOLDER_KEY', { action: 'login' });
+            }
+
             const response = await axios.post('/login', {
                 login: data.login,
                 password: data.password,
                 remember: data.remember,
+                recaptcha_token: recaptchaToken,
             });
             
             // Redirect to authentication page on success

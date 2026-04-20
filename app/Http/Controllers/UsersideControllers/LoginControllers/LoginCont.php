@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Mail;
+use ReCaptcha\ReCaptcha;
 
 class LoginCont extends Controller
 {
@@ -24,8 +25,21 @@ class LoginCont extends Controller
         $credentials = $request->validate([
             'login' => 'required|string',
             'password' => 'required|string',
-            'remember' => 'boolean'
+            'remember' => 'boolean',
+            'recaptcha_token' => 'nullable|string'
         ]);
+
+        // Verify reCAPTCHA token if provided
+        if ($credentials['recaptcha_token']) {
+            $recaptchaVerified = $this->verifyRecaptcha($credentials['recaptcha_token']);
+            if (!$recaptchaVerified) {
+                $message = 'reCAPTCHA verification failed. Please try again.';
+                if ($request->expectsJson()) {
+                    return response()->json(['message' => $message, 'errors' => ['recaptcha' => $message]], 422);
+                }
+                return back()->withErrors(['recaptcha' => $message]);
+            }
+        }
 
         // user:admin
         // password:umerch2026
@@ -131,5 +145,28 @@ class LoginCont extends Controller
         $request->session()->regenerateToken();
         
         return redirect('/');
+    }
+
+    /**
+     * Verify reCAPTCHA token
+     */
+    private function verifyRecaptcha($token)
+    {
+        $secretKey = config('recaptcha.secret_key');
+        $threshold = config('recaptcha.threshold', 0.5);
+
+        if (!$secretKey) {
+            // If secret key is not configured, skip verification
+            return true;
+        }
+
+        $recaptcha = new ReCaptcha($secretKey);
+        $resp = $recaptcha->verify($token, $_SERVER['REMOTE_ADDR'] ?? '');
+
+        if ($resp->isSuccess() && $resp->getScore() >= $threshold) {
+            return true;
+        }
+
+        return false;
     }
 }
