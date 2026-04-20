@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {Link} from '@inertiajs/react';
 import BackgroundImage from '@images/um5.jpg';
 import LoginLogo from '@images/UMERCH-LOGIN-LOGO.svg';
@@ -12,25 +12,78 @@ export default function Knowledge({ showLogin, onCloseLogin }) {
         login: '', 
         password: '', 
         remember: false, 
+        recaptcha_token: null,
     });
     const [errors, setErrors] = useState({});
     const [processing, setProcessing] = useState(false);
     const [showError, setShowError] = useState(false);
 
-    // Load reCAPTCHA script
-    useEffect(() => {
-        const script = document.createElement('script');
-        script.src = 'https://www.google.com/recaptcha/api.js?render=' + (import.meta.env.VITE_RECAPTCHA_SITE_KEY || 'PLACEHOLDER_KEY');
-        script.async = true;
-        script.defer = true;
-        document.body.appendChild(script);
-
-        return () => {
-            if (document.body.contains(script)) {
-                document.body.removeChild(script);
-            }
-        };
+    // Handle reCAPTCHA callback
+    const handleRecaptchaChange = useCallback((token) => {
+        setData(prev => ({
+            ...prev,
+            recaptcha_token: token
+        }));
     }, []);
+
+    // Expose callback to window for reCAPTCHA
+    useEffect(() => {
+        window.handleRecaptchaChange = handleRecaptchaChange;
+    }, [handleRecaptchaChange]);
+
+    // Load reCAPTCHA script and render checkbox
+    useEffect(() => {
+        if (!window.grecaptcha) {
+            const script = document.createElement('script');
+            script.src = 'https://www.google.com/recaptcha/api.js';
+            script.async = true;
+            script.defer = true;
+            script.onload = () => {
+                const recaptchaContainer = document.getElementById('recaptcha-container');
+                if (recaptchaContainer && window.grecaptcha) {
+                    setTimeout(() => {
+                        window.grecaptcha.render('recaptcha-container', {
+                            sitekey: import.meta.env.VITE_RECAPTCHA_SITE_KEY || 'PLACEHOLDER_KEY',
+                            callback: 'handleRecaptchaChange',
+                            theme: 'dark'
+                        });
+                    }, 100);
+                }
+            };
+            document.body.appendChild(script);
+
+            return () => {
+                if (document.body.contains(script)) {
+                    document.body.removeChild(script);
+                }
+            };
+        } else {
+            const recaptchaContainer = document.getElementById('recaptcha-container');
+            if (recaptchaContainer && window.grecaptcha && !recaptchaContainer.innerHTML) {
+                window.grecaptcha.render('recaptcha-container', {
+                    sitekey: import.meta.env.VITE_RECAPTCHA_SITE_KEY || 'PLACEHOLDER_KEY',
+                    callback: 'handleRecaptchaChange',
+                    theme: 'dark'
+                });
+            }
+        }
+    }, []);
+
+    // Render reCAPTCHA when showLogin changes
+    useEffect(() => {
+        if (showLogin && window.grecaptcha) {
+            setTimeout(() => {
+                const recaptchaContainer = document.getElementById('recaptcha-container');
+                if (recaptchaContainer && !recaptchaContainer.innerHTML) {
+                    window.grecaptcha.render('recaptcha-container', {
+                        sitekey: import.meta.env.VITE_RECAPTCHA_SITE_KEY || 'PLACEHOLDER_KEY',
+                        callback: 'handleRecaptchaChange',
+                        theme: 'dark'
+                    });
+                }
+            }, 50);
+        }
+    }, [showLogin]);
 
     useEffect(() => {
         if (Object.keys(errors).length > 0) {
@@ -52,18 +105,21 @@ export default function Knowledge({ showLogin, onCloseLogin }) {
         setProcessing(true);
         setErrors({});
         
+        // Check if reCAPTCHA is completed
+        if (!data.recaptcha_token) {
+            setErrors({ recaptcha: 'Please verify that you\'re not a robot.' });
+            setShowError(true);
+            setProcessing(false);
+            setTimeout(() => setShowError(false), 3000);
+            return;
+        }
+        
         try {
-            // Get reCAPTCHA token
-            let recaptchaToken = null;
-            if (window.grecaptcha) {
-                recaptchaToken = await window.grecaptcha.execute(import.meta.env.VITE_RECAPTCHA_SITE_KEY || 'PLACEHOLDER_KEY', { action: 'login' });
-            }
-
             const response = await axios.post('/login', {
                 login: data.login,
                 password: data.password,
                 remember: data.remember,
-                recaptcha_token: recaptchaToken,
+                recaptcha_token: data.recaptcha_token,
             });
             
             // Redirect to authentication page on success
@@ -192,7 +248,11 @@ export default function Knowledge({ showLogin, onCloseLogin }) {
                                         <label htmlFor="remember" className="ml-2 text-white select-none cursor-pointer text-[14px]">
                                             Remember Me
                                         </label>
-                                        <Link href="#" className="ml-auto text-white text-[14px] hover:underline">Forgot Password?</Link>
+                                    </div>
+
+                                    {/* reCAPTCHA v2 Checkbox */}
+                                    <div className='mt-6 flex justify-center'>
+                                        <div id="recaptcha-container" />
                                     </div>
                                     
                                     <div className='mt-6 w-full'>

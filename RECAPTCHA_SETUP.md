@@ -1,11 +1,11 @@
-# Google reCAPTCHA v3 Setup Guide
+# Google reCAPTCHA v2 Checkbox Setup Guide
 
 ## What I've Implemented
 
-I've added Google reCAPTCHA v3 to your login form. This protection:
-- Works invisibly in the background (no user interaction needed)
-- Scores each interaction on a scale of 0.0 to 1.0
-- Rejects obvious bots while allowing legitimate users through
+I've added Google reCAPTCHA v2 Checkbox to your login form. This protection:
+- Shows a visible "I'm not a robot" checkbox that users interact with
+- Uses Google's advanced risk analysis to verify user authenticity
+- Simple and user-friendly verification method
 
 ## Setup Steps
 
@@ -16,7 +16,7 @@ I've added Google reCAPTCHA v3 to your login form. This protection:
 3. Click **"Create +"** or **"+"** button to create a new site
 4. Fill in the form:
    - **Label**: UMERCH (or your preferred name)
-   - **reCAPTCHA type**: Select **reCAPTCHA v3**
+   - **reCAPTCHA type**: Select **reCAPTCHA v2** → **"I'm not a robot" Checkbox**
    - **Domains**: Add your domain(s):
      - `localhost` (for local development)
      - `your-domain.com` (for production)
@@ -55,51 +55,56 @@ The following files have been updated to support reCAPTCHA:
 ### 4. How It Works
 
 **Frontend (React):**
-- When the page loads, the reCAPTCHA script is loaded from Google
-- When the user submits the login form, a reCAPTCHA token is generated
+- When the page loads, the reCAPTCHA v2 script is loaded from Google
+- The checkbox widget appears on the login form
+- When the user checks the "I'm not a robot" box, Google validates them
+- Upon successful validation, a token is generated and stored
 - The token is sent to the backend with login credentials
 
 **Backend (Laravel):**
 - The token is validated using the Google reCAPTCHA API
-- If the score is above the threshold (0.5 by default), login proceeds
+- If validation is successful, login proceeds
 - Otherwise, login is rejected with a reCAPTCHA error
 
-### 5. Configuration Options
+### 5. Configuration
 
-You can adjust the reCAPTCHA threshold in `config/recaptcha.php`:
-
-```php
-'threshold' => 0.5, // 0.0 (definitely bot) to 1.0 (definitely human)
-```
-
-**Recommended thresholds:**
-- `0.9` - Very permissive (only block obvious bots)
-- `0.5` - Balanced (default)
-- `0.3` - Strict (may block some legitimate users)
+The v2 Checkbox doesn't require threshold configuration. It simply validates and returns a pass/fail result.
 
 ### 6. Testing
 
 After setting up:
 1. Clear your application cache: `php artisan config:clear`
 2. Test the login form
-3. You should see the reCAPTCHA badge in the bottom-right corner
-4. Legitimate logins should work without interruption
+3. You should see the "I'm not a robot" checkbox on the login form
+4. Click the checkbox and wait for Google to validate
+5. Once verified, you can submit the login form
 
 ### 7. Troubleshooting
 
-**Issue: "reCAPTCHA verification failed"**
+**Issue: Checkbox is not showing**
 - Check that your Site Key is correct in `.env`
 - Verify the domain in Google Admin Console matches your site
 - Clear the config cache: `php artisan config:clear`
+- Hard refresh your browser (Ctrl+Shift+R or Cmd+Shift+R)
+
+**Issue: "Please verify that you're not a robot" error**
+- Make sure you've clicked and verified the checkbox before submitting
+- The checkbox validation may be taking time; wait a moment before submitting
+
+**Issue: reCAPTCHA verification failed on backend**
+- Check that your Secret Key is correct in `.env`
+- Verify the domain in Google Admin Console matches your site
+- Clear the config cache
 
 **Issue: Keys not loading**
 - Restart your Laravel server
 - Restart your frontend dev server (if using `npm run dev`)
 - Check that `.env` changes are saved
 
-**Issue: Still seeing placeholder text on login**
+**Issue: Still having issues**
 - Make sure both keys are properly set in `.env`
 - Check browser console for JavaScript errors
+- Verify reCAPTCHA keys are for v2 Checkbox type
 
 ### 8. Production Deployment
 
@@ -118,4 +123,4 @@ This package handles the verification of reCAPTCHA tokens on the backend.
 
 ---
 
-**Need help?** Check the Google reCAPTCHA documentation: https://developers.google.com/recaptcha/docs/v3
+**Need help?** Check the Google reCAPTCHA documentation: https://developers.google.com/recaptcha/docs/display

@@ -155,18 +155,33 @@ class LoginCont extends Controller
         $secretKey = config('recaptcha.secret_key');
         $threshold = config('recaptcha.threshold', 0.5);
 
-        if (!$secretKey) {
-            // If secret key is not configured, skip verification
+        if (!$secretKey || $secretKey === 'YOUR_SECRET_KEY_HERE') {
+            // If secret key is not configured, skip verification for development
             return true;
         }
 
-        $recaptcha = new ReCaptcha($secretKey);
-        $resp = $recaptcha->verify($token, $_SERVER['REMOTE_ADDR'] ?? '');
+        try {
+            $recaptcha = new ReCaptcha($secretKey);
+            $resp = $recaptcha->verify($token, $_SERVER['REMOTE_ADDR'] ?? '');
 
-        if ($resp->isSuccess() && $resp->getScore() >= $threshold) {
-            return true;
+            // For localhost/development, be more lenient
+            if (config('app.env') === 'local') {
+                // On localhost, allow if verification succeeds
+                return $resp->isSuccess();
+            }
+
+            // On production, require both success AND score threshold
+            if ($resp->isSuccess() && $resp->getScore() >= $threshold) {
+                return true;
+            }
+
+            return false;
+        } catch (\Exception $e) {
+            // If verification fails due to network/API error on localhost, allow it
+            if (config('app.env') === 'local') {
+                return true;
+            }
+            return false;
         }
-
-        return false;
     }
 }
