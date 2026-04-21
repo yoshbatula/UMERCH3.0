@@ -1,5 +1,5 @@
-import React, {Suspense, lazy} from 'react';
-import {Link} from '@inertiajs/react';
+import React, {Suspense, lazy, useEffect} from 'react';
+import {Link, usePage} from '@inertiajs/react';
 import Navbar from '../components/layouts/Navbar';
 
 // Lazy load components
@@ -12,7 +12,20 @@ const DiscountedProduct = lazy(() => import('../components/ui/DiscountedProduct'
 const Advertisement = lazy(() => import('../components/ui/Advertisement'));
 const Knowledge = lazy(() => import('../components/ui/Knowledge'));
 const Footer = lazy(() => import('../components/layouts/Footer'));
+
 export default function Login() {
+    const { auth } = usePage().props;
+
+    // Redirect already authenticated users
+    useEffect(() => {
+        if (auth?.user) {
+            if (auth.user.role === 'Admin') {
+                window.location.replace('/admin');
+            } else {
+                window.location.replace('/Landing');
+            }
+        }
+    }, [auth?.user]);
 
     const [showLogin, setShowLogin] = React.useState(false);
     React.useEffect(() => {

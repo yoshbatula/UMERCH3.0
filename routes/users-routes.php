@@ -15,9 +15,12 @@ use Inertia\Middleware;
 use Inertia\Inertia;
 
 
-// User authentication routes
-Route::get('/login', [LoginCont::class, 'showLoginForm'])->name('login');
-Route::post('/login', [LoginCont::class, 'login'])->name('login.submit');
+// User authentication routes (only for guests/non-authenticated users)
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [LoginCont::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [LoginCont::class, 'login'])->name('login.submit');
+    Route::post('/check-trusted-device', [LoginCont::class, 'checkTrustedDevice'])->name('check.trusted.device');
+});
 
 // Public products route (only active products)
 Route::get('/api/products', [InventoryController::class, 'userProducts'])->name('api.products');
@@ -32,6 +35,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/authentication', [AuthCont::class, 'showAuthenticationPage'])->name('authentication');
     Route::post('/resend-otp', [AuthCont::class, 'resendOtp'])->name('resend.otp');
     Route::post('/verify-otp', [AuthCont::class, 'verifyOtp'])->name('verify.otp');
+
+    // Device management routes
+    Route::get('/api/trusted-devices', [AuthCont::class, 'getTrustedDevices'])->name('get.trusted.devices');
+    Route::delete('/api/trusted-devices/{deviceId}', [AuthCont::class, 'forgetDevice'])->name('forget.device');
 
     // This route for adding items to cart
     Route::post('/add-to-cart', [AddCartCont::class, 'AddCart'])->name('add.to.cart');

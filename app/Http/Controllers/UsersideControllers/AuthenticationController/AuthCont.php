@@ -105,6 +105,47 @@ class AuthCont extends Controller {
 
         return $censoredName . '@' . $domain;
     }
+
+    /**
+     * Get all trusted devices for the authenticated user
+     */
+    public function getTrustedDevices()
+    {
+        $user = Auth::user();
+        $devices = $user->trustedDevices()
+            ->orderBy('last_used_at', 'desc')
+            ->select('id', 'device_name', 'ip_address', 'last_used_at', 'created_at')
+            ->get();
+
+        return response()->json([
+            'devices' => $devices,
+            'count' => $devices->count()
+        ]);
+    }
+
+    /**
+     * Remove/forget a trusted device
+     */
+    public function forgetDevice(Request $request, $deviceId)
+    {
+        $user = Auth::user();
+        $device = \App\Models\TrustedDevice::where('id', $deviceId)
+            ->where('user_id', $user->id)
+            ->first();
+
+        if (!$device) {
+            return response()->json([
+                'message' => 'Device not found'
+            ], 404);
+        }
+
+        $device->delete();
+
+        return response()->json([
+            'message' => 'Device removed successfully',
+            'device_name' => $device->device_name
+        ]);
+    }
 }
 
 

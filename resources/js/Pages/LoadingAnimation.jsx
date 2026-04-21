@@ -1,13 +1,22 @@
 import { useEffect } from 'react';
+import { usePage } from '@inertiajs/react';
 import Logo from '@images/UMERCH-LOGO.svg';
 
 export default function LoadingAnimation() {
+    const { auth } = usePage().props;
+
     useEffect(() => {
         const timer = setTimeout(() => {
-            window.location.replace('/login');
-        }, 3000); // Redirect after 5 seconds
+            // If user is already authenticated, redirect to landing page
+            // Otherwise, redirect to login
+            if (auth?.user) {
+                window.location.replace('/Landing');
+            } else {
+                window.location.replace('/login');
+            }
+        }, 3000); // Redirect after 3 seconds
         return () => clearTimeout(timer);
-    }, []);
+    }, [auth]);
 
     return (
         <div

@@ -9,14 +9,54 @@ use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Mail;
 use ReCaptcha\ReCaptcha;
+use App\Services\DeviceDetectionService;
 
 class LoginCont extends Controller
 {
+    protected $deviceService;
+
+    public function __construct(DeviceDetectionService $deviceService)
+    {
+        $this->deviceService = $deviceService;
+    }
     
     // Displays the login form
     public function showLoginForm()
     {
+        // Redirect already authenticated users based on their role
+        if (Auth::check()) {
+            if (Auth::user()->role === 'Admin') {
+                return redirect('/admin');
+            }
+            return redirect('/Landing');
+        }
         return Inertia::render('Login');
+    }
+
+    /**
+     * Check if device is trusted
+     */
+    public function checkTrustedDevice(Request $request)
+    {
+        $fingerprint = $request->validate([
+            'fingerprint' => 'required|string'
+        ])['fingerprint'];
+
+        // Check if any user has this device registered
+        $trustedDevice = \App\Models\TrustedDevice::where(
+            'device_fingerprint',
+            $this->deviceService->hashFingerprint($fingerprint)
+        )->with('user')->first();
+
+        if ($trustedDevice) {
+            return response()->json([
+                'trusted' => true,
+                'user_email' => $trustedDevice->user->email,
+                'device_name' => $trustedDevice->device_name,
+            ]);
+        }
+
+        return response()->json(['trusted' => false]);
     }
 
     // Handles user login
@@ -26,7 +66,8 @@ class LoginCont extends Controller
             'login' => 'required|string',
             'password' => 'required|string',
             'remember' => 'boolean',
-            'recaptcha_token' => 'nullable|string'
+            'recaptcha_token' => 'nullable|string',
+            'device_fingerprint' => 'nullable|string'
         ]);
 
         // Verify reCAPTCHA token if provided
@@ -107,16 +148,43 @@ class LoginCont extends Controller
                 // Log the login activity
                 ActivityLog::logLogin($user);
 
-                // Generate and send OTP
-                $otp = random_int(100000, 999999);
-                session(['otp' => $otp, 'otp_expires' => now()->addMinutes(5)]);
-                Mail::to($user->email)->send(new \App\Mail\OtpMail($otp, $user->user_fullname ?? 'User'));
-
-                // Return JSON for axios or redirect for form submissions
-                if ($request->expectsJson()) {
-                    return response()->json(['redirect' => '/authentication']);
+                // Check if device is trusted
+                $isTrustedDevice = false;
+                if ($credentials['device_fingerprint']) {
+                    $device = $this->deviceService->getTrustedDevice($user, $credentials['device_fingerprint']);
+                    
+                    if ($device) {
+                        // Device already registered - it's trusted
+                        $isTrustedDevice = true;
+                        // Update last used timestamp
+                        $device->update(['last_used_at' => now()]);
+                    } else {
+                        // Register new device
+                        $deviceName = $this->deviceService->getDeviceNameFromUserAgent($request->userAgent());
+                        $this->deviceService->registerDevice($user, $credentials['device_fingerprint'], $request, $deviceName);
+                        // New device - still require OTP
+                        $isTrustedDevice = false;
+                    }
                 }
-                return redirect()->route('authentication');
+
+                // If device is trusted, skip OTP and go directly to Landing
+                if ($isTrustedDevice) {
+                    session(['otp_verified' => true]);
+                    if ($request->expectsJson()) {
+                        return response()->json(['redirect' => '/Landing']);
+                    }
+                    return redirect('/Landing');
+                } else {
+                    // New device or no fingerprint - require OTP
+                    $otp = random_int(100000, 999999);
+                    session(['otp' => $otp, 'otp_expires' => now()->addMinutes(5)]);
+                    Mail::to($user->email)->send(new \App\Mail\OtpMail($otp, $user->user_fullname ?? 'User'));
+
+                    if ($request->expectsJson()) {
+                        return response()->json(['redirect' => '/authentication']);
+                    }
+                    return redirect()->route('authentication');
+                }
             }
         }
 

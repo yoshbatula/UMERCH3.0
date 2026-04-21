@@ -4,8 +4,8 @@ import BackgroundImage from '@images/um5.jpg';
 import LoginLogo from '@images/UMERCH-LOGIN-LOGO.svg';
 import EmailIcon from '@images/email-icon.svg';
 import PasswordIcon from '@images/password-icon.svg';
-// import RealUmLogo from '@images/UM-LOGO.png';
 import axios from 'axios';
+import { DeviceFingerprint } from '../../utils/DeviceFingerprint';
 
 export default function Knowledge({ showLogin, onCloseLogin }) {
     const [data, setData] = useState({
@@ -13,10 +13,58 @@ export default function Knowledge({ showLogin, onCloseLogin }) {
         password: '', 
         remember: false, 
         recaptcha_token: null,
+        device_fingerprint: null,
     });
     const [errors, setErrors] = useState({});
     const [processing, setProcessing] = useState(false);
     const [showError, setShowError] = useState(false);
+    const [checkingDevice, setCheckingDevice] = useState(false);
+
+    // Initialize device fingerprint
+    useEffect(() => {
+        const initializeDeviceFingerprint = async () => {
+            try {
+                // First check if we have a stored fingerprint
+                let fingerprint = DeviceFingerprint.getStoredFingerprint();
+                
+                // If not stored, generate a new one
+                if (!fingerprint) {
+                    fingerprint = await DeviceFingerprint.generateFingerprint();
+                    DeviceFingerprint.storeFingerprint(fingerprint);
+                }
+                
+                setData(prev => ({
+                    ...prev,
+                    device_fingerprint: fingerprint
+                }));
+
+                // Check if this device is trusted
+                setCheckingDevice(true);
+                try {
+                    const response = await axios.post('/check-trusted-device', {
+                        fingerprint: fingerprint
+                    });
+
+                    if (response.data.trusted) {
+                        // Device is trusted - pre-fill the email field
+                        console.log('Trusted device detected for:', response.data.user_email);
+                        setData(prev => ({
+                            ...prev,
+                            login: response.data.user_email // Pre-fill email
+                        }));
+                    }
+                } catch (err) {
+                    console.log('Device check error (non-blocking):', err.message);
+                }
+            } catch (err) {
+                console.log('Fingerprint generation error:', err.message);
+            } finally {
+                setCheckingDevice(false);
+            }
+        };
+
+        initializeDeviceFingerprint();
+    }, []);
 
     // Handle reCAPTCHA callback
     const handleRecaptchaChange = useCallback((token) => {
@@ -120,6 +168,7 @@ export default function Knowledge({ showLogin, onCloseLogin }) {
                 password: data.password,
                 remember: data.remember,
                 recaptcha_token: data.recaptcha_token,
+                device_fingerprint: data.device_fingerprint,
             });
             
             // Redirect to authentication page on success
