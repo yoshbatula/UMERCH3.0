@@ -25,6 +25,8 @@ class User extends Authenticatable
         'user_password',
         'role',
         'status',
+        'failed_login_attempts',
+        'locked_until',
     ];
 
     /**
@@ -47,6 +49,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'user_password' => 'hashed',
+            'locked_until' => 'datetime',
         ];
     }
 
@@ -56,6 +59,14 @@ class User extends Authenticatable
     public function trustedDevices(): HasMany
     {
         return $this->hasMany(TrustedDevice::class);
+    }
+
+    /**
+     * Get all login attempts for this user
+     */
+    public function loginAttempts(): HasMany
+    {
+        return $this->hasMany(LoginAttempt::class);
     }
 }
 

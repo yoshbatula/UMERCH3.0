@@ -10,14 +10,17 @@ use Inertia\Inertia;
 use Illuminate\Support\Facades\Mail;
 use ReCaptcha\ReCaptcha;
 use App\Services\DeviceDetectionService;
+use App\Services\LoginAttemptService;
 
 class LoginCont extends Controller
 {
     protected $deviceService;
+    protected $loginAttemptService;
 
-    public function __construct(DeviceDetectionService $deviceService)
+    public function __construct(DeviceDetectionService $deviceService, LoginAttemptService $loginAttemptService)
     {
         $this->deviceService = $deviceService;
+        $this->loginAttemptService = $loginAttemptService;
     }
     
     // Displays the login form
@@ -70,6 +73,17 @@ class LoginCont extends Controller
             'device_fingerprint' => 'nullable|string'
         ]);
 
+        $identifier = $credentials['login'];
+
+        // Check if rate limited by IP
+        if ($this->loginAttemptService->isRateLimited($request, null, $identifier)) {
+            $message = 'Too many login attempts. Please try again later.';
+            if ($request->expectsJson()) {
+                return response()->json(['message' => $message, 'errors' => ['login' => $message]], 429);
+            }
+            return back()->withErrors(['login' => $message]);
+        }
+
         // Verify reCAPTCHA token if provided
         if ($credentials['recaptcha_token']) {
             $recaptchaVerified = $this->verifyRecaptcha($credentials['recaptcha_token']);
@@ -104,11 +118,23 @@ class LoginCont extends Controller
                     $adminUser->save();
                 }
             }
+
+            // Check if admin account is locked
+            if ($this->loginAttemptService->isAccountLocked($adminUser)) {
+                $lockoutTime = $this->loginAttemptService->getLockoutTimeRemaining($adminUser);
+                $message = "Account is locked. Please try again in {$lockoutTime} minutes.";
+                $this->loginAttemptService->recordFailedAttempt($request, $adminUser, $identifier);
+                if ($request->expectsJson()) {
+                    return response()->json(['message' => $message, 'errors' => ['login' => $message]], 423);
+                }
+                return back()->withErrors(['login' => $message]);
+            }
             
             Auth::login($adminUser, $credentials['remember'] ?? false);
             $request->session()->regenerate();
             
-           
+            // Record successful attempt
+            $this->loginAttemptService->recordSuccessfulAttempt($request, $adminUser);
             ActivityLog::logLogin($adminUser);
             
             if ($request->expectsJson()) {
@@ -124,9 +150,20 @@ class LoginCont extends Controller
         $user = User::where($field, $credentials['login'])->first();
 
         if ($user) {
+            // Check if account is locked
+            if ($this->loginAttemptService->isAccountLocked($user)) {
+                $lockoutTime = $this->loginAttemptService->getLockoutTimeRemaining($user);
+                $message = "Account is locked due to too many failed login attempts. Please try again in {$lockoutTime} minutes.";
+                $this->loginAttemptService->recordFailedAttempt($request, $user, $identifier);
+                if ($request->expectsJson()) {
+                    return response()->json(['message' => $message, 'errors' => ['login' => $message]], 423);
+                }
+                return back()->withErrors(['login' => $message]);
+            }
          
             if (isset($user->status) && $user->status === 'inactive') {
                 $message = 'Your account has been deactivated. Please contact an administrator.';
+                $this->loginAttemptService->recordFailedAttempt($request, $user, $identifier);
                 if ($request->expectsJson()) {
                     return response()->json(['message' => $message, 'errors' => ['login' => $message]], 422);
                 }
@@ -145,7 +182,8 @@ class LoginCont extends Controller
                 Auth::login($user, $credentials['remember'] ?? false);
                 $request->session()->regenerate();
 
-                // Log the login activity
+                // Record successful attempt
+                $this->loginAttemptService->recordSuccessfulAttempt($request, $user);
                 ActivityLog::logLogin($user);
 
                 // Check if device is trusted
@@ -156,8 +194,8 @@ class LoginCont extends Controller
                     if ($device) {
                         // Device already registered - it's trusted
                         $isTrustedDevice = true;
-                        // Update last used timestamp
-                        $device->update(['last_used_at' => now()]);
+                        // Renew device trust (extends expiration by 30 days)
+                        $device->renew();
                     } else {
                         // Register new device
                         $deviceName = $this->deviceService->getDeviceNameFromUserAgent($request->userAgent());
@@ -185,8 +223,30 @@ class LoginCont extends Controller
                     }
                     return redirect()->route('authentication');
                 }
+            } else {
+                // Record failed attempt
+                $this->loginAttemptService->recordFailedAttempt($request, $user, $identifier);
+                $remaining = $this->loginAttemptService->getRemainingAttempts($user);
+                
+                if ($remaining > 0) {
+                    $message = "Invalid credentials. You have {$remaining} attempt(s) remaining.";
+                } else {
+                    $message = 'Account is now locked due to too many failed attempts. Please try again in 30 minutes.';
+                }
+                
+                if ($request->expectsJson()) {
+                    return response()->json([
+                        'message' => $message,
+                        'errors' => ['login' => $message],
+                        'remaining_attempts' => $remaining
+                    ], 422);
+                }
+                return back()->withErrors(['login' => $message]);
             }
         }
+
+        // Record failed attempt (user not found)
+        $this->loginAttemptService->recordFailedAttempt($request, null, $identifier);
 
         $message = 'The provided credentials do not match our records.';
         if ($request->expectsJson()) {

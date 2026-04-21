@@ -113,9 +113,26 @@ class AuthCont extends Controller {
     {
         $user = Auth::user();
         $devices = $user->trustedDevices()
+            ->where('is_expired', false)
+            ->where(function ($q) {
+                $q->whereNull('expires_at')
+                  ->orWhere('expires_at', '>', now());
+            })
             ->orderBy('last_used_at', 'desc')
-            ->select('id', 'device_name', 'ip_address', 'last_used_at', 'created_at')
-            ->get();
+            ->select('id', 'device_name', 'ip_address', 'last_used_at', 'expires_at', 'created_at')
+            ->get()
+            ->map(function ($device) {
+                return [
+                    'id' => $device->id,
+                    'device_name' => $device->device_name,
+                    'ip_address' => $device->ip_address,
+                    'last_used_at' => $device->last_used_at,
+                    'expires_at' => $device->expires_at,
+                    'created_at' => $device->created_at,
+                    'days_remaining' => $device->expires_at ? now()->diffInDays($device->expires_at) : null,
+                    'is_expired' => $device->isExpired(),
+                ];
+            });
 
         return response()->json([
             'devices' => $devices,

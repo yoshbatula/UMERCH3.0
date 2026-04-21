@@ -43,7 +43,13 @@ class DeviceDetectionService
     {
         $hashedFingerprint = $this->hashFingerprint($fingerprint);
         
-        return TrustedDevice::forUserByFingerprint($user->id, $hashedFingerprint)->first();
+        $device = TrustedDevice::forUserByFingerprint($user->id, $hashedFingerprint)->first();
+        
+        if ($device && $device->isExpired()) {
+            return null;
+        }
+        
+        return $device;
     }
 
     /**
