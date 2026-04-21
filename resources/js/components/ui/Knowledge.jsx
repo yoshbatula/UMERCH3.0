@@ -190,6 +190,8 @@ export default function Knowledge({ showLogin, onCloseLogin }) {
         }
     };
 
+    // Security
+
     return (
         <div className='relative min-h-screen flex flex-col'>
             {/* Background image */}
