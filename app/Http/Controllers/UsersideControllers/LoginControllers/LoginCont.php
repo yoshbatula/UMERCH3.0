@@ -10,6 +10,8 @@ use Inertia\Inertia;
 use Illuminate\Support\Facades\Mail;
 use ReCaptcha\ReCaptcha;
 use App\Services\DeviceDetectionService;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 
 class LoginCont extends Controller
 {
@@ -70,10 +72,25 @@ class LoginCont extends Controller
             'device_fingerprint' => 'nullable|string'
         ]);
 
+        // Check brute force rate limiter
+        $rateLimitKey = 'login-attempts:'.Str::lower($credentials['login']);
+
+        if (RateLimiter::tooManyAttempts($rateLimitKey, 5)) {
+            $seconds = RateLimiter::availableIn($rateLimitKey);
+            $minutes = ceil($seconds / 60);
+            $message = "Account temporarily locked. Too many failed attempts. Please try again in {$minutes} minute(s).";
+
+            if ($request->expectsJson()) {
+                return response()->json(['message' => $message, 'errors' => ['login' => $message]], 429);
+            }
+            return back()->withErrors(['login' => $message]);
+        }
+
         // Verify reCAPTCHA token if provided
         if ($credentials['recaptcha_token']) {
             $recaptchaVerified = $this->verifyRecaptcha($credentials['recaptcha_token']);
             if (!$recaptchaVerified) {
+                RateLimiter::hit($rateLimitKey, 180);
                 $message = 'reCAPTCHA verification failed. Please try again.';
                 if ($request->expectsJson()) {
                     return response()->json(['message' => $message, 'errors' => ['recaptcha' => $message]], 422);
@@ -109,6 +126,8 @@ class LoginCont extends Controller
             $request->session()->regenerate();
             
            
+            RateLimiter::clear($rateLimitKey);
+
             ActivityLog::logLogin($adminUser);
             
             if ($request->expectsJson()) {
@@ -126,6 +145,7 @@ class LoginCont extends Controller
         if ($user) {
          
             if (isset($user->status) && $user->status === 'inactive') {
+                RateLimiter::hit($rateLimitKey, 180);
                 $message = 'Your account has been deactivated. Please contact an administrator.';
                 if ($request->expectsJson()) {
                     return response()->json(['message' => $message, 'errors' => ['login' => $message]], 422);
@@ -142,6 +162,7 @@ class LoginCont extends Controller
                 : $inputPassword === $dbPassword;
 
             if ($valid) {
+                RateLimiter::clear($rateLimitKey);
                 Auth::login($user, $credentials['remember'] ?? false);
                 $request->session()->regenerate();
 
@@ -188,6 +209,8 @@ class LoginCont extends Controller
             }
         }
 
+        RateLimiter::hit($rateLimitKey, 180);
+
         $message = 'The provided credentials do not match our records.';
         if ($request->expectsJson()) {
             return response()->json(['message' => $message, 'errors' => ['login' => $message]], 422);
@@ -228,27 +251,21 @@ class LoginCont extends Controller
             return true;
         }
 
+        // Skip verification in local development
+        if (config('app.env') === 'local') {
+            return true;
+        }
+
         try {
             $recaptcha = new ReCaptcha($secretKey);
             $resp = $recaptcha->verify($token, $_SERVER['REMOTE_ADDR'] ?? '');
 
-            // For localhost/development, be more lenient
-            if (config('app.env') === 'local') {
-                // On localhost, allow if verification succeeds
-                return $resp->isSuccess();
-            }
-
-            // On production, require both success AND score threshold
             if ($resp->isSuccess() && $resp->getScore() >= $threshold) {
                 return true;
             }
 
             return false;
         } catch (\Exception $e) {
-            // If verification fails due to network/API error on localhost, allow it
-            if (config('app.env') === 'local') {
-                return true;
-            }
             return false;
         }
     }
