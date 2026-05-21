@@ -19,6 +19,7 @@ export default function Knowledge({ showLogin, onCloseLogin }) {
     const [processing, setProcessing] = useState(false);
     const [showError, setShowError] = useState(false);
     const [checkingDevice, setCheckingDevice] = useState(false);
+    const [lockoutCountdown, setLockoutCountdown] = useState(0);
 
     // Initialize device fingerprint
     useEffect(() => {
@@ -134,12 +135,33 @@ export default function Knowledge({ showLogin, onCloseLogin }) {
     }, [showLogin]);
 
     useEffect(() => {
-        if (Object.keys(errors).length > 0) {
+        if (lockoutCountdown > 0 && !showError) {
             setShowError(true);
-            const timer = setTimeout(() => setShowError(false), 3000);
+        }
+    }, [lockoutCountdown]);
+
+    useEffect(() => {
+        if (lockoutCountdown <= 0) return;
+        const interval = setInterval(() => {
+            setLockoutCountdown(prev => {
+                if (prev <= 1) {
+                    setShowError(false);
+                    setErrors({});
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+        return () => clearInterval(interval);
+    }, [lockoutCountdown]);
+
+    useEffect(() => {
+        if (Object.keys(errors).length > 0 && !lockoutCountdown) {
+            setShowError(true);
+            const timer = setTimeout(() => setShowError(false), 5000);
             return () => clearTimeout(timer);
         }
-    }, [errors]);
+    }, [errors, lockoutCountdown]);
 
     const handleChange = (e) => {
         setData(prev => ({
@@ -158,7 +180,7 @@ export default function Knowledge({ showLogin, onCloseLogin }) {
             setErrors({ recaptcha: 'Please verify that you\'re not a robot.' });
             setShowError(true);
             setProcessing(false);
-            setTimeout(() => setShowError(false), 3000);
+            setTimeout(() => setShowError(false), 5000);
             return;
         }
         
@@ -174,7 +196,10 @@ export default function Knowledge({ showLogin, onCloseLogin }) {
             // Redirect to authentication page on success
             window.location.href = response.data.redirect || '/authentication';
         } catch (error) {
-            if (error.response?.status === 419) {
+            if (error.response?.status === 429 && error.response?.data?.retry_after) {
+                setLockoutCountdown(error.response.data.retry_after);
+                setErrors({ login: error.response.data.errors?.login || 'Account locked.' });
+            } else if (error.response?.status === 419) {
                 setErrors({ general: 'Session expired. Please refresh and try again.' });
             } else if (error.response?.data?.errors) {
                 setErrors(error.response.data.errors);
@@ -184,7 +209,6 @@ export default function Knowledge({ showLogin, onCloseLogin }) {
                 setErrors({ general: 'Login failed. Please try again.' });
             }
             setShowError(true);
-            setTimeout(() => setShowError(false), 3000);
         } finally {
             setProcessing(false);
         }
@@ -243,10 +267,12 @@ export default function Knowledge({ showLogin, onCloseLogin }) {
                                     </div>
                                     <h1 className='text-white text-[20px] font-bold leading-tight'>LOGIN</h1>
                                     
-                                    {showError && Object.keys(errors).length > 0 && (
+                                    {showError && ((lockoutCountdown > 0) || Object.keys(errors).length > 0) && (
                                         <div className='p-4 py-2 bg-red-100 border border-red-400 rounded-[10px] mt-2 w-full flex justify-center items-center'>
                                             <p className="text-red-700 text-[12px]">
-                                                {errors.login || errors.password || errors.email || Object.values(errors)[0]}
+                                                {lockoutCountdown > 0
+                                                    ? `Account locked. Try again in ${lockoutCountdown} second(s).`
+                                                    : errors.login || errors.password || errors.email || Object.values(errors)[0]}
                                             </p>
                                         </div>
                                     )}

@@ -10,7 +10,6 @@ use Inertia\Inertia;
 use Illuminate\Support\Facades\Mail;
 use ReCaptcha\ReCaptcha;
 use App\Services\DeviceDetectionService;
-use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 
 class LoginCont extends Controller
@@ -73,15 +72,46 @@ class LoginCont extends Controller
         ]);
 
         // Check brute force rate limiter
+        $rateLimitDecay = 60; // seconds (tracking window)
+        $rateLimitLockout = 10; // seconds (lockout duration)
         $rateLimitKey = 'login-attempts:'.Str::lower($credentials['login']);
+        $rateLimitDir = storage_path('framework/cache/rate-limit');
+        $rateLimitFile = $rateLimitDir . '/' . md5($rateLimitKey) . '.json';
+        $rateLimitData = ['attempts' => [], 'locked_until' => 0];
+        if (file_exists($rateLimitFile)) {
+            $saved = @json_decode(@file_get_contents($rateLimitFile), true);
+            if (is_array($saved) && isset($saved['attempts'])) {
+                $rateLimitData = $saved;
+            }
+        }
 
-        if (RateLimiter::tooManyAttempts($rateLimitKey, 5)) {
-            $seconds = RateLimiter::availableIn($rateLimitKey);
-            $minutes = ceil($seconds / 60);
-            $message = "Account temporarily locked. Too many failed attempts. Please try again in {$minutes} minute(s).";
-
+        // Check if currently locked
+        if ($rateLimitData['locked_until'] > time()) {
+            $remaining = $rateLimitData['locked_until'] - time();
+            $message = "Account temporarily locked. Too many failed attempts. Please try again in {$remaining} second(s).";
             if ($request->expectsJson()) {
-                return response()->json(['message' => $message, 'errors' => ['login' => $message]], 429);
+                return response()->json(['message' => $message, 'errors' => ['login' => $message], 'retry_after' => $remaining], 429);
+            }
+            return back()->withErrors(['login' => $message]);
+        }
+
+        // Lockout expired — clear attempts so they don't immediately re-lock
+        if ($rateLimitData['locked_until'] > 0) {
+            $rateLimitData = ['attempts' => [], 'locked_until' => 0];
+            @file_put_contents($rateLimitFile, json_encode($rateLimitData), LOCK_EX);
+        }
+
+        // Count recent attempts within tracking window
+        $attempts = collect($rateLimitData['attempts'])
+            ->filter(fn($t) => time() - $t < $rateLimitDecay)
+            ->values();
+
+        if ($attempts->count() >= 5) {
+            $rateLimitData['locked_until'] = time() + $rateLimitLockout;
+            @file_put_contents($rateLimitFile, json_encode($rateLimitData), LOCK_EX);
+            $message = "Account temporarily locked. Too many failed attempts. Please try again in {$rateLimitLockout} second(s).";
+            if ($request->expectsJson()) {
+                return response()->json(['message' => $message, 'errors' => ['login' => $message], 'retry_after' => $rateLimitLockout], 429);
             }
             return back()->withErrors(['login' => $message]);
         }
@@ -90,7 +120,7 @@ class LoginCont extends Controller
         if ($credentials['recaptcha_token']) {
             $recaptchaVerified = $this->verifyRecaptcha($credentials['recaptcha_token']);
             if (!$recaptchaVerified) {
-                RateLimiter::hit($rateLimitKey, 180);
+                $this->recordFailedAttempt($rateLimitKey, $rateLimitDecay);
                 $message = 'reCAPTCHA verification failed. Please try again.';
                 if ($request->expectsJson()) {
                     return response()->json(['message' => $message, 'errors' => ['recaptcha' => $message]], 422);
@@ -126,7 +156,7 @@ class LoginCont extends Controller
             $request->session()->regenerate();
             
            
-            RateLimiter::clear($rateLimitKey);
+            if (file_exists($rateLimitFile)) @unlink($rateLimitFile);
 
             ActivityLog::logLogin($adminUser);
             
@@ -145,7 +175,7 @@ class LoginCont extends Controller
         if ($user) {
          
             if (isset($user->status) && $user->status === 'inactive') {
-                RateLimiter::hit($rateLimitKey, 180);
+                $this->recordFailedAttempt($rateLimitKey, $rateLimitDecay);
                 $message = 'Your account has been deactivated. Please contact an administrator.';
                 if ($request->expectsJson()) {
                     return response()->json(['message' => $message, 'errors' => ['login' => $message]], 422);
@@ -162,7 +192,7 @@ class LoginCont extends Controller
                 : $inputPassword === $dbPassword;
 
             if ($valid) {
-                RateLimiter::clear($rateLimitKey);
+                if (file_exists($rateLimitFile)) @unlink($rateLimitFile);
                 Auth::login($user, $credentials['remember'] ?? false);
                 $request->session()->regenerate();
 
@@ -209,7 +239,7 @@ class LoginCont extends Controller
             }
         }
 
-        RateLimiter::hit($rateLimitKey, 180);
+        $this->recordFailedAttempt($rateLimitKey, $rateLimitDecay);
 
         $message = 'The provided credentials do not match our records.';
         if ($request->expectsJson()) {
@@ -236,6 +266,31 @@ class LoginCont extends Controller
         $request->session()->regenerateToken();
         
         return redirect('/');
+    }
+
+    /**
+     * Record a failed login attempt for rate limiting
+     */
+    private function recordFailedAttempt($key, $decay)
+    {
+        $file = storage_path('framework/cache/rate-limit/' . md5($key) . '.json');
+        $dir = dirname($file);
+        if (!is_dir($dir)) {
+            @mkdir($dir, 0755, true);
+        }
+        $data = ['attempts' => [], 'locked_until' => 0];
+        if (file_exists($file)) {
+            $saved = @json_decode(@file_get_contents($file), true);
+            if (is_array($saved) && isset($saved['attempts'])) {
+                $data = $saved;
+            }
+        }
+        $data['attempts'] = collect($data['attempts'])
+            ->filter(fn($t) => time() - $t < $decay)
+            ->push(time())
+            ->values()
+            ->toArray();
+        @file_put_contents($file, json_encode($data), LOCK_EX);
     }
 
     /**
