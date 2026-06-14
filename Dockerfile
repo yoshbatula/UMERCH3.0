@@ -19,4 +19,4 @@ COPY . .
 
 RUN composer install --no-dev --optimize-autoloader && php artisan storage:link
 
-CMD php artisan key:generate --force && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=$PORT
+CMD php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=$PORT
