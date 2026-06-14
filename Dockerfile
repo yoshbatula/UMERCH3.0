@@ -23,6 +23,7 @@ RUN composer install --no-dev --optimize-autoloader \
     && npm install \
     && npm run build \
     && php artisan storage:link \
+    && cp .env.example .env \
     && chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
 COPY apache.conf /etc/apache2/sites-available/000-default.conf
