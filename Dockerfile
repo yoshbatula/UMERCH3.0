@@ -17,6 +17,6 @@ WORKDIR /var/www/html
 
 COPY . .
 
-RUN cp .env.example .env && composer install --no-dev --optimize-autoloader && php artisan key:generate --force && php artisan storage:link
+RUN composer install --no-dev --optimize-autoloader && php artisan storage:link
 
-CMD php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=$PORT
+CMD php artisan key:generate --force && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=$PORT
